@@ -65,7 +65,8 @@ function ItemPage() {
   const leadMin = f.lead.reduce((a, l) => a + l[1], 0)
   const leadMax = f.lead.reduce((a, l) => a + l[2], 0)
   const siblings = f.styles.filter((x) => x.n !== s.n)
-  const gallery = Array.from(new Set([s.photo, f.photo])).filter((p) => PHOTOS[p])
+  // Only this product's own photo: the family photo shows a different product (e.g. potato on every vegetable).
+  const gallery = [s.photo].filter((p) => PHOTOS[p])
   const custom = quote.specParts.length
   const productJson = {
     '@context': 'https://schema.org',
