@@ -240,7 +240,7 @@ export function SiteFooter() {
       <div className="border-t border-paper/10">
         <div className="mx-auto flex max-w-7xl flex-wrap justify-between gap-3 px-4 py-5 text-[13px] opacity-60">
           <span>© 2026 {SITE.name}. Prices are indicative and confirmed only by a signed proforma invoice. Duty and route information updated {SITE.updated}.</span>
-          <Link to="/photo-credits" className="text-paper">Photo credits</Link>
+          <span className="flex gap-4"><Link to="/privacy" className="text-paper">Privacy</Link><Link to="/terms" className="text-paper">Terms</Link><Link to="/photo-credits" className="text-paper">Photo credits</Link></span>
         </div>
       </div>
     </footer>

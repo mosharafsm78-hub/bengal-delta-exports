@@ -6,6 +6,7 @@ import type { CategoryId } from '@/data/types'
 import { Photo } from '@/components/photo'
 import { PageHead } from '@/components/site-shell'
 import { ItemTile } from '@/components/item-tile'
+import { useHydrated } from '@/lib/use-hydrated'
 import { CAT_PHOTO, catStyle } from '@/lib/cat-style'
 
 interface ProductsSearch {
@@ -25,7 +26,10 @@ export const Route = createFileRoute('/products/')({
 const ORDER: CategoryId[] = ['garments', 'produce', 'footwear', 'food', 'home', 'jute', 'crafts']
 
 function Products() {
-  const { cat, q } = Route.useSearch()
+  const search = Route.useSearch()
+  // Static pages are built without ?cat / ?q, so apply them only after hydration.
+  const hydrated = useHydrated()
+  const { cat, q } = hydrated ? search : { cat: undefined, q: undefined }
   const navigate = useNavigate({ from: '/products/' })
   const query = (q ?? '').toLowerCase().trim()
   const cats = ORDER.map((id) => CATS.find((c) => c.id === id)!)

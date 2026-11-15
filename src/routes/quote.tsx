@@ -9,6 +9,7 @@ import { Photo } from '@/components/photo'
 import { mailtoFor, submitLead, type LeadPayload } from '@/lib/leads'
 import { slug, usd } from '@/lib/slug'
 import { cn } from '@/lib/utils'
+import { useEffect } from 'react'
 
 interface QuoteSearch { tab?: 'requirement'; msg?: string; samples?: boolean }
 
@@ -30,7 +31,7 @@ function photoFor(familyId: string, style: string) {
 function QuotePage() {
   const search = Route.useSearch()
   const items = useBasket()
-  const [kind, setKind] = useState<'quote' | 'requirement'>(search.tab === 'requirement' ? 'requirement' : 'quote')
+  const [kind, setKind] = useState<'quote' | 'requirement'>('quote')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [done, setDone] = useState<'' | 'saved' | 'email'>('')
@@ -38,8 +39,14 @@ function QuotePage() {
   const [ref, setRef] = useState('')
   const [pick, setPick] = useState('')
   const [certs, setCerts] = useState<string[]>([])
-  const [wantSamples, setWantSamples] = useState(Boolean(search.samples))
-  const [form, setForm] = useState({ quantity: '', unit: 'pieces', requirement: search.msg ?? '', country: '', port: '', incoterm: 'FOB Bangladesh', neededBy: '', company: '', buyerType: 'Importer / distributor', name: '', email: '', phone: '', website: '', notes: '', hp: '' })
+  const [wantSamples, setWantSamples] = useState(false)
+  const [form, setForm] = useState({ quantity: '', unit: 'pieces', requirement: '', country: '', port: '', incoterm: 'FOB Bangladesh', neededBy: '', company: '', buyerType: 'Importer / distributor', name: '', email: '', phone: '', website: '', notes: '', hp: '' })
+  // Apply ?tab / ?msg / ?samples after hydration (the static page is built without them).
+  useEffect(() => {
+    if (search.tab === 'requirement') setKind('requirement')
+    if (search.samples) setWantSamples(true)
+    if (search.msg) setForm((f) => ({ ...f, requirement: f.requirement || search.msg! }))
+  }, [search.tab, search.samples, search.msg])
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => setForm((f) => ({ ...f, [k]: e.target.value }))
   const total = items.reduce((s, i) => s + (i.unitMid && i.qtyNum ? i.unitMid * i.qtyNum : 0), 0)
 
@@ -219,7 +226,7 @@ function QuotePage() {
 
             {error && <p role="alert" className="mt-5 mb-0 rounded-lg bg-danger-soft px-4 py-3 text-sm font-semibold text-danger">{error}</p>}
             <button type="submit" disabled={busy} className="btn btn-primary mt-6 w-full py-4 text-base sm:w-auto sm:px-10">{busy ? 'Sending…' : 'Send — get my price in 24 h'}</button>
-            <p className="mt-3 mb-0 flex items-center gap-1.5 text-[13px] text-muted-foreground"><Lock className="size-3.5" aria-hidden="true" /> We only use your details to reply to this request.</p>
+            <p className="mt-3 mb-0 flex items-center gap-1.5 text-[13px] text-muted-foreground"><Lock className="size-3.5" aria-hidden="true" /> We only use your details to reply to this request. <Link to="/privacy" className="text-brand">Privacy policy</Link></p>
           </section>
         </form>
 

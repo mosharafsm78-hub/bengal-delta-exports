@@ -54,5 +54,13 @@
   "/suppliers": {
     "title": "Become a verified supplier — BengalExport",
     "description": "Bangladeshi factories, farms and artisans: sell to importers worldwide. We buy your goods and handle the export, LC, inspection and shipping."
+  },
+  "/privacy": {
+    "title": "Privacy policy — BengalExport",
+    "description": "What information BengalExport collects through quote and supplier forms, why, where it is stored and your rights."
+  },
+  "/terms": {
+    "title": "Terms of trade — BengalExport",
+    "description": "Indicative prices, how a contract is made (proforma invoice and 100% LC at sight), samples, claims and governing law."
   }
 }

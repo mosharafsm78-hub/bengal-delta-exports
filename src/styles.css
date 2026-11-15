@@ -1,4 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap');
+@import '@fontsource-variable/inter/index.css';
+@import '@fontsource-variable/fraunces/opsz.css';
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
@@ -40,8 +41,8 @@
 }
 
 @theme inline {
-  --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
-  --font-sans: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-display: 'Fraunces Variable', Georgia, 'Times New Roman', serif;
+  --font-sans: 'Inter Variable', 'Segoe UI', system-ui, -apple-system, sans-serif;
   --color-c-garments: hsl(var(--c-garments));
   --color-c-produce: hsl(var(--c-produce));
   --color-c-footwear: hsl(var(--c-footwear));
@@ -135,3 +136,6 @@ body {
 .cat-soft { background: hsl(var(--c) / 0.1); }
 .cat-text { color: hsl(var(--c)); }
 .cat-border { border-color: hsl(var(--c) / 0.35); }
+
+/* Let grid children shrink so wide tables scroll inside their box instead of widening the page on phones */
+.grid > * { min-width: 0; }

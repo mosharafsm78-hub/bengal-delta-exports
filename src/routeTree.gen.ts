@@ -17,11 +17,13 @@ import { Route as HowWeWorkRouteImport } from './routes/how-we-work'
 import { Route as NotFoundRouteImport } from './routes/not-found'
 import { Route as PhotoCreditsRouteImport } from './routes/photo-credits'
 import { Route as PricesRouteImport } from './routes/prices'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as QualityRouteImport } from './routes/quality'
 import { Route as QuoteRouteImport } from './routes/quote'
 import { Route as SeasonCalendarRouteImport } from './routes/season-calendar'
 import { Route as ShippingRouteImport } from './routes/shipping'
 import { Route as SuppliersRouteImport } from './routes/suppliers'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as ProductsIndexRouteImport } from './routes/products/index'
 import { Route as ProductsFamilyIdRouteImport } from './routes/products/$familyId'
 import { Route as ProductsFamilyIdItemIdRouteImport } from './routes/products/$familyId_.$itemId'
@@ -66,6 +68,11 @@ const PricesRoute = PricesRouteImport.update({
   path: '/prices',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const QualityRoute = QualityRouteImport.update({
   id: '/quality',
   path: '/quality',
@@ -89,6 +96,11 @@ const ShippingRoute = ShippingRouteImport.update({
 const SuppliersRoute = SuppliersRouteImport.update({
   id: '/suppliers',
   path: '/suppliers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProductsIndexRoute = ProductsIndexRouteImport.update({
@@ -116,11 +128,13 @@ export interface FileRoutesByFullPath {
   '/not-found': typeof NotFoundRoute
   '/photo-credits': typeof PhotoCreditsRoute
   '/prices': typeof PricesRoute
+  '/privacy': typeof PrivacyRoute
   '/quality': typeof QualityRoute
   '/quote': typeof QuoteRoute
   '/season-calendar': typeof SeasonCalendarRoute
   '/shipping': typeof ShippingRoute
   '/suppliers': typeof SuppliersRoute
+  '/terms': typeof TermsRoute
   '/products/$familyId': typeof ProductsFamilyIdRoute
   '/products/': typeof ProductsIndexRoute
   '/products/$familyId/$itemId': typeof ProductsFamilyIdItemIdRoute
@@ -134,11 +148,13 @@ export interface FileRoutesByTo {
   '/not-found': typeof NotFoundRoute
   '/photo-credits': typeof PhotoCreditsRoute
   '/prices': typeof PricesRoute
+  '/privacy': typeof PrivacyRoute
   '/quality': typeof QualityRoute
   '/quote': typeof QuoteRoute
   '/season-calendar': typeof SeasonCalendarRoute
   '/shipping': typeof ShippingRoute
   '/suppliers': typeof SuppliersRoute
+  '/terms': typeof TermsRoute
   '/products/$familyId': typeof ProductsFamilyIdRoute
   '/products': typeof ProductsIndexRoute
   '/products/$familyId/$itemId': typeof ProductsFamilyIdItemIdRoute
@@ -153,11 +169,13 @@ export interface FileRoutesById {
   '/not-found': typeof NotFoundRoute
   '/photo-credits': typeof PhotoCreditsRoute
   '/prices': typeof PricesRoute
+  '/privacy': typeof PrivacyRoute
   '/quality': typeof QualityRoute
   '/quote': typeof QuoteRoute
   '/season-calendar': typeof SeasonCalendarRoute
   '/shipping': typeof ShippingRoute
   '/suppliers': typeof SuppliersRoute
+  '/terms': typeof TermsRoute
   '/products/$familyId': typeof ProductsFamilyIdRoute
   '/products/': typeof ProductsIndexRoute
   '/products/$familyId_/$itemId': typeof ProductsFamilyIdItemIdRoute
@@ -173,11 +191,13 @@ export interface FileRouteTypes {
     | '/not-found'
     | '/photo-credits'
     | '/prices'
+    | '/privacy'
     | '/quality'
     | '/quote'
     | '/season-calendar'
     | '/shipping'
     | '/suppliers'
+    | '/terms'
     | '/products/$familyId'
     | '/products/'
     | '/products/$familyId/$itemId'
@@ -191,11 +211,13 @@ export interface FileRouteTypes {
     | '/not-found'
     | '/photo-credits'
     | '/prices'
+    | '/privacy'
     | '/quality'
     | '/quote'
     | '/season-calendar'
     | '/shipping'
     | '/suppliers'
+    | '/terms'
     | '/products/$familyId'
     | '/products'
     | '/products/$familyId/$itemId'
@@ -209,11 +231,13 @@ export interface FileRouteTypes {
     | '/not-found'
     | '/photo-credits'
     | '/prices'
+    | '/privacy'
     | '/quality'
     | '/quote'
     | '/season-calendar'
     | '/shipping'
     | '/suppliers'
+    | '/terms'
     | '/products/$familyId'
     | '/products/'
     | '/products/$familyId_/$itemId'
@@ -228,11 +252,13 @@ export interface RootRouteChildren {
   NotFoundRoute: typeof NotFoundRoute
   PhotoCreditsRoute: typeof PhotoCreditsRoute
   PricesRoute: typeof PricesRoute
+  PrivacyRoute: typeof PrivacyRoute
   QualityRoute: typeof QualityRoute
   QuoteRoute: typeof QuoteRoute
   SeasonCalendarRoute: typeof SeasonCalendarRoute
   ShippingRoute: typeof ShippingRoute
   SuppliersRoute: typeof SuppliersRoute
+  TermsRoute: typeof TermsRoute
   ProductsFamilyIdRoute: typeof ProductsFamilyIdRoute
   ProductsIndexRoute: typeof ProductsIndexRoute
   ProductsFamilyIdItemIdRoute: typeof ProductsFamilyIdItemIdRoute
@@ -296,6 +322,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PricesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/quality': {
       id: '/quality'
       path: '/quality'
@@ -331,6 +364,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SuppliersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/products/': {
       id: '/products/'
       path: '/products'
@@ -364,11 +404,13 @@ const rootRouteChildren: RootRouteChildren = {
   NotFoundRoute: NotFoundRoute,
   PhotoCreditsRoute: PhotoCreditsRoute,
   PricesRoute: PricesRoute,
+  PrivacyRoute: PrivacyRoute,
   QualityRoute: QualityRoute,
   QuoteRoute: QuoteRoute,
   SeasonCalendarRoute: SeasonCalendarRoute,
   ShippingRoute: ShippingRoute,
   SuppliersRoute: SuppliersRoute,
+  TermsRoute: TermsRoute,
   ProductsFamilyIdRoute: ProductsFamilyIdRoute,
   ProductsIndexRoute: ProductsIndexRoute,
   ProductsFamilyIdItemIdRoute: ProductsFamilyIdItemIdRoute,

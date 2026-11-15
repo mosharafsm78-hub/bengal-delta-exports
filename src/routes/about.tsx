@@ -53,13 +53,13 @@ function About() {
           <div className="eyebrow mb-3 text-jute">About {SITE.name}</div>
           <h1 className="m-0 max-w-4xl text-[clamp(2.2rem,5vw,3.6rem)] leading-[1.06] text-paper">A Chattogram company that makes, sources and exports the best of Bangladesh.</h1>
           <p className="mt-5 max-w-[62ch] text-lg text-paper/80">{SITE.name} was founded in 2022 in Chattogram. Today a team of about 22 people helps importers buy clothing, footwear, fresh produce, food, jute and home textiles from one accountable exporter.</p>
-          <dl className="m-0 mt-10 grid max-w-3xl grid-cols-3 gap-6">
+          <dl className="m-0 mt-10 grid max-w-3xl grid-cols-3 gap-4 sm:gap-6">
             {[[CalendarDays, '2022', 'Founded'], [Users, '≈ 22', 'People on our team'], [MapPin, 'Chattogram', 'Head office, West Khulshi']].map(([I, b, s]) => {
               const Icon = I as typeof Users
               return (
                 <div key={s as string}>
                   <Icon className="size-5 text-jute" aria-hidden="true" />
-                  <dt className="num mt-2 font-display text-3xl font-semibold">{b as string}</dt>
+                  <dt className="num mt-2 font-display text-xl font-semibold break-words sm:text-3xl">{b as string}</dt>
                   <dd className="m-0 text-[14px] text-paper/70">{s as string}</dd>
                 </div>
               )
