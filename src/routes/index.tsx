@@ -157,7 +157,7 @@ function Home() {
             [Landmark, 'produce', '100% LC payment', 'You pay through your own bank. Money is released only after we ship.', '/how-we-work'],
             [Globe2, 'home', '0% import duty', 'Duty-free into the EU, UK, Canada, Australia and China.', '/duty-free-markets'],
             [ShieldCheck, 'garments', 'Checked before shipping', 'Inspection, lab tests and official certificates for every order.', '/quality'],
-            [Factory, 'footwear', 'Own factories', 'We make footwear ourselves and audit every partner mill and farm.', '/about'],
+            [Factory, 'footwear', 'Verified producers', 'Our team checks documents and visits every factory and farm before it supplies us.', '/suppliers'],
           ].map(([Icon, color, t, d, to]) => {
             const I = Icon as typeof Landmark
             return (

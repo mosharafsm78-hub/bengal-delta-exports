@@ -10,9 +10,9 @@ export const Route = createFileRoute('/about')({
 })
 
 const HISTORY: [string, string, string][] = [
-  ['2022', 'Founded in Chattogram', 'We started as a footwear maker with our own factories, producing slides, sandals and shoes for the Bangladeshi market under our own brand.'],
-  ['Growing', 'Warehouses and experience centres', 'Two warehouses and customer experience centres in Dhaka and Chattogram, and a design team creating our own product lines.'],
-  ['Growing', 'A sourcing network', 'We built relationships with garment and home-textile mills, jute mills, farms and artisan groups, and learned how to check them.'],
+  ['2022', 'Founded in Chattogram', 'BengalExport was founded in Chattogram, close to Bangladesh\'s main seaport, to help overseas buyers source from Bangladesh.'],
+  ['Growing', 'A verified sourcing network', 'We built relationships with garment and home-textile mills, footwear and leather factories, jute mills, farms and artisan groups, and a process to check each one.'],
+  ['Growing', 'A team of about 22', 'Sourcing, quality control, documentation, logistics and sales under one roof in Chattogram.'],
   ['2026', 'BengalExport export hub', 'We opened our catalogue to importers worldwide: one exporter for clothing, footwear, fresh produce, food, jute, home textiles and handicrafts.'],
 ]
 
@@ -52,9 +52,9 @@ function About() {
         <div className="mx-auto max-w-7xl px-4 py-16">
           <div className="eyebrow mb-3 text-jute">About {SITE.name}</div>
           <h1 className="m-0 max-w-4xl text-[clamp(2.2rem,5vw,3.6rem)] leading-[1.06] text-paper">A Chattogram company that makes, sources and exports the best of Bangladesh.</h1>
-          <p className="mt-5 max-w-[62ch] text-lg text-paper/80">{SITE.name} began in 2022 as a footwear manufacturer with its own factories. Today a team of about 22 people helps importers buy clothing, footwear, fresh produce, food, jute and home textiles from one accountable exporter.</p>
+          <p className="mt-5 max-w-[62ch] text-lg text-paper/80">{SITE.name} was founded in 2022 in Chattogram. Today a team of about 22 people helps importers buy clothing, footwear, fresh produce, food, jute and home textiles from one accountable exporter.</p>
           <dl className="m-0 mt-10 grid max-w-3xl grid-cols-3 gap-6">
-            {[[CalendarDays, '2022', 'Founded'], [Users, '≈ 22', 'People on our team'], [MapPin, '2', 'Offices: Chattogram, Dhaka']].map(([I, b, s]) => {
+            {[[CalendarDays, '2022', 'Founded'], [Users, '≈ 22', 'People on our team'], [MapPin, 'Chattogram', 'Head office, West Khulshi']].map(([I, b, s]) => {
               const Icon = I as typeof Users
               return (
                 <div key={s as string}>
@@ -128,7 +128,7 @@ function About() {
             <div>
               <div className="eyebrow">Founder</div>
               <p className="m-0 mt-1 font-display text-2xl font-semibold">{SITE.founder}</p>
-              <p className="m-0 mt-1 text-[15px] text-muted-foreground">{SITE.founderRole}. More than 15 years in business across fashion, footwear manufacturing, branding and international sourcing.</p>
+              <p className="m-0 mt-1 text-[15px] text-muted-foreground">{SITE.founderRole}. More than 15 years in business across fashion, branding and international sourcing.</p>
               <p className="m-0 mt-3 text-[15px]">“We built {SITE.name} so that a buyer anywhere can order from Bangladesh as easily and safely as from home: clear prices, real samples, and payment through their own bank.”</p>
             </div>
           </div>

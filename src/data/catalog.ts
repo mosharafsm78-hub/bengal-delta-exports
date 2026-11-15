@@ -4,7 +4,7 @@ import type { Category, Family } from './types'
 
 export const CATS: Category[] = [
   { id: 'garments', name: 'Garments & apparel', short: 'Garments', blurb: 'Knit and woven clothing for men, women and kids, from basic tees to outerwear.' },
-  { id: 'footwear', name: 'Footwear & leather', short: 'Footwear', blurb: 'Slides, sandals, sneakers, leather shoes, belts, wallets and bags from our own factories.' },
+  { id: 'footwear', name: 'Footwear & leather', short: 'Footwear', blurb: 'Slides, sandals, sneakers, leather shoes, belts, wallets and bags from verified Bangladeshi factories.' },
   { id: 'home', name: 'Home textiles', short: 'Home textiles', blurb: 'Towels, bed linen, kitchen and table textiles.' },
   { id: 'jute', name: 'Jute & natural fibre', short: 'Jute', blurb: 'Jute bags, sacks, hessian, yarn, rope and jute home decor.' },
   { id: 'produce', name: 'Fresh vegetables & fruit', short: 'Fresh produce', blurb: 'Potato, cabbage, gourds, chilies, leafy greens, mango, jackfruit and more.' },
@@ -278,7 +278,7 @@ export const FAMILIES: Family[] = [
   /* =================== FOOTWEAR & LEATHER =================== */
   {
     id: 'casual-footwear', cat: 'footwear', name: 'Slides, sandals & sneakers', hs: '6402.20 · 6402.99 · 6404.19',
-    tag: 'Made in our own factories: EVA and PU slides, sandals, flip-flops, mules and sneakers.',
+    tag: 'EVA and PU slides, sandals, flip-flops, mules and sneakers from verified factories.',
     intro: 'We manufacture this range ourselves, so we control the moulds, materials, colours and delivery dates. Upper material and sole type set the price.',
     photo: 'slides', moq: '600 pairs per design (300 pairs on existing moulds)', lead: LEAD_SHOE,
     styles: [

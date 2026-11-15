@@ -12,7 +12,7 @@ export const SITE = {
   /** Registration numbers are shown on the About page only when filled in. */
   registration: { erc: '', tradeLicence: '', tin: '', bin: '' },
   hours: 'Sat–Thu, 9:00–19:00 Bangladesh time (GMT+6)',
-  offices: ['Chattogram (head office)', 'Dhaka'],
+  offices: ['Chattogram (head office)'],
   updated: 'November 2026',
 }
 
@@ -141,6 +141,6 @@ export const FAQ: [string, string][] = [
   ['Where do Bangladeshi goods enter duty-free?', 'The EU, UK, Canada, Australia and China charge 0% on practically everything; Japan, South Korea and India on most goods. The Gulf charges 5% (0% on fresh produce) and the USA a 19% reciprocal tariff plus normal duty.'],
   ['Can you ship to the Gulf right now?', 'Yes for Saudi Arabia by air and via Jeddah. For the UAE, Qatar, Kuwait, Bahrain and Oman, routes are disrupted by the regional conflict; we confirm dates only at booking.'],
   ['How do I know fresh produce is safe?', 'Every lot is residue-tested before shipment, and the Bangladesh Plant Quarantine Wing issues a phytosanitary certificate only for lots that pass.'],
-  ['Can I visit the factories or send an inspector?', 'Yes. Our footwear factories and partner mills welcome buyer visits and third-party audits such as SGS, Intertek and Bureau Veritas.'],
+  ['Can I visit the factories or send an inspector?', 'Yes. Our verified partner factories and mills welcome buyer visits and third-party audits such as SGS, Intertek and Bureau Veritas.'],
   ['What cannot be exported from Bangladesh?', 'Onion, garlic, ginger, non-aromatic rice, raw pulses, most crop seeds and some shrimp sizes are banned for export under the Export Policy 2024-27.'],
 ]
