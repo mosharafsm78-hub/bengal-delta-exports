@@ -1,8 +1,8 @@
 import { createFileRoute, Link, notFound } from '@tanstack/react-router'
 import { useMemo, useState } from 'react'
-import { CheckCircle2, ShieldCheck, FileText, Ship, Clock, Package, Globe2, Info, ArrowRight, Leaf } from 'lucide-react'
+import { CheckCircle2, ShieldCheck, FileText, Ship, Clock, Package, Globe2, Info, ArrowRight, Leaf, Landmark } from 'lucide-react'
 import { catById, findItem } from '@/data/catalog'
-import { DUTY, DUTY_PRESETS, STEPS, TRANSIT, SITE, PAYMENT_TERMS } from '@/data/site'
+import { DUTY, DUTY_PRESETS, STEPS, TRANSIT, SITE, PAYMENT_TERMS, PAYMENT_HEADLINE } from '@/data/site'
 import { PHOTOS } from '@/data/photos'
 import { pageHead } from '@/lib/head'
 import { Photo } from '@/components/photo'
@@ -77,7 +77,7 @@ function ItemPage() {
   }
 
   const add = () => {
-    basket.add({ familyId: f.id, family: f.name, style: s.n, itemId: slug(s.n), qty: q > 0 ? `${q.toLocaleString('en-US')} ${unitName(unit, q)}` : undefined, spec: quote.specParts.join(' · ') || undefined, estimate: `≈${money(mid)}/${unit} (range ${money(quote.lo)}–${quote.hi.toFixed(2)})` })
+    basket.add({ familyId: f.id, family: f.name, style: s.n, itemId: slug(s.n), qty: q > 0 ? `${q.toLocaleString('en-US')} ${unitName(unit, q)}` : undefined, spec: quote.specParts.join(' · ') || undefined, estimate: `≈${money(mid)}/${unit} (range ${money(quote.lo)}–${quote.hi.toFixed(2)})`, unitMid: mid, qtyNum: q > 0 ? q : undefined, unit })
     setAdded(true)
   }
 
@@ -187,9 +187,10 @@ function ItemPage() {
               <p className="mt-2 text-[12px] text-muted-foreground">Freight is quoted per shipment. Your proforma invoice confirms the final price.</p>
             </div>
 
-            <div className="mt-5 grid gap-2 sm:grid-cols-2">
+            <p className="mt-4 mb-0 flex items-center gap-2 rounded-md border border-border px-3 py-2 text-[13.5px]"><Landmark className="size-4 flex-none text-brand" aria-hidden="true" /><span><b>Payment:</b> {PAYMENT_HEADLINE}. <Link to="/how-we-work" className="text-brand">How it works</Link></span></p>
+            <div className="mt-4 grid gap-2 sm:grid-cols-2">
               <button type="button" onClick={add} className="btn btn-primary">{added || inBasket ? <><CheckCircle2 className="size-4" aria-hidden="true" /> {added ? 'Added — update anytime' : 'In your quote'}</> : 'Add to quote'}</button>
-              <Link to="/quote" onClick={() => { if (!inBasket && !added) add() }} className="btn btn-outline">Get my price in 24 h <ArrowRight className="size-4" aria-hidden="true" /></Link>
+              <Link to="/quote" onClick={() => { if (!inBasket && !added) add() }} className="btn btn-outline">Request proforma <ArrowRight className="size-4" aria-hidden="true" /></Link>
             </div>
             {(added || inBasket) && <p className="mt-2 text-center text-[13px]"><Link to="/quote" className="font-semibold text-brand">Review your quote ({items.length} {items.length === 1 ? 'item' : 'items'}) →</Link></p>}
             <div className="mt-3 flex flex-wrap justify-center gap-x-5 gap-y-1 text-[13.5px] print:hidden">
@@ -204,7 +205,7 @@ function ItemPage() {
               [FileText, 'Priced proforma invoice within 24 hours'],
               [ShieldCheck, 'Pre-shipment inspection; SGS / Intertek on request'],
               [Globe2, '0% duty into the EU, UK, Canada, Australia, China'],
-              [CheckCircle2, 'Pay by LC at sight or 30% T/T advance'],
+              [CheckCircle2, 'Pay by 100% LC at sight through your own bank'],
             ].map(([Icon, t]) => {
               const I = Icon as typeof FileText
               return <li key={t as string} className="flex items-start gap-2"><I className="mt-0.5 size-4 flex-none text-ok" aria-hidden="true" />{t as string}</li>
@@ -333,10 +334,16 @@ function ItemPage() {
               </li>
             ))}
           </ol>
-          <div className="mt-5 grid gap-3 md:grid-cols-2">
-            {PAYMENT_TERMS.slice(0, 2).map(([k, v]) => (
-              <p key={k} className="m-0 rounded-lg border border-border bg-card p-4 text-[14.5px]"><b>{k}:</b> <span className="text-muted-foreground">{v}</span></p>
-            ))}
+          <div className="mt-5 grid gap-3 md:grid-cols-[1.2fr_1fr]">
+            <div className="rounded-lg border border-brand/25 bg-brand-soft p-5">
+              <div className="eyebrow">Payment</div>
+              <p className="m-0 mt-1 text-lg font-semibold">{PAYMENT_HEADLINE}</p>
+              <p className="m-0 mt-1 text-[14.5px] text-muted-foreground">{PAYMENT_TERMS[1][1]}</p>
+            </div>
+            <div className="flex flex-col justify-center rounded-lg border border-border bg-card p-5 text-[14.5px]">
+              <p className="m-0">Your bank needs our proforma invoice and the LC checklist.</p>
+              <Link to="/how-we-work" hash="lc" className="mt-2 inline-flex items-center gap-1 font-semibold text-brand no-underline">What your LC should say <ArrowRight className="size-4" aria-hidden="true" /></Link>
+            </div>
           </div>
         </section>
 

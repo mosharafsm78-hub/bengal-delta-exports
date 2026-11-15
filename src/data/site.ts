@@ -10,15 +10,50 @@ export const SITE = {
   updated: 'November 2026',
 }
 
+/** The buyer's journey from first visit to goods in their warehouse. [title, what happens, typical time, who acts] */
 export const STEPS: [string, string, string][] = [
-  ['Inquiry', 'Send products, quantity and destination through any quote form, or by email.', 'Day 0'],
-  ['Quote and proforma', 'We confirm specs and send a priced proforma invoice with lead time.', 'Within 24 h'],
-  ['Samples', 'Physical samples by courier, or photo and video samples for produce.', '3–10 days'],
-  ['Contract and payment', 'Sign the contract; Letter of Credit at sight or 30% advance by T/T.', '1–5 days'],
-  ['Production or harvest', 'Factory production or contract-farm harvest, with progress photos.', 'Per product'],
-  ['Quality check', 'Final inspection, lab tests and phytosanitary or other certificates.', '1–3 days'],
-  ['Export clearance', 'Customs, EXP form and shipping documents prepared and sent to your bank.', '1–2 days'],
-  ['Shipment and tracking', 'Container or air waybill tracking until arrival at your port.', '1–45 days'],
+  ['Request a proforma invoice', 'Add products and quantities to your quote, or describe any requirement, and send one request.', 'Day 0'],
+  ['Receive the proforma invoice', 'Prices, specifications, packing, Incoterm, latest shipment date and the LC terms we need, in one document.', 'Within 24 h'],
+  ['Approve samples', 'Pre-production samples by courier, or photos and video for fresh produce. Sample cost is refunded on your first order.', '3–10 days'],
+  ['Open a 100% LC at sight', 'Your bank issues an irrevocable Letter of Credit at sight for the full proforma value. We check it and confirm acceptance.', '3–7 days'],
+  ['Production or harvest', 'Starts the day the LC is accepted. You get progress photos and updates at every stage.', 'Per product'],
+  ['Inspection and certificates', 'Our final inspection or your third-party inspector, plus the certificates your market requires.', '1–3 days'],
+  ['Shipment and documents', 'We ship before the LC\'s latest shipment date and present the shipping documents through our bank.', '1–3 days'],
+  ['Bank payment and delivery', 'Your bank pays against compliant documents and releases them to you to clear the goods at your port.', '5–10 banking days'],
+]
+
+export const PAYMENT_HEADLINE = '100% irrevocable Letter of Credit (LC) at sight'
+
+export const PAYMENT_TERMS: [string, string][] = [
+  ['All orders', '100% irrevocable documentary Letter of Credit at sight, issued by your bank under UCP 600. Production or harvest starts once we receive and accept the LC.'],
+  ['Why we use LC', 'It protects both sides. Your bank pays only when our bank presents shipping documents that match the LC, which proves the goods were shipped as agreed.'],
+  ['Confirmed LC', 'For some issuing banks or countries we may ask for the LC to be confirmed by a first-class international bank. We tell you on the proforma invoice.'],
+  ['Samples', 'Sample cost and courier are quoted separately and credited against your first LC order.'],
+  ['Bank charges', 'Standard practice: charges at your bank are for your account, charges in Bangladesh are for ours.'],
+]
+
+/** What the LC should say. The exact beneficiary and bank details are printed on the proforma invoice. */
+export const LC_TERMS: [string, string][] = [
+  ['Form of credit', 'Irrevocable documentary credit, available at sight'],
+  ['Rules', 'UCP 600 (latest version)'],
+  ['Beneficiary', 'Our company name and address exactly as on the proforma invoice'],
+  ['Advising bank', 'Our bank in Bangladesh, with the SWIFT code shown on the proforma invoice'],
+  ['Amount', '100% of the proforma value (±5% tolerance for fresh produce and bulk goods)'],
+  ['Incoterm and port', 'As on the proforma: FOB Chattogram / Dhaka, CFR or CIF to your port'],
+  ['Latest shipment date', 'Order date plus the production lead time on the proforma'],
+  ['Expiry', '21 days after the latest shipment date, in Bangladesh'],
+  ['Partial shipment / transshipment', 'Allowed'],
+  ['Presentation period', 'Within 21 days after the shipment date'],
+]
+
+export const LC_DOCS = [
+  'Signed commercial invoice',
+  'Packing list',
+  'Full set of clean on-board Bill of Lading, or Air Waybill',
+  'Certificate of Origin, or REX statement on origin for duty-free EU / UK entry',
+  'Phytosanitary certificate (plants and produce) or health certificate (fish and shrimp)',
+  'Inspection certificate, if your LC asks for one',
+  'Insurance certificate (CIF orders)',
 ]
 
 export const DOCUMENTS = [
@@ -30,13 +65,6 @@ export const DOCUMENTS = [
   'Health certificate (FIQC) for fish and shrimp',
   'Pre-shipment inspection report with photos',
   'Halal, fumigation or other certificates your country requires',
-]
-
-export const PAYMENT_TERMS = [
-  ['New buyers', 'Irrevocable Letter of Credit at sight, or 30% advance by T/T and 70% against copy of shipping documents.'],
-  ['Fresh produce and frozen food', '100% advance T/T or LC at sight, because goods are perishable.'],
-  ['Repeat buyers', 'Terms agreed after two clean shipments.'],
-  ['Samples', 'Paid by the buyer, refunded against the first order above minimum quantity.'],
 ]
 
 export type Status = 'ok' | 'watch' | 'disrupted'
@@ -98,7 +126,9 @@ export const ADVISORY = 'Gulf air and sea routes through the Strait of Hormuz re
 export const FAQ: [string, string][] = [
   ['What is your minimum order?', 'It depends on the product: garments 300–1,000 pieces per style, footwear 300–600 pairs per design, fresh produce from 300–500 kg by air or one reefer by sea. Each product page shows its minimum. You can mix several products in one container.'],
   ['Are the prices on the site final?', 'No. They are indicative FOB ranges, updated November 2026. Your proforma invoice confirms the exact price for your quantity, specifications and delivery date.'],
-  ['Which payment terms do you accept?', 'Letter of Credit at sight, or T/T with 30% advance and 70% against shipping documents. Fresh produce and frozen food are 100% advance or LC at sight.'],
+  ['How do I pay?', 'Every order is paid by a 100% irrevocable Letter of Credit (LC) at sight, issued by your bank under UCP 600. Your bank pays only against shipping documents that match the LC, so your money is protected until the goods are shipped as agreed.'],
+  ['How do I open an LC?', 'Accept our proforma invoice, then give it to your bank and ask for an irrevocable LC at sight for the full amount. Our How to order page lists exactly what the LC should say. Most banks issue it in 2–5 working days.'],
+  ['Can I pay by bank transfer (T/T) instead?', 'For orders we work only on 100% LC at sight, because it protects both sides. Small sample charges can be settled separately.'],
   ['Can you make products under my brand?', 'Yes. Garments, footwear, bags, food and home textiles can carry your labels, hang tags, packaging and logos.'],
   ['Can I order a ready style instead of a custom design?', 'Yes. Every product page lists the standard types we make. Pick one and we quote it as is, or change the fabric, colour or branding with the price calculator.'],
   ['Where do Bangladeshi goods enter duty-free?', 'The EU, UK, Canada, Australia and China charge 0% on practically everything; Japan, South Korea and India on most goods. The Gulf charges 5% (0% on fresh produce) and the USA a 19% reciprocal tariff plus normal duty.'],

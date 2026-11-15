@@ -69,7 +69,7 @@ export function PriceBuilder({ family, styleIndex, onStyleChange }: { family: Fa
           type="button"
           className="btn btn-primary"
           onClick={() => {
-            basket.add({ familyId: family.id, family: family.name, style: style.n, itemId: slug(style.n), qty: q > 0 ? `${q.toLocaleString('en-US')} ${unitName(unit, q)}` : undefined, spec: quote.specParts.join(' · ') || undefined, estimate: `${money(quote.lo)}–${quote.hi.toFixed(2)}/${unit}` })
+            basket.add({ familyId: family.id, family: family.name, style: style.n, itemId: slug(style.n), qty: q > 0 ? `${q.toLocaleString('en-US')} ${unitName(unit, q)}` : undefined, spec: quote.specParts.join(' · ') || undefined, estimate: `${money(quote.lo)}–${quote.hi.toFixed(2)}/${unit}`, unitMid: (quote.lo + quote.hi) / 2, qtyNum: q > 0 ? q : undefined, unit })
             setAdded(true)
           }}
         >

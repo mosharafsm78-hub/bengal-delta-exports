@@ -66,7 +66,7 @@ function Home() {
               <button type="submit" className="rounded-full bg-brand px-6 font-semibold text-brand-ink hover:opacity-90">Search</button>
             </form>
             <ul className="mt-5 flex list-none flex-wrap gap-x-5 gap-y-1.5 p-0 text-[14px]">
-              {['Priced quote in 24 hours', 'Samples before bulk', 'Pay by bank LC or 30% advance'].map((t) => (
+              {['Proforma invoice in 24 hours', 'Samples before bulk', 'Pay by 100% LC at sight'].map((t) => (
                 <li key={t} className="flex items-center gap-1.5"><CheckCircle2 className="size-4 text-ok" aria-hidden="true" />{t}</li>
               ))}
             </ul>
@@ -209,7 +209,7 @@ function Home() {
         <SectionHead eyebrow="Buy with confidence" title="Safe for first-time buyers" />
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {[
-            [Landmark, 'Bank-secured payment', 'Letter of Credit at sight through your bank, or 30% advance with the balance against shipping documents.'],
+            [Landmark, '100% LC at sight', 'You pay through your own bank by Letter of Credit. Money is released only against shipping documents that match your LC.'],
             [FileCheck2, 'Registered exporter', 'Export Registration Certificate, trade licence, TIN and BIN. Official certificates travel with every shipment.'],
             [ShieldCheck, 'Independent inspection', 'Book SGS, Intertek or Bureau Veritas, or get our photo and video inspection report before you pay the balance.'],
             [Factory, 'Own factories', 'We make footwear in our own factories and audit every partner mill, farm and artisan group we source from.'],
@@ -228,7 +228,7 @@ function Home() {
 
       {/* Process */}
       <section className="mx-auto max-w-7xl px-4 pt-20">
-        <SectionHead eyebrow="Process" title="From inquiry to your port" link={<Link to="/how-we-work" className="inline-flex items-center gap-1 text-[15px] font-semibold text-brand no-underline">Full process {arrow}</Link>} />
+        <SectionHead eyebrow="Process" title="From first request to your port" link={<Link to="/how-we-work" className="inline-flex items-center gap-1 text-[15px] font-semibold text-brand no-underline">Full process {arrow}</Link>} />
         <ol className="m-0 grid list-none gap-px overflow-hidden rounded-lg border border-border bg-border p-0 sm:grid-cols-2 lg:grid-cols-4">
           {STEPS.map(([t, d, time], i) => (
             <li key={t} className="bg-card p-6">

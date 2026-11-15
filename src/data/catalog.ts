@@ -18,7 +18,7 @@ type Tiers = [string, number][]
 const LEAD_KNIT: Lead = [['Sampling and approval', 7, 12], ['Lab dip / colour approval', 5, 7], ['Yarn, knitting, dyeing, finishing', 10, 18], ['Cutting and printing', 3, 7], ['Sewing', 10, 20], ['Finishing, inspection, packing', 4, 7]]
 const LEAD_WOVEN: Lead = [['Sampling and approval', 10, 15], ['Lab dip / strike-off', 5, 10], ['Fabric sourcing or weaving', 15, 30], ['Cutting', 3, 6], ['Sewing', 15, 25], ['Washing (if any), finishing, inspection, packing', 5, 10]]
 const LEAD_SHOE: Lead = [['Sampling and approval', 10, 15], ['Materials and moulds (new sole)', 7, 20], ['Cutting and stitching uppers', 7, 12], ['Lasting, sole attaching', 7, 12], ['Finishing, inspection, boxing', 3, 5]]
-const LEAD_PRODUCE: Lead = [['Order confirmation and advance', 1, 2], ['Harvest from contract farms', 1, 3], ['Sorting, grading, washing, packing', 1, 1], ['Residue test and phytosanitary certificate', 1, 2], ['Cold chain to airport / port', 1, 1]]
+const LEAD_PRODUCE: Lead = [['Order confirmation and LC', 1, 2], ['Harvest from contract farms', 1, 3], ['Sorting, grading, washing, packing', 1, 1], ['Residue test and phytosanitary certificate', 1, 2], ['Cold chain to airport / port', 1, 1]]
 const LEAD_FOOD: Lead = [['Specification and label approval', 3, 7], ['Production or procurement', 7, 15], ['Lab test, halal / health certificates', 3, 7], ['Packing and loading', 2, 4]]
 const LEAD_JUTE: Lead = [['Sample and approval', 5, 10], ['Fabric weaving or yarn spinning', 7, 15], ['Cutting, printing, stitching', 7, 15], ['Inspection and baling / cartons', 2, 4]]
 

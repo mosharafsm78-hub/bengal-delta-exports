@@ -9,6 +9,10 @@ export interface BasketItem {
   qty?: string
   spec?: string
   estimate?: string
+  /** Numbers for the basket total */
+  unitMid?: number
+  qtyNum?: number
+  unit?: string
 }
 
 const KEY = 'bde-quote-basket-v2'

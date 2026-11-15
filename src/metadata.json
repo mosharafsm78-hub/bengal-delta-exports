@@ -1,15 +1,54 @@
 {
-  "default": { "title": "Bengal Delta Exports — Export hub for products from Bangladesh", "description": "Source garments, footwear, home textiles, jute, fresh vegetables, fruit, food and handicrafts from Bangladesh. Prices, specs, duty-free markets, shipping and quotes in 24 hours." },
-  "/": { "title": "Bengal Delta Exports — Export hub for products from Bangladesh", "description": "Source garments, footwear, home textiles, jute, fresh vegetables, fruit, food and handicrafts from Bangladesh. Prices, specs, duty-free markets, shipping and quotes in 24 hours." },
-  "/products": { "title": "Products — Bengal Delta Exports", "description": "Browse 26 product families and 170+ products exported from Bangladesh, with indicative FOB prices, minimum orders and lead times." },
-  "/prices": { "title": "Indicative FOB price list — Bengal Delta Exports", "description": "Indicative FOB prices for every product we export from Bangladesh, with units, minimum orders and lead times." },
-  "/duty-free-markets": { "title": "Duty-free markets for Bangladeshi goods — Bengal Delta Exports", "description": "Import duty on goods from Bangladesh in the EU, UK, USA, Canada, Australia, China, Japan, India and the Gulf, plus a landed-cost calculator." },
-  "/shipping": { "title": "Shipping from Bangladesh: modes and transit times — Bengal Delta Exports", "description": "Sea, reefer, air, land and courier shipping from Chattogram and Dhaka, transit times by destination, Incoterms and current route advisories." },
-  "/how-we-work": { "title": "How we work: order process and payment terms — Bengal Delta Exports", "description": "Eight steps from inquiry to delivery, payment terms and the export documents you receive." },
-  "/quality": { "title": "Quality and compliance — Bengal Delta Exports", "description": "Inspections, lab tests and certificates for garments, footwear, fresh produce, food and handicrafts exported from Bangladesh." },
-  "/season-calendar": { "title": "Fresh produce season calendar — Bengal Delta Exports", "description": "Month-by-month availability of Bangladeshi vegetables and fruits for export." },
-  "/about": { "title": "About us — Bengal Delta Exports", "description": "A Chattogram export trading house with its own footwear factories and audited partner mills, farms and artisan groups." },
-  "/faq": { "title": "FAQ for importers — Bengal Delta Exports", "description": "Minimum orders, payment terms, private label, duty-free access, Gulf shipping and export rules for products from Bangladesh." },
-  "/quote": { "title": "Request a quote — Bengal Delta Exports", "description": "Send your product list or any requirement and get a priced proforma invoice within 24 hours." },
-  "/photo-credits": { "title": "Photo credits — Bengal Delta Exports", "description": "Credits and licences for the photographs used on this site." }
+  "default": {
+    "title": "Bengal Delta Exports — Export hub for products from Bangladesh",
+    "description": "Source garments, footwear, home textiles, jute, fresh vegetables, fruit, food and handicrafts from Bangladesh. Prices, specs, duty-free markets, shipping and quotes in 24 hours."
+  },
+  "/": {
+    "title": "Bengal Delta Exports — Export hub for products from Bangladesh",
+    "description": "Source garments, footwear, home textiles, jute, fresh vegetables, fruit, food and handicrafts from Bangladesh. Prices, specs, duty-free markets, shipping and quotes in 24 hours."
+  },
+  "/products": {
+    "title": "Products — Bengal Delta Exports",
+    "description": "Browse 26 product families and 170+ products exported from Bangladesh, with indicative FOB prices, minimum orders and lead times."
+  },
+  "/prices": {
+    "title": "Indicative FOB price list — Bengal Delta Exports",
+    "description": "Indicative FOB prices for every product we export from Bangladesh, with units, minimum orders and lead times."
+  },
+  "/duty-free-markets": {
+    "title": "Duty-free markets for Bangladeshi goods — Bengal Delta Exports",
+    "description": "Import duty on goods from Bangladesh in the EU, UK, USA, Canada, Australia, China, Japan, India and the Gulf, plus a landed-cost calculator."
+  },
+  "/shipping": {
+    "title": "Shipping from Bangladesh: modes and transit times — Bengal Delta Exports",
+    "description": "Sea, reefer, air, land and courier shipping from Chattogram and Dhaka, transit times by destination, Incoterms and current route advisories."
+  },
+  "/how-we-work": {
+    "title": "How to order and pay (100% LC at sight) — Bengal Delta Exports",
+    "description": "The eight steps from proforma invoice to delivery, payment by 100% irrevocable Letter of Credit at sight, what your LC should say, and the documents you receive."
+  },
+  "/quality": {
+    "title": "Quality and compliance — Bengal Delta Exports",
+    "description": "Inspections, lab tests and certificates for garments, footwear, fresh produce, food and handicrafts exported from Bangladesh."
+  },
+  "/season-calendar": {
+    "title": "Fresh produce season calendar — Bengal Delta Exports",
+    "description": "Month-by-month availability of Bangladeshi vegetables and fruits for export."
+  },
+  "/about": {
+    "title": "About us — Bengal Delta Exports",
+    "description": "A Chattogram export trading house with its own footwear factories and audited partner mills, farms and artisan groups."
+  },
+  "/faq": {
+    "title": "FAQ for importers — Bengal Delta Exports",
+    "description": "Minimum orders, payment terms, private label, duty-free access, Gulf shipping and export rules for products from Bangladesh."
+  },
+  "/quote": {
+    "title": "Request a proforma invoice — Bengal Delta Exports",
+    "description": "Send your product list or any requirement and get a priced proforma invoice within 24 hours. Payment by 100% Letter of Credit at sight."
+  },
+  "/photo-credits": {
+    "title": "Photo credits — Bengal Delta Exports",
+    "description": "Credits and licences for the photographs used on this site."
+  }
 }
