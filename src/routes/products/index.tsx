@@ -6,6 +6,7 @@ import type { CategoryId } from '@/data/types'
 import { Photo } from '@/components/photo'
 import { PageHead } from '@/components/site-shell'
 import { ItemTile } from '@/components/item-tile'
+import { CAT_PHOTO, catStyle } from '@/lib/cat-style'
 
 interface ProductsSearch {
   cat?: CategoryId
@@ -21,9 +22,6 @@ export const Route = createFileRoute('/products/')({
   component: Products,
 })
 
-const CAT_PHOTO: Record<string, string> = {
-  garments: 'tshirt-family', footwear: 'slides', home: 'bath-towels', jute: 'jute-tote', produce: 'produce-market', food: 'turmeric-powder', crafts: 'seagrass-basket',
-}
 const ORDER: CategoryId[] = ['garments', 'produce', 'footwear', 'food', 'home', 'jute', 'crafts']
 
 function Products() {
@@ -94,10 +92,12 @@ function Products() {
               {cats.map((c) => {
                 const n = FAMILIES.filter((f) => f.cat === c.id).reduce((s, f) => s + f.styles.length, 0)
                 return (
-                  <Link key={c.id} to="/products" search={{ cat: c.id }} className="group text-foreground no-underline">
-                    <Photo id={CAT_PHOTO[c.id]} alt={c.name} className="aspect-square rounded-lg transition group-hover:opacity-90" />
-                    <div className="mt-2 text-[15px] leading-snug font-semibold group-hover:text-brand">{c.name}</div>
-                    <div className="num text-[13px] text-muted-foreground">{n} products</div>
+                  <Link key={c.id} to="/products" search={{ cat: c.id }} style={catStyle(c.id)} className="group overflow-hidden rounded-xl text-foreground no-underline shadow-sm ring-1 ring-black/5 transition hover:-translate-y-1 hover:shadow-md">
+                    <Photo id={CAT_PHOTO[c.id]} alt={c.name} className="aspect-square" />
+                    <div className="cat-bg px-3 py-2">
+                      <div className="text-[14px] leading-snug font-semibold">{c.name}</div>
+                      <div className="num text-[12px] opacity-85">{n} products</div>
+                    </div>
                   </Link>
                 )
               })}
@@ -109,10 +109,10 @@ function Products() {
             if (!list.length) return null
             const items = list.flatMap((f) => f.styles.map((s) => ({ f, s })))
             return (
-              <section key={c.id} id={c.id} className="mb-20 scroll-mt-40">
-                <div className="mb-6 flex flex-wrap items-end justify-between gap-3 border-b border-border pb-4">
+              <section key={c.id} id={c.id} className="mb-20 scroll-mt-40" style={catStyle(c.id)}>
+                <div className="mb-6 flex flex-wrap items-end justify-between gap-3 border-b-[3px] border-[hsl(var(--c))] pb-4">
                   <div>
-                    <h2 className="m-0 text-[clamp(1.6rem,3vw,2.1rem)]">{c.name}</h2>
+                    <h2 className="cat-text m-0 text-[clamp(1.6rem,3vw,2.1rem)]">{c.name}</h2>
                     <p className="mt-1 mb-0 text-muted-foreground">{c.blurb}</p>
                   </div>
                   {!cat && (

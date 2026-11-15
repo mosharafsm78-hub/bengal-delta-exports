@@ -30,8 +30,8 @@ jobs:
           BASE_PATH: ${{ vars.BASE_PATH || '/bengal-delta-exports/' }}
           SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://mosharafsm78-hub.github.io' }}
           VITE_SITE_URL: ${{ vars.SITE_URL || 'https://mosharafsm78-hub.github.io/bengal-delta-exports' }}
-          VITE_SUPABASE_URL: ${{ vars.SUPABASE_URL }}
-          VITE_SUPABASE_KEY: ${{ vars.SUPABASE_KEY }}
+          VITE_SUPABASE_URL: ${{ vars.SUPABASE_URL || 'https://pmyfswozvkdpqgnsiibf.supabase.co' }}
+          VITE_SUPABASE_KEY: ${{ vars.SUPABASE_KEY || 'sb_publishable_RrciEiRwRPkbU6yO6wt8Zg_BI0tSYEW' }}
         run: npm run build
       - name: Add 404 page
         run: cp dist/client/not-found/index.html dist/client/404.html && touch dist/client/.nojekyll

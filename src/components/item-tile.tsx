@@ -3,6 +3,7 @@ import type { Family, Style } from '@/data/types'
 import { Photo } from '@/components/photo'
 import { slug } from '@/lib/slug'
 import { cn } from '@/lib/utils'
+import { catStyle } from '@/lib/cat-style'
 
 const MONTH = new Date().getMonth()
 
@@ -17,6 +18,7 @@ export function ItemTile({ f, s, className }: { f: Family; s: Style; className?:
     <Link
       to="/products/$familyId/$itemId"
       params={{ familyId: f.id, itemId: slug(s.n) }}
+      style={catStyle(f.cat)}
       className={cn('group flex flex-col overflow-hidden rounded-lg border border-border bg-card text-foreground no-underline transition hover:-translate-y-0.5 hover:border-brand hover:shadow-md', className)}
     >
       <div className="relative">
@@ -25,7 +27,7 @@ export function ItemTile({ f, s, className }: { f: Family; s: Style; className?:
       </div>
       <div className="flex flex-1 flex-col p-3">
         <span className="text-[15px] leading-snug font-semibold group-hover:text-brand">{s.n}</span>
-        <span className="mt-0.5 text-xs text-muted-foreground">{f.name}</span>
+        <span className="cat-text mt-0.5 text-xs font-semibold">{f.name}</span>
         <span className="num mt-auto pt-2 text-sm font-semibold">
           ${s.p[0].toFixed(2)}–{s.p[1].toFixed(2)} <span className="font-normal text-muted-foreground">/ {unit} FOB</span>
         </span>

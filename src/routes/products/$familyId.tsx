@@ -10,6 +10,7 @@ import { inSeason } from '@/components/item-tile'
 import { basket, useBasket } from '@/lib/quote-basket'
 import { money, slug } from '@/lib/slug'
 import { PHOTOS } from '@/data/photos'
+import { catStyle } from '@/lib/cat-style'
 
 export const Route = createFileRoute('/products/$familyId')({
   loader: ({ params }) => {
@@ -56,7 +57,7 @@ function FamilyPage() {
           <div className="grid gap-10 lg:grid-cols-[1fr_1.05fr]">
             <Photo id={f.photo} alt={f.name} className="aspect-[4/3] rounded-lg" credit eager />
             <div>
-              <div className="eyebrow mb-2">{cat?.name}</div>
+              <span style={catStyle(f.cat)} className="cat-bg mb-3 inline-block rounded-full px-3 py-1 text-[12.5px] font-semibold">{cat?.name}</span>
               <h1 className="m-0 text-[clamp(2.1rem,4.4vw,3.2rem)]">{f.name}</h1>
               <p className="mt-3 text-lg font-medium text-jute">{f.tag}</p>
               <p className="mt-3 max-w-[65ch] text-muted-foreground">{f.intro}</p>
@@ -194,7 +195,7 @@ function FamilyPage() {
               <h2 className="m-0 text-[clamp(1.5rem,3vw,2rem)]">Ready to price your {f.name.toLowerCase()} order?</h2>
               <p className="mt-2 mb-0 opacity-85">Add types to your quote, then send one request for everything.</p>
             </div>
-            <Link to="/quote" className="btn bg-brand-ink text-brand">Request a quote{items.length ? ` (${items.length})` : ''}</Link>
+            <Link to="/quote" className="btn bg-brand-ink text-brand">Get a free quote{items.length ? ` (${items.length})` : ''}</Link>
           </div>
         </section>
 

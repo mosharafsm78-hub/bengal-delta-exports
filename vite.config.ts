@@ -14,7 +14,7 @@ export default defineConfig({
     tsconfigPaths({ projects: ['./tsconfig.json'] }),
     tailwindcss(),
     tanstackStart({
-      prerender: { enabled: true, crawlLinks: true, autoSubfolderIndex: true, failOnError: true, concurrency: 8 },
+      prerender: { enabled: true, crawlLinks: true, autoSubfolderIndex: true, failOnError: true, concurrency: 8, filter: (page) => !page.path.includes('?') },
       sitemap: { enabled: true, host: host + base.replace(/\/$/, '') },
       pages: [{ path: '/' }, { path: '/not-found', sitemap: { exclude: true } }],
     }),

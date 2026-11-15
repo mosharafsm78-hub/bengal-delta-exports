@@ -1,6 +1,7 @@
 import { SITE } from '@/data/site'
 
 export interface LeadPayload {
+  reference?: string
   kind: 'quote' | 'requirement' | 'question'
   items: { family: string; style: string; qty?: string; spec?: string; estimate?: string }[]
   requirement?: string

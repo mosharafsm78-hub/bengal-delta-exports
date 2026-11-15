@@ -1,23 +1,24 @@
 import { Link, useNavigate, useRouterState } from '@tanstack/react-router'
 import { useEffect, useRef, useState } from 'react'
-import { Menu, X, ShoppingBag, ChevronDown, TriangleAlert, ArrowRight, Search, Mail, MessageCircle } from 'lucide-react'
+import { Menu, X, ShoppingBag, ChevronDown, ArrowRight, Search, Mail, MessageCircle } from 'lucide-react'
 import { CATS, FAMILIES } from '@/data/catalog'
-import { ADVISORY, SITE } from '@/data/site'
+import { SITE } from '@/data/site'
 import { useBasket } from '@/lib/quote-basket'
 import { cn } from '@/lib/utils'
+import { catStyle } from '@/lib/cat-style'
 
 const PRIMARY = [
-  { to: '/prices', label: 'Price list' },
-  { to: '/duty-free-markets', label: 'Duty-free markets' },
-  { to: '/shipping', label: 'Shipping' },
   { to: '/how-we-work', label: 'How to order' },
+  { to: '/about', label: 'About us' },
+  { to: '/faq', label: 'FAQ' },
 ] as const
 
-const COMPANY = [
-  { to: '/about', label: 'About us', d: 'Who we are, offices and sourcing network' },
-  { to: '/quality', label: 'Quality & compliance', d: 'Inspections, lab tests, certificates' },
-  { to: '/season-calendar', label: 'Season calendar', d: 'When each vegetable and fruit is available' },
-  { to: '/faq', label: 'FAQ', d: 'Payments, MOQs, samples, documents' },
+const GUIDES = [
+  { to: '/prices', label: 'Price list' },
+  { to: '/duty-free-markets', label: 'Duty-free markets' },
+  { to: '/shipping', label: 'Shipping and transit' },
+  { to: '/season-calendar', label: 'Season calendar' },
+  { to: '/quality', label: 'Quality and certificates' },
 ] as const
 
 export function Logo({ size = 36 }: { size?: number }) {
@@ -74,7 +75,7 @@ function ProductsMenu() {
               const c = CATS.find((x) => x.id === cid)!
               return (
                 <div key={cid}>
-                  <Link to="/products" search={{ cat: c.id }} className="eyebrow no-underline hover:underline">{c.name}</Link>
+                  <Link to="/products" search={{ cat: c.id }} style={catStyle(c.id)} className="cat-text text-[12px] font-semibold tracking-[0.12em] uppercase no-underline hover:underline">{c.name}</Link>
                   <ul className="mt-2 grid list-none gap-0.5 p-0">
                     {FAMILIES.filter((f) => f.cat === cid).map((f) => (
                       <li key={f.id}>
@@ -90,7 +91,11 @@ function ProductsMenu() {
           </div>
         ))}
         <div className="flex flex-col gap-3 rounded-lg bg-brand-soft p-4">
-          <h4 className="m-0 text-base">Can't find it?</h4>
+          <h4 className="m-0 text-base">Buyer guides</h4>
+          <ul className="m-0 grid list-none gap-1 p-0">
+            {GUIDES.map((g) => <li key={g.to}><Link to={g.to} className="text-[14px] text-foreground no-underline hover:text-brand">{g.label}</Link></li>)}
+          </ul>
+          <h4 className="m-0 mt-2 text-base">Can't find it?</h4>
           <p className="m-0 text-sm text-muted-foreground">We source anything made or grown in Bangladesh. Tell us the product, spec and quantity.</p>
           <Link to="/quote" search={{ tab: 'requirement' }} className="mt-auto inline-flex items-center gap-1 text-sm font-semibold text-brand no-underline">Send a requirement <ArrowRight className="size-4" aria-hidden="true" /></Link>
           <Link to="/products" className="inline-flex items-center gap-1 text-sm font-semibold text-brand no-underline">All products <ArrowRight className="size-4" aria-hidden="true" /></Link>
@@ -128,13 +133,6 @@ export function SiteHeader() {
   return (
     <>
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:rounded focus:bg-card focus:px-3 focus:py-2">Skip to content</a>
-      <div className="bg-ink text-[13px] text-paper print:hidden">
-        <div className="mx-auto flex max-w-7xl items-center gap-2 px-4 py-1.5">
-          <TriangleAlert className="size-3.5 flex-none text-jute" aria-hidden="true" />
-          <span className="truncate opacity-90"><b className="font-semibold">Route advisory:</b> {ADVISORY}</span>
-          <Link to="/shipping" className="ml-auto flex-none whitespace-nowrap text-paper underline underline-offset-2">Shipping routes</Link>
-        </div>
-      </div>
       <header className="sticky top-0 z-30 print:hidden border-b border-border bg-card/95 backdrop-blur">
         <div className="relative mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 sm:gap-5">
           <Link to="/" className="flex flex-none items-center gap-2.5 text-foreground no-underline" aria-label={`${SITE.name} home`}>
@@ -151,24 +149,12 @@ export function SiteHeader() {
             {PRIMARY.map((n) => (
               <Link key={n.to} to={n.to} className={navLink} activeProps={{ className: 'bg-muted text-brand' }}>{n.label}</Link>
             ))}
-            <Dropdown label="Company" id="menu-company">
-              <ul className="m-0 grid w-80 list-none gap-0.5 rounded-xl border border-border bg-card p-2 shadow-xl">
-                {COMPANY.map((n) => (
-                  <li key={n.to}>
-                    <Link to={n.to} className="block rounded-md px-3 py-2 text-foreground no-underline hover:bg-muted">
-                      <span className="block text-[14.5px] font-semibold">{n.label}</span>
-                      <span className="block text-[13px] text-muted-foreground">{n.d}</span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </Dropdown>
           </nav>
           <div className="ml-auto flex items-center gap-2">
             <div className="hidden xl:block"><HeaderSearch /></div>
             <Link to="/quote" className="btn btn-primary px-3 py-2.5 text-[14.5px] sm:px-4">
               <ShoppingBag className="size-4" aria-hidden="true" />
-              <span className="hidden sm:inline">Request a quote</span>
+              <span className="hidden sm:inline">Get a free quote</span>
               <span className="sm:hidden">Quote</span>
               {items.length > 0 && <span className="num rounded-full bg-brand-ink px-1.5 text-xs text-brand">{items.length}</span>}
             </Link>
@@ -188,7 +174,7 @@ export function SiteHeader() {
             </div>
             <div className="eyebrow mt-4 mb-1">Buyer guide</div>
             <div className="grid grid-cols-2 gap-x-2">
-              {[...PRIMARY, ...COMPANY].map((n) => (
+              {[...PRIMARY, ...GUIDES].map((n) => (
                 <Link key={n.to} to={n.to} className="rounded-md py-2 text-[15px] font-medium text-foreground no-underline">{n.label}</Link>
               ))}
             </div>
@@ -220,7 +206,7 @@ export function SiteFooter() {
             <span className="font-display text-xl font-semibold">{SITE.name}</span>
           </div>
           <p className="mt-4 max-w-sm opacity-75">An export trading house in Chattogram, Bangladesh. Garments, footwear, home textiles, jute, fresh produce, food and handicrafts, shipped FOB, CFR or CIF worldwide.</p>
-          <Link to="/quote" className="btn mt-5 bg-paper text-ink">Request a quote <ArrowRight className="size-4" aria-hidden="true" /></Link>
+          <Link to="/quote" className="btn mt-5 bg-paper text-ink">Get a free quote <ArrowRight className="size-4" aria-hidden="true" /></Link>
         </div>
         <div>
           <h4 className="mb-3 text-[13px] font-semibold tracking-[0.12em] uppercase opacity-60">Products</h4>
@@ -233,7 +219,7 @@ export function SiteFooter() {
         <div>
           <h4 className="mb-3 text-[13px] font-semibold tracking-[0.12em] uppercase opacity-60">Buyer guide</h4>
           <ul className="m-0 grid list-none gap-2 p-0">
-            {[...PRIMARY, ...COMPANY].map((n) => (
+            {[...PRIMARY, ...GUIDES].map((n) => (
               <li key={n.to}><Link to={n.to} className="text-paper no-underline opacity-85 hover:opacity-100">{n.label}</Link></li>
             ))}
           </ul>
