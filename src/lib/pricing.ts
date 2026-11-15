@@ -39,7 +39,8 @@ export function priceFor(f: Family, s: Style, picks: Record<string, number>, qty
     if (g.opts) {
       const i = picks[g.name] ?? 0
       add += g.opts[i][1]
-      if (g.opts[i][1] !== 0 || i !== 0) specParts.push(`${g.name}: ${g.opts[i][0]}`)
+      const def = Math.max(0, g.opts.findIndex((o) => o[1] === 0))
+      if (i !== def) specParts.push(`${g.name}: ${g.opts[i][0]}`)
     }
     if (g.tiers) {
       moqQty = tierMin(g.tiers[0][0])
