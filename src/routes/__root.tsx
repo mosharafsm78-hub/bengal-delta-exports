@@ -27,7 +27,7 @@ export const Route = createRootRoute({
           name: SITE.name,
           description: 'Export trading house in Chattogram, Bangladesh: garments, footwear, home textiles, jute, fresh produce, food and handicrafts.',
           email: SITE.email,
-          address: { '@type': 'PostalAddress', addressLocality: 'Chattogram', addressCountry: 'BD' },
+          address: { '@type': 'PostalAddress', streetAddress: 'Jalalabad Co-operative Housing Society, West Khulshi', addressLocality: 'Chattogram', addressCountry: 'BD' },
         }),
       },
     ],

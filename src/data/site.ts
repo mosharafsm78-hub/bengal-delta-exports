@@ -6,7 +6,7 @@ export const SITE = {
   whatsapp: '', // international digits only, e.g. 88018XXXXXXXX — leave empty to hide WhatsApp buttons
   whatsappDisplay: '', // e.g. +880 18XX-XXXXXX
   phone: '', // e.g. +880 18XX-XXXXXX — shown in the footer and About page when filled
-  address: '', // full street address of the Chattogram office — shown when filled
+  address: 'Jalalabad Co-operative Housing Society, West Khulshi, Chattogram, Bangladesh',
   founder: 'Mosharaf Hossain',
   founderRole: 'Founder and Managing Director',
   /** Registration numbers are shown on the About page only when filled in. */
