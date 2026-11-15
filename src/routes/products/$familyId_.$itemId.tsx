@@ -43,6 +43,12 @@ type Tab = 'details' | 'shipping' | 'duty' | 'quality' | 'order'
 
 function ItemPage() {
   const { f, s } = Route.useLoaderData()
+  // Keyed by product so photo, quantity and options reset when moving between products.
+  return <ItemBody key={`${f.id}/${s.n}`} />
+}
+
+function ItemBody() {
+  const { f, s } = Route.useLoaderData()
   const cat = catById(f.cat)
   const unit = s.u ?? 'pc'
   const isProduce = f.cat === 'produce'

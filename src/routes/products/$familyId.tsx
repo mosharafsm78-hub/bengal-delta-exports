@@ -31,6 +31,11 @@ export const Route = createFileRoute('/products/$familyId')({
 
 function FamilyPage() {
   const { family: f } = Route.useLoaderData()
+  return <FamilyBody key={f.id} />
+}
+
+function FamilyBody() {
+  const { family: f } = Route.useLoaderData()
   const cat = catById(f.cat)
   const [styleIndex, setStyleIndex] = useState(0)
   const items = useBasket()
