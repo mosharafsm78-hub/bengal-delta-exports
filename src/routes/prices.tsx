@@ -17,7 +17,7 @@ function Prices() {
   const rows = fams.flatMap((f) => f.styles.filter((s) => !q || `${s.n} ${f.name}`.toLowerCase().includes(q.toLowerCase())).map((s) => ({ f, s })))
   return (
     <div className="mx-auto max-w-7xl px-4 pt-12">
-      <PageHead eyebrow="Price list · November 2026" title="Indicative FOB price list" lead="FOB means packed, cleared for export and loaded at Chattogram port (sea) or Dhaka airport (air). Freight and insurance are quoted per shipment. “Market data” prices come from published Bangladeshi supplier listings; “Estimate” prices are our costings, confirmed on quote." />
+      <PageHead eyebrow="Price list · November 2026" title="Indicative FOB price list" lead="FOB means packed, cleared for export and loaded at Chattogram port (sea) or Dhaka airport (air). Freight and insurance are quoted per shipment. “Market-checked” prices are compared with published Bangladeshi supplier listings; “Indicative” prices are our costings. Both are confirmed on your proforma invoice." />
       <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-center">
         <input aria-label="Filter price list" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Filter by product…" className="field lg:w-72" />
         <div className="flex flex-wrap gap-2">
@@ -44,7 +44,7 @@ function Prices() {
                   <td className="px-4 py-2.5">{s.u ?? 'pc'}</td>
                   <td className="px-4 py-2.5 text-sm">{f.moq}</td>
                   <td className="px-4 py-2.5 text-sm">{s.season ?? lead}</td>
-                  <td className="px-4 py-2.5">{s.b === 'M' ? <Pill>Market data</Pill> : <Pill tone="jute">Estimate</Pill>}</td>
+                  <td className="px-4 py-2.5">{s.b === 'M' ? <Pill>Market-checked price</Pill> : <Pill tone="jute">Indicative price</Pill>}</td>
                 </tr>
               )
             })}

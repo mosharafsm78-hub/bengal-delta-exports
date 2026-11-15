@@ -105,7 +105,7 @@ function FamilyPage() {
                     <p className="m-0 text-[14.5px] text-muted-foreground">{s.d}</p>
                     <div className="num text-xl font-semibold">{money(s.p[0])}–{s.p[1].toFixed(2)} <span className="text-sm font-normal text-muted-foreground">/ {s.u ?? 'pc'} FOB</span></div>
                     <div className="flex flex-wrap gap-1.5">
-                      {s.b === 'M' ? <Pill>Market data</Pill> : <Pill tone="jute">Estimate</Pill>}
+                      {s.b === 'M' ? <Pill>Market-checked price</Pill> : <Pill tone="jute">Indicative price</Pill>}
                       {s.season && <Pill tone="ok">Season: {s.season}</Pill>}
                     </div>
                     <div className="mt-auto grid grid-cols-2 gap-2 pt-3">

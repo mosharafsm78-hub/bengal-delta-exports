@@ -11,14 +11,15 @@ import { leadsOnline, mailtoFor, submitLead, type LeadPayload } from '@/lib/lead
 import { slug } from '@/lib/slug'
 import { cn } from '@/lib/utils'
 
-interface QuoteSearch { tab?: 'requirement' }
+interface QuoteSearch { tab?: 'requirement'; msg?: string }
 
 export const Route = createFileRoute('/quote')({
-  validateSearch: (s: Record<string, unknown>): QuoteSearch => ({ tab: s.tab === 'requirement' ? 'requirement' : undefined }),
+  validateSearch: (s: Record<string, unknown>): QuoteSearch => ({ tab: s.tab === 'requirement' ? 'requirement' : undefined, msg: typeof s.msg === 'string' ? s.msg.slice(0, 300) : undefined }),
   head: () => pageHead('/quote'),
   component: QuotePage,
 })
 
+const COUNTRIES = ['Australia', 'Austria', 'Bahrain', 'Belgium', 'Canada', 'China', 'Czech Republic', 'Denmark', 'Finland', 'France', 'Germany', 'Greece', 'Hong Kong', 'India', 'Indonesia', 'Ireland', 'Italy', 'Japan', 'Kuwait', 'Malaysia', 'Maldives', 'Nepal', 'Netherlands', 'New Zealand', 'Norway', 'Oman', 'Poland', 'Portugal', 'Qatar', 'Saudi Arabia', 'Singapore', 'South Africa', 'South Korea', 'Spain', 'Sri Lanka', 'Sweden', 'Switzerland', 'Thailand', 'Turkey', 'United Arab Emirates', 'United Kingdom', 'United States', 'Vietnam']
 const CERTS = ['GlobalGAP', 'Halal', 'OEKO-TEX', 'GOTS / organic', 'BSCI', 'HACCP']
 const label = 'mb-1.5 block text-sm font-semibold'
 
@@ -37,7 +38,7 @@ function QuotePage() {
   const [lastPayload, setLastPayload] = useState<LeadPayload | null>(null)
   const [pick, setPick] = useState('')
   const [certs, setCerts] = useState<string[]>([])
-  const [form, setForm] = useState({ quantity: '', unit: 'pieces', requirement: '', country: '', port: '', incoterm: 'FOB Bangladesh', neededBy: '', company: '', buyerType: 'Importer / distributor', name: '', email: '', phone: '', website: '', notes: '', consent: false, hp: '' })
+  const [form, setForm] = useState({ quantity: '', unit: 'pieces', requirement: search.msg ?? '', country: '', port: '', incoterm: 'FOB Bangladesh', neededBy: '', company: '', buyerType: 'Importer / distributor', name: '', email: '', phone: '', website: '', notes: '', consent: false, hp: '' })
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => setForm((f) => ({ ...f, [k]: e.target.value }))
 
   if (done) {
@@ -119,7 +120,11 @@ function QuotePage() {
                       <div className="min-w-0 flex-1">
                         <Link to="/products/$familyId/$itemId" params={{ familyId: i.familyId, itemId: i.itemId ?? slug(i.style) }} className="font-semibold text-foreground no-underline hover:text-brand">{i.style}</Link>
                         <span className="text-muted-foreground"> · {i.family}</span>
-                        <div className="text-xs text-muted-foreground">{[i.qty && `Qty ${i.qty}`, i.spec, i.estimate && `est. ${i.estimate}`].filter(Boolean).join(' · ')}</div>
+                        <div className="text-xs text-muted-foreground">{[i.spec, i.estimate && `est. ${i.estimate}`].filter(Boolean).join(' · ')}</div>
+                        <label className="mt-1.5 flex items-center gap-2 text-xs">
+                          <span className="text-muted-foreground">Quantity</span>
+                          <input defaultValue={i.qty ?? ''} placeholder="e.g. 3,000 pieces" aria-label={`Quantity for ${i.style}`} onBlur={(e) => { const v = e.target.value.trim(); if (v !== (i.qty ?? '')) basket.add({ ...i, qty: v || undefined }) }} className="w-40 rounded border border-input bg-card px-2 py-1 text-[13px]" />
+                        </label>
                       </div>
                       <button type="button" onClick={() => basket.remove(i.key)} className="rounded p-2 text-danger hover:bg-danger-soft" aria-label={`Remove ${i.style}`}><Trash2 className="size-4" /></button>
                     </li>
@@ -154,7 +159,7 @@ function QuotePage() {
           <div className="grid gap-4 sm:grid-cols-2">
             <div><label htmlFor="qty" className={label}>Total quantity {items.some((i) => i.qty) && kind === 'quote' ? <span className="font-normal text-muted-foreground">(optional, per item set above)</span> : '*'}</label><input id="qty" className="field" value={form.quantity} onChange={set('quantity')} placeholder="e.g. 5000" /></div>
             <div><label htmlFor="unit" className={label}>Unit</label><select id="unit" className="field" value={form.unit} onChange={set('unit')}>{['pieces', 'pairs', 'sets', 'kg', 'metric tons', 'litres', 'cartons', '20 ft containers', '40 ft containers'].map((u) => <option key={u}>{u}</option>)}</select></div>
-            <div><label htmlFor="country" className={label}>Destination country *</label><input id="country" autoComplete="country-name" className="field" value={form.country} onChange={set('country')} placeholder="e.g. Germany" /></div>
+            <div><label htmlFor="country" className={label}>Destination country *</label><input id="country" list="countries" autoComplete="country-name" className="field" value={form.country} onChange={set('country')} placeholder="e.g. Germany" /><datalist id="countries">{COUNTRIES.map((c) => <option key={c} value={c} />)}</datalist></div>
             <div><label htmlFor="port" className={label}>Destination port or city</label><input id="port" className="field" value={form.port} onChange={set('port')} placeholder="e.g. Hamburg" /></div>
             <div><label htmlFor="inc" className={label}>Price basis</label><select id="inc" className="field" value={form.incoterm} onChange={set('incoterm')}>{['FOB Bangladesh', 'CFR / CNF', 'CIF', 'DAP / DDP', 'Not sure, advise me'].map((u) => <option key={u}>{u}</option>)}</select></div>
             <div><label htmlFor="when" className={label}>Needed by</label><input id="when" type="month" className="field" value={form.neededBy} onChange={set('neededBy')} /></div>

@@ -128,19 +128,19 @@ export function SiteHeader() {
   return (
     <>
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:rounded focus:bg-card focus:px-3 focus:py-2">Skip to content</a>
-      <div className="bg-ink text-[13px] text-paper">
+      <div className="bg-ink text-[13px] text-paper print:hidden">
         <div className="mx-auto flex max-w-7xl items-center gap-2 px-4 py-1.5">
           <TriangleAlert className="size-3.5 flex-none text-jute" aria-hidden="true" />
           <span className="truncate opacity-90"><b className="font-semibold">Route advisory:</b> {ADVISORY}</span>
           <Link to="/shipping" className="ml-auto flex-none whitespace-nowrap text-paper underline underline-offset-2">Shipping routes</Link>
         </div>
       </div>
-      <header className="sticky top-0 z-30 border-b border-border bg-card/95 backdrop-blur">
-        <div className="relative mx-auto flex h-16 max-w-7xl items-center gap-5 px-4">
+      <header className="sticky top-0 z-30 print:hidden border-b border-border bg-card/95 backdrop-blur">
+        <div className="relative mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 sm:gap-5">
           <Link to="/" className="flex flex-none items-center gap-2.5 text-foreground no-underline" aria-label={`${SITE.name} home`}>
             <Logo />
             <span className="leading-none">
-              <span className="block font-display text-[19px] font-semibold tracking-tight">{SITE.name}</span>
+              <span className="block font-display text-[17px] font-semibold tracking-tight sm:text-[19px]">{SITE.name}</span>
               <span className="mt-1 hidden text-[10.5px] font-medium tracking-[0.12em] text-muted-foreground uppercase sm:block">Bangladesh export hub</span>
             </span>
           </Link>
@@ -166,7 +166,7 @@ export function SiteHeader() {
           </nav>
           <div className="ml-auto flex items-center gap-2">
             <div className="hidden xl:block"><HeaderSearch /></div>
-            <Link to="/quote" className="btn btn-primary px-4 py-2.5 text-[14.5px]">
+            <Link to="/quote" className="btn btn-primary px-3 py-2.5 text-[14.5px] sm:px-4">
               <ShoppingBag className="size-4" aria-hidden="true" />
               <span className="hidden sm:inline">Request a quote</span>
               <span className="sm:hidden">Quote</span>
@@ -212,7 +212,7 @@ export function ContactLinks({ text, className }: { text?: string; className?: s
 
 export function SiteFooter() {
   return (
-    <footer className="mt-24 bg-ink text-[14.5px] text-paper">
+    <footer className="mt-24 bg-ink print:hidden text-[14.5px] text-paper">
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
         <div>
           <div className="flex items-center gap-2.5">

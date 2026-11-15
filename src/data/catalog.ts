@@ -98,7 +98,7 @@ export const FAMILIES: Family[] = [
     certs: APPAREL_CERTS, tests: APPAREL_TESTS,
     config: { baseFrom: 'styles', groups: [
       { name: 'Fabric weight', opts: [['Light 120–150 GSM', -0.15], ['Standard 160–180 GSM', 0], ['Mid 190–220 GSM', 0.35], ['Heavy 230–280 GSM', 0.85]] },
-      { name: 'Yarn / fibre', opts: [['Carded open-end cotton', -0.1], ['Combed ring-spun cotton', 0.2], ['Compact combed cotton', 0.35], ['Organic cotton (GOTS)', 0.6], ['CVC 60/40', -0.05], ['100% polyester', 0], ['Cotton/elastane 95/5', 0.3]] },
+      { name: 'Yarn / fibre', opts: [['Carded ring-spun cotton (standard)', 0], ['Carded open-end cotton', -0.1], ['Combed ring-spun cotton', 0.2], ['Compact combed cotton', 0.35], ['Organic cotton (GOTS)', 0.6], ['CVC 60/40', -0.05], ['100% polyester', 0], ['Cotton/elastane 95/5', 0.3]] },
       { name: 'Decoration', opts: [['None (blank)', 0], ['Screen print 1 colour', 0.2], ['Screen print 3–4 colours', 0.4], ['Embroidery (small logo)', 0.45], ['DTF full colour', 0.7], ['Sublimation all-over', 0.9]] },
       { name: 'Finish', opts: [['Standard', 0], ['Enzyme wash + silicone', 0.15], ['Garment / acid wash', 0.55]] },
       { name: 'Quantity per style', tiers: QTY_TIERS }] },

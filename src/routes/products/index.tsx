@@ -22,7 +22,7 @@ export const Route = createFileRoute('/products/')({
 })
 
 const CAT_PHOTO: Record<string, string> = {
-  garments: 'tshirt-family', footwear: 'slides', home: 'bath-towels', jute: 'jute-tote', produce: 'produce-market', food: 'turmeric-powder', crafts: 'nakshi-kantha',
+  garments: 'tshirt-family', footwear: 'slides', home: 'bath-towels', jute: 'jute-tote', produce: 'produce-market', food: 'turmeric-powder', crafts: 'seagrass-basket',
 }
 const ORDER: CategoryId[] = ['garments', 'produce', 'footwear', 'food', 'home', 'jute', 'crafts']
 

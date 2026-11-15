@@ -56,6 +56,7 @@ function ItemPage() {
 
   const q = parseFloat(qty.replace(/,/g, '')) || 0
   const quote = useMemo(() => priceFor(f, s, picks, q), [f, s, picks, q])
+  const mid = Math.round(((quote.lo + quote.hi) / 2) * 100) / 100
   const dutyPct = DUTY_PRESETS[market][isProduce ? 2 : 1]
   const spec = [...quote.specParts, q > 0 ? `Qty: ${q.toLocaleString('en-US')} ${unitName(unit, q)}` : ''].filter(Boolean).join(' · ')
   const inBasket = items.some((b) => b.familyId === f.id && b.style === s.n)
@@ -76,12 +77,12 @@ function ItemPage() {
   }
 
   const add = () => {
-    basket.add({ familyId: f.id, family: f.name, style: s.n, itemId: slug(s.n), qty: q > 0 ? `${q.toLocaleString('en-US')} ${unitName(unit, q)}` : undefined, spec: quote.specParts.join(' · ') || undefined, estimate: `${money(quote.lo)}–${quote.hi.toFixed(2)}/${unit}` })
+    basket.add({ familyId: f.id, family: f.name, style: s.n, itemId: slug(s.n), qty: q > 0 ? `${q.toLocaleString('en-US')} ${unitName(unit, q)}` : undefined, spec: quote.specParts.join(' · ') || undefined, estimate: `≈${money(mid)}/${unit} (range ${money(quote.lo)}–${quote.hi.toFixed(2)})` })
     setAdded(true)
   }
 
   return (
-    <div>
+    <div className="pb-20 lg:pb-0 print:pb-0">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productJson) }} />
       <div className="mx-auto max-w-7xl px-4 pt-6">
         <nav aria-label="Breadcrumb" className="text-[13.5px] text-muted-foreground">
@@ -119,7 +120,7 @@ function ItemPage() {
           <h1 className="mt-2 mb-0 text-[clamp(2rem,4vw,2.8rem)]">{s.n}</h1>
           <p className="mt-3 text-[17px] text-muted-foreground">{s.d}</p>
           <div className="mt-3 flex flex-wrap gap-2">
-            {s.b === 'M' ? <Pill>Price from market data</Pill> : <Pill tone="jute">Price: our estimate</Pill>}
+            {s.b === 'M' ? <Pill>Market-checked price</Pill> : <Pill tone="jute">Indicative price</Pill>}
             {s.cal && (inSeason(s) ? <Pill tone="ok">In season now</Pill> : <Pill tone="warn">Out of season now</Pill>)}
             {s.season && <Pill tone="ok">Season: {s.season}</Pill>}
             <Pill>HS {f.hs.replace(/\s*\(.*?\)/g, '').split('·')[0].trim()}</Pill>
@@ -128,10 +129,11 @@ function ItemPage() {
           <div className="mt-6 rounded-lg border border-border bg-card p-5 shadow-sm">
             <div className="flex flex-wrap items-end justify-between gap-2">
               <div>
-                <div className="text-[13px] text-muted-foreground">Unit price, FOB Bangladesh</div>
-                <div className="num font-display text-[34px] leading-tight font-semibold text-brand">
-                  {money(quote.lo)}–{quote.hi.toFixed(2)} <span className="font-sans text-base font-normal text-muted-foreground">/ {unitName(unit, 1)}</span>
+                <div className="text-[13px] text-muted-foreground">Estimated unit price, FOB Bangladesh</div>
+                <div className="num font-display text-[36px] leading-tight font-semibold text-brand">
+                  {money(mid)} <span className="font-sans text-base font-normal text-muted-foreground">/ {unitName(unit, 1)}</span>
                 </div>
+                <div className="num text-[13px] text-muted-foreground">Range {money(quote.lo)}–{quote.hi.toFixed(2)} depending on exact spec and factory</div>
               </div>
               {quote.tierLabel && <span className="rounded-full bg-muted px-2.5 py-1 text-[12.5px]">Volume band: {quote.tierLabel}</span>}
             </div>
@@ -170,16 +172,17 @@ function ItemPage() {
 
             <div className="mt-5 rounded-md bg-brand-soft p-4">
               <div className="text-[13px] text-muted-foreground">Estimated order value (FOB)</div>
-              <div className="num font-display text-[28px] leading-tight font-semibold">
-                {quote.total ? `${usd(quote.total[0])} – ${usd(quote.total[1])}` : 'Enter a quantity'}
+              <div className="num font-display text-[30px] leading-tight font-semibold">
+                {q > 0 ? `≈ ${usd(mid * q)}` : 'Enter a quantity'}
               </div>
+              {q > 0 && <div className="num text-[13px] text-muted-foreground">{q.toLocaleString('en-US')} {unitName(unit, q)} × {money(mid)} · range {usd(quote.lo * q)}–{usd(quote.hi * q)}</div>}
               <div className="mt-3 grid grid-cols-[1fr_auto] items-center gap-2 border-t border-brand/15 pt-3 text-[13.5px]">
                 <label htmlFor="mk" className="text-muted-foreground">Import duty in</label>
                 <select id="mk" value={market} onChange={(e) => setMarket(Number(e.target.value))} className="rounded-md border border-input bg-card px-2 py-1 text-[13.5px]">
                   {DUTY_PRESETS.map((d, i) => <option key={d[0]} value={i}>{d[0]}</option>)}
                 </select>
                 <span className="text-muted-foreground">Duty at your border</span>
-                <span className="num text-right font-semibold">{dutyPct === null ? 'Ask your broker' : dutyPct === 0 ? '0% — duty-free' : `${dutyPct}% (≈ ${quote.total ? usd(((quote.total[0] + quote.total[1]) / 2) * dutyPct / 100) : '—'})`}</span>
+                <span className="num text-right font-semibold">{dutyPct === null ? 'Ask your broker' : dutyPct === 0 ? '0% — duty-free' : `${dutyPct}%${q > 0 ? ` (≈ ${usd((mid * q * dutyPct) / 100)})` : ''}`}</span>
               </div>
               <p className="mt-2 text-[12px] text-muted-foreground">Freight is quoted per shipment. Your proforma invoice confirms the final price.</p>
             </div>
@@ -189,6 +192,11 @@ function ItemPage() {
               <Link to="/quote" onClick={() => { if (!inBasket && !added) add() }} className="btn btn-outline">Get my price in 24 h <ArrowRight className="size-4" aria-hidden="true" /></Link>
             </div>
             {(added || inBasket) && <p className="mt-2 text-center text-[13px]"><Link to="/quote" className="font-semibold text-brand">Review your quote ({items.length} {items.length === 1 ? 'item' : 'items'}) →</Link></p>}
+            <div className="mt-3 flex flex-wrap justify-center gap-x-5 gap-y-1 text-[13.5px] print:hidden">
+              <Link to="/quote" search={{ tab: 'requirement', msg: `Sample request: ${s.n} (${f.name}). Please quote sample cost and courier time to my country.` }} className="font-semibold text-brand">Order a sample</Link>
+              <Link to="/quote" search={{ tab: 'requirement', msg: `Question about ${s.n} (${f.name}): ` }} className="font-semibold text-brand">Ask a question</Link>
+              <button type="button" onClick={() => window.print()} className="font-semibold text-brand">Save spec sheet (PDF)</button>
+            </div>
           </div>
 
           <ul className="mt-5 grid list-none gap-2 p-0 text-[14px] sm:grid-cols-2">
@@ -204,6 +212,15 @@ function ItemPage() {
           </ul>
         </div>
       </section>
+
+      {/* Mobile sticky buy bar */}
+      <div className="fixed inset-x-0 bottom-0 z-30 flex items-center gap-3 border-t border-border bg-card/95 px-4 py-3 backdrop-blur lg:hidden print:hidden">
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-[13px] text-muted-foreground">{s.n}</div>
+          <div className="num font-semibold">{money(mid)} / {unitName(unit, 1)}{q > 0 ? ` · ≈ ${usd(mid * q)}` : ''}</div>
+        </div>
+        <button type="button" onClick={add} className="btn btn-primary px-4 py-2.5 text-sm">{added || inBasket ? 'Added ✓' : 'Add to quote'}</button>
+      </div>
 
       {/* Key facts */}
       <section className="border-y border-border bg-card">

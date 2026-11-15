@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
-import { Search, PackageCheck, PenTool, Compass, Globe2, Ship, ShieldCheck, ArrowRight, Leaf, Factory, FileCheck2, Landmark } from 'lucide-react'
+import { Search, PackageCheck, PenTool, Compass, Globe2, Ship, ShieldCheck, ArrowRight, Leaf, Factory, FileCheck2, Landmark, CheckCircle2 } from 'lucide-react'
 import { pageHead } from '@/lib/head'
 import { CATS, FAMILIES } from '@/data/catalog'
 import { STEPS } from '@/data/site'
@@ -13,7 +13,7 @@ export const Route = createFileRoute('/')({
 })
 
 const CAT_PHOTO: Record<string, string> = {
-  garments: 'tshirt-family', footwear: 'slides', home: 'bath-towels', jute: 'jute-tote', produce: 'produce-market', food: 'turmeric-powder', crafts: 'nakshi-kantha',
+  garments: 'tshirt-family', footwear: 'slides', home: 'bath-towels', jute: 'jute-tote', produce: 'produce-market', food: 'turmeric-powder', crafts: 'seagrass-basket',
 }
 const MONTH_NAME = new Date().toLocaleString('en-GB', { month: 'long' })
 
@@ -65,7 +65,12 @@ function Home() {
               </div>
               <button type="submit" className="rounded-full bg-brand px-6 font-semibold text-brand-ink hover:opacity-90">Search</button>
             </form>
-            <div className="mt-5 flex flex-wrap items-center gap-2 text-[13.5px]">
+            <ul className="mt-5 flex list-none flex-wrap gap-x-5 gap-y-1.5 p-0 text-[14px]">
+              {['Priced quote in 24 hours', 'Samples before bulk', 'Pay by bank LC or 30% advance'].map((t) => (
+                <li key={t} className="flex items-center gap-1.5"><CheckCircle2 className="size-4 text-ok" aria-hidden="true" />{t}</li>
+              ))}
+            </ul>
+            <div className="mt-4 flex flex-wrap items-center gap-2 text-[13.5px]">
               <span className="text-muted-foreground">Popular:</span>
               {[['T-shirts', 'tshirts'], ['Fresh vegetables', 'vegetables'], ['Mango', 'fruits'], ['Jute bags', 'jute-bags'], ['Sneakers', 'casual-footwear']].map(([l, id]) => (
                 <Link key={id} to="/products/$familyId" params={{ familyId: id }} className="rounded-full border border-border px-2.5 py-0.5 text-foreground no-underline hover:border-brand hover:text-brand">{l}</Link>
