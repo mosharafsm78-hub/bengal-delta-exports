@@ -79,3 +79,47 @@ export async function submitLead(p: LeadPayload): Promise<'saved' | 'email'> {
   }
   return 'saved'
 }
+
+export interface SupplierPayload {
+  reference: string
+  company: string
+  contactName: string
+  email: string
+  phone: string
+  district?: string
+  categories: string[]
+  products: string
+  capacity?: string
+  businessType?: string
+  hasTradeLicence: boolean
+  hasErc: boolean
+  certificates: string[]
+  exportedBefore?: string
+  website?: string
+  notes?: string
+}
+
+/** Saves a supplier application. Falls back to the buyer's email app when the database is not configured. */
+export async function submitSupplier(p: SupplierPayload): Promise<'saved' | 'email'> {
+  if (!leadsOnline) {
+    const body = Object.entries(p).map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`).join('\n')
+    window.location.href = `mailto:${SITE.email}?subject=${encodeURIComponent(`Supplier application — ${p.company}`)}&body=${encodeURIComponent(body)}`
+    return 'email'
+  }
+  const res = await fetch(`${URL_}/rest/v1/rpc/bde_submit_supplier`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', apikey: KEY!, Authorization: `Bearer ${KEY}` },
+    body: JSON.stringify({ p }),
+  })
+  if (!res.ok) {
+    let msg = 'Something went wrong. Please try again, or email us.'
+    try {
+      const j = (await res.json()) as { message?: string }
+      if (j.message && j.message.length < 120) msg = j.message
+    } catch {
+      /* keep default */
+    }
+    throw new Error(msg)
+  }
+  return 'saved'
+}

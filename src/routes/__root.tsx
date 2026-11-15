@@ -1,5 +1,5 @@
 import { HeadContent, Outlet, Scripts, createRootRoute } from '@tanstack/react-router'
-import { SiteFooter, SiteHeader } from '@/components/site-shell'
+import { SiteFooter, SiteHeader, WhatsAppFab } from '@/components/site-shell'
 import { SITE } from '@/data/site'
 import '../styles.css'
 
@@ -44,6 +44,7 @@ function RootLayout() {
         <Outlet />
       </main>
       <SiteFooter />
+      <WhatsAppFab />
     </>
   )
 }

@@ -4,7 +4,13 @@ export const SITE = {
   tagline: 'Sourced in Bangladesh · Shipped worldwide',
   email: 'sales@bengaldeltaexports.com',
   whatsapp: '', // international digits only, e.g. 88018XXXXXXXX — leave empty to hide WhatsApp buttons
-  whatsappDisplay: '',
+  whatsappDisplay: '', // e.g. +880 18XX-XXXXXX
+  phone: '', // e.g. +880 18XX-XXXXXX — shown in the footer and About page when filled
+  address: '', // full street address of the Chattogram office — shown when filled
+  founder: 'Mosharaf Hossain',
+  founderRole: 'Founder and Managing Director',
+  /** Registration numbers are shown on the About page only when filled in. */
+  registration: { erc: '', tradeLicence: '', tin: '', bin: '' },
   hours: 'Sat–Thu, 9:00–19:00 Bangladesh time (GMT+6)',
   offices: ['Chattogram (head office)', 'Dhaka'],
   updated: 'November 2026',
@@ -76,8 +82,8 @@ export const DUTY: { market: string; short: string; duty: string; zero: boolean;
   { market: 'Australia', short: 'Australia', duty: '0% on 100% of lines', zero: true, scheme: 'LDC preference, extended to at least 2034.', proof: 'Origin declaration', status: 'ok', statusText: 'Normal' },
   { market: 'China', short: 'China', duty: '0% on 100% of lines (quota goods within quota)', zero: true, scheme: "China's zero-tariff treatment for LDCs, in force since 1 Dec 2024. About 9 days by sea from Chattogram.", proof: 'Certificate of origin', status: 'ok', statusText: 'Normal' },
   { market: 'Japan', short: 'Japan', duty: '0% on most goods', zero: true, scheme: "LDC preference today. The Bangladesh–Japan EPA signed on 6 Feb 2026 makes 7,379 products (about 97% of Bangladesh's exports, including garments) duty-free permanently once Japan ratifies it.", proof: 'Certificate of origin', status: 'ok', statusText: 'Normal' },
-  { market: 'South Korea', short: 'South Korea', duty: '0% on 95% of lines (4,802 products)', zero: true, scheme: "Korea's preferential tariff for LDCs.", proof: 'Certificate of origin', status: 'ok', statusText: 'Normal' },
-  { market: 'India', short: 'India', duty: '0% on most lines', zero: true, scheme: 'SAFTA. Since 2025 India bars land-port entry for Bangladeshi garments, processed food, jute goods, furniture and some other items; these go by sea.', proof: 'SAFTA certificate of origin', status: 'watch', statusText: 'Sea only for many goods' },
+  { market: 'South Korea', short: 'South Korea', duty: '0% on most products', zero: true, scheme: "Korea's preferential tariff for LDCs covers most products; some farm and fishery lines are excluded, so we confirm your HS code on the proforma.", proof: 'Certificate of origin', status: 'ok', statusText: 'Normal' },
+  { market: 'India', short: 'India', duty: '0% on most lines', zero: true, scheme: 'SAFTA. Since May 2025 India allows Bangladeshi garments only through Kolkata and Nhava Sheva seaports, and jute products only through Nhava Sheva; fruit, processed food and some other goods cannot enter by land.', proof: 'SAFTA certificate of origin', status: 'watch', statusText: 'Sea only for many goods' },
   { market: 'Gulf states (Saudi Arabia, UAE, Qatar, Kuwait, Bahrain, Oman)', short: 'Gulf states', duty: '0% fresh vegetables and fruit · 5% most other goods', zero: false, scheme: 'GCC common external tariff on CIF value. Saudi Arabia raised some food lines to 5–15% in July 2026. VAT is separate (UAE 5%, Saudi 15%).', proof: 'Certificate of origin, legalised where required', status: 'disrupted', statusText: 'Saudi normal by air; others disrupted' },
   { market: 'Singapore', short: 'Singapore', duty: '0% on almost all goods', zero: true, scheme: 'Duty applies only to alcohol, tobacco, motor vehicles and petroleum. GST applies.', proof: 'Commercial documents', status: 'ok', statusText: 'Normal' },
   { market: 'USA', short: 'USA', duty: '19% reciprocal tariff + normal duty', zero: false, scheme: 'US–Bangladesh reciprocal trade agreement of 9 Feb 2026 set the extra tariff at 19%. Garments made with US cotton or US man-made fibre qualify for a 0% reciprocal rate; ask us for US-cotton options.', proof: 'Certificate of origin, US-input records for the 0% route', status: 'ok', statusText: 'Normal' },

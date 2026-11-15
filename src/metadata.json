@@ -50,5 +50,9 @@
   "/photo-credits": {
     "title": "Photo credits — Bengal Delta Exports",
     "description": "Credits and licences for the photographs used on this site."
+  },
+  "/suppliers": {
+    "title": "Become a verified supplier — Bengal Delta Exports",
+    "description": "Bangladeshi factories, farms and artisans: sell to importers worldwide. We buy your goods and handle the export, LC, inspection and shipping."
   }
 }

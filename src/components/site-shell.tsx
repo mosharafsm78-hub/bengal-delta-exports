@@ -9,6 +9,7 @@ import { catStyle } from '@/lib/cat-style'
 
 const PRIMARY = [
   { to: '/how-we-work', label: 'How to order' },
+  { to: '/suppliers', label: 'For suppliers' },
   { to: '/about', label: 'About us' },
   { to: '/faq', label: 'FAQ' },
 ] as const
@@ -229,6 +230,8 @@ export function SiteFooter() {
           <ul className="m-0 grid list-none gap-2 p-0 opacity-85">
             <li><a href={`mailto:${SITE.email}`} className="text-paper no-underline">{SITE.email}</a></li>
             {SITE.whatsappDisplay && <li>WhatsApp {SITE.whatsappDisplay}</li>}
+            {SITE.phone && <li>Phone {SITE.phone}</li>}
+            {SITE.address && <li>{SITE.address}</li>}
             {SITE.offices.map((o) => <li key={o}>{o}</li>)}
             <li>{SITE.hours}</li>
           </ul>
@@ -282,5 +285,15 @@ export function DataTable({ cols, rows, className }: { cols: string[]; rows: Rea
         </tbody>
       </table>
     </div>
+  )
+}
+
+/** Floating WhatsApp button, shown only when a WhatsApp number is set in SITE. */
+export function WhatsAppFab() {
+  if (!SITE.whatsapp) return null
+  return (
+    <a href={`https://wa.me/${SITE.whatsapp}?text=${encodeURIComponent(`Hello ${SITE.name}, I'm interested in your products.`)}`} target="_blank" rel="noopener noreferrer" aria-label="Chat on WhatsApp" className="fixed right-4 bottom-24 z-40 grid size-14 place-items-center rounded-full bg-[#25D366] text-white shadow-lg hover:scale-105 lg:bottom-6 print:hidden">
+      <MessageCircle className="size-7" aria-hidden="true" />
+    </a>
   )
 }

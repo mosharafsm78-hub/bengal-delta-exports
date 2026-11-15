@@ -21,6 +21,7 @@ import { Route as QualityRouteImport } from './routes/quality'
 import { Route as QuoteRouteImport } from './routes/quote'
 import { Route as SeasonCalendarRouteImport } from './routes/season-calendar'
 import { Route as ShippingRouteImport } from './routes/shipping'
+import { Route as SuppliersRouteImport } from './routes/suppliers'
 import { Route as ProductsIndexRouteImport } from './routes/products/index'
 import { Route as ProductsFamilyIdRouteImport } from './routes/products/$familyId'
 import { Route as ProductsFamilyIdItemIdRouteImport } from './routes/products/$familyId_.$itemId'
@@ -85,6 +86,11 @@ const ShippingRoute = ShippingRouteImport.update({
   path: '/shipping',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SuppliersRoute = SuppliersRouteImport.update({
+  id: '/suppliers',
+  path: '/suppliers',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProductsIndexRoute = ProductsIndexRouteImport.update({
   id: '/products/',
   path: '/products/',
@@ -114,6 +120,7 @@ export interface FileRoutesByFullPath {
   '/quote': typeof QuoteRoute
   '/season-calendar': typeof SeasonCalendarRoute
   '/shipping': typeof ShippingRoute
+  '/suppliers': typeof SuppliersRoute
   '/products/$familyId': typeof ProductsFamilyIdRoute
   '/products/': typeof ProductsIndexRoute
   '/products/$familyId/$itemId': typeof ProductsFamilyIdItemIdRoute
@@ -131,6 +138,7 @@ export interface FileRoutesByTo {
   '/quote': typeof QuoteRoute
   '/season-calendar': typeof SeasonCalendarRoute
   '/shipping': typeof ShippingRoute
+  '/suppliers': typeof SuppliersRoute
   '/products/$familyId': typeof ProductsFamilyIdRoute
   '/products': typeof ProductsIndexRoute
   '/products/$familyId/$itemId': typeof ProductsFamilyIdItemIdRoute
@@ -149,6 +157,7 @@ export interface FileRoutesById {
   '/quote': typeof QuoteRoute
   '/season-calendar': typeof SeasonCalendarRoute
   '/shipping': typeof ShippingRoute
+  '/suppliers': typeof SuppliersRoute
   '/products/$familyId': typeof ProductsFamilyIdRoute
   '/products/': typeof ProductsIndexRoute
   '/products/$familyId_/$itemId': typeof ProductsFamilyIdItemIdRoute
@@ -168,6 +177,7 @@ export interface FileRouteTypes {
     | '/quote'
     | '/season-calendar'
     | '/shipping'
+    | '/suppliers'
     | '/products/$familyId'
     | '/products/'
     | '/products/$familyId/$itemId'
@@ -185,6 +195,7 @@ export interface FileRouteTypes {
     | '/quote'
     | '/season-calendar'
     | '/shipping'
+    | '/suppliers'
     | '/products/$familyId'
     | '/products'
     | '/products/$familyId/$itemId'
@@ -202,6 +213,7 @@ export interface FileRouteTypes {
     | '/quote'
     | '/season-calendar'
     | '/shipping'
+    | '/suppliers'
     | '/products/$familyId'
     | '/products/'
     | '/products/$familyId_/$itemId'
@@ -220,6 +232,7 @@ export interface RootRouteChildren {
   QuoteRoute: typeof QuoteRoute
   SeasonCalendarRoute: typeof SeasonCalendarRoute
   ShippingRoute: typeof ShippingRoute
+  SuppliersRoute: typeof SuppliersRoute
   ProductsFamilyIdRoute: typeof ProductsFamilyIdRoute
   ProductsIndexRoute: typeof ProductsIndexRoute
   ProductsFamilyIdItemIdRoute: typeof ProductsFamilyIdItemIdRoute
@@ -311,6 +324,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ShippingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/suppliers': {
+      id: '/suppliers'
+      path: '/suppliers'
+      fullPath: '/suppliers'
+      preLoaderRoute: typeof SuppliersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/products/': {
       id: '/products/'
       path: '/products'
@@ -348,6 +368,7 @@ const rootRouteChildren: RootRouteChildren = {
   QuoteRoute: QuoteRoute,
   SeasonCalendarRoute: SeasonCalendarRoute,
   ShippingRoute: ShippingRoute,
+  SuppliersRoute: SuppliersRoute,
   ProductsFamilyIdRoute: ProductsFamilyIdRoute,
   ProductsIndexRoute: ProductsIndexRoute,
   ProductsFamilyIdItemIdRoute: ProductsFamilyIdItemIdRoute,

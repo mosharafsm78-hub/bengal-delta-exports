@@ -171,6 +171,17 @@ function Home() {
         </div>
       </section>
 
+      {/* Suppliers */}
+      <section className="mx-auto max-w-7xl px-4 pt-16">
+        <Link to="/suppliers" className="flex flex-col items-start justify-between gap-4 rounded-2xl border-2 border-dashed border-jute bg-jute-soft p-7 text-foreground no-underline md:flex-row md:items-center">
+          <div>
+            <h3 className="m-0 text-xl">Are you a factory, farm or artisan in Bangladesh?</h3>
+            <p className="mt-1 mb-0 text-muted-foreground">Become a verified supplier. We buy your products and handle the export.</p>
+          </div>
+          <span className="btn bg-jute text-white">Become a supplier {arrow}</span>
+        </Link>
+      </section>
+
       {/* CTA */}
       <section className="mx-auto max-w-7xl px-4 pt-20">
         <div className="flex flex-col items-start justify-between gap-6 rounded-2xl bg-brand p-10 text-brand-ink md:flex-row md:items-center">
