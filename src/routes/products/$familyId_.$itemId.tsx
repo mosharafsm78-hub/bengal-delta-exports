@@ -184,10 +184,19 @@ function ItemPage() {
             {(added || inBasket) && <p className="mt-2 mb-0 text-center text-[13.5px]"><Link to="/quote" className="font-semibold text-brand">View your list ({items.length}) →</Link></p>}
 
             <div className="mt-4 grid grid-cols-3 gap-2 border-t border-border pt-4 text-center text-[12.5px] print:hidden">
-              <Link to="/quote" search={{ tab: 'requirement', msg: `Sample request: ${s.n} (${f.name}). Please quote sample cost and courier time to my country.` }} className="flex flex-col items-center gap-1 rounded-md p-2 text-foreground no-underline hover:bg-muted"><FlaskConical className="size-5 text-brand" aria-hidden="true" />Order a sample</Link>
+              <Link to="/quote" search={{ samples: true }} onClick={() => { if (!inBasket && !added) add() }} className="flex flex-col items-center gap-1 rounded-md p-2 text-foreground no-underline hover:bg-muted"><FlaskConical className="size-5 text-brand" aria-hidden="true" />Order a sample</Link>
               <Link to="/quote" search={{ tab: 'requirement', msg: `Question about ${s.n} (${f.name}): ` }} className="flex flex-col items-center gap-1 rounded-md p-2 text-foreground no-underline hover:bg-muted"><MessageSquare className="size-5 text-brand" aria-hidden="true" />Ask a question</Link>
               <button type="button" onClick={() => window.print()} className="flex flex-col items-center gap-1 rounded-md p-2 hover:bg-muted"><Printer className="size-5 text-brand" aria-hidden="true" />Spec sheet (PDF)</button>
             </div>
+          </div>
+
+          <div className="mt-4 flex flex-col gap-3 rounded-xl border-2 border-jute/40 bg-jute-soft p-4 sm:flex-row sm:items-center">
+            <FlaskConical className="size-6 flex-none text-jute" aria-hidden="true" />
+            <div className="flex-1 text-[14px]">
+              <b>{isProduce ? 'See it before you order.' : 'Samples in 24 hours.'}</b>{' '}
+              {isProduce ? 'We send photos and video of the actual lot, or an air sample on request.' : 'Pay the sample invoice and ready-style samples ship by express courier within 24 hours. Cost credited on your order.'}
+            </div>
+            <Link to="/quote" search={{ samples: true }} onClick={() => { if (!inBasket && !added) add() }} className="btn bg-jute px-4 py-2.5 text-sm text-white">Request samples</Link>
           </div>
 
           <div className="mt-4 flex items-start gap-3 rounded-xl bg-brand-soft p-4 text-[14px]">

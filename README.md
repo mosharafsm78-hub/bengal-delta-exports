@@ -1,4 +1,4 @@
-# Bengal Delta Exports — Bangladesh export hub
+# BengalExport — Bangladesh export hub
 
 Static website (TanStack Start + React + Tailwind), prerendered to plain HTML and hosted free on GitHub Pages.
 

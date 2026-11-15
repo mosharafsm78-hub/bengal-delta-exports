@@ -21,7 +21,7 @@ export const Route = createFileRoute('/products/$familyId')({
   head: ({ loaderData }) =>
     loaderData
       ? pageHead(`/products/${loaderData.family.id}`, {
-          title: `${loaderData.family.name} from Bangladesh — prices, types, specs | Bengal Delta Exports`,
+          title: `${loaderData.family.name} from Bangladesh — prices, types, specs | BengalExport`,
           description: `${loaderData.family.tag} ${loaderData.family.styles.length} types with indicative FOB prices, minimum order ${loaderData.family.moq}, lead times and shipping.`,
           image: PHOTOS[loaderData.family.photo]?.src,
         })

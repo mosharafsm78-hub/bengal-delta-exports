@@ -1,4 +1,4 @@
-// Bengal Delta Exports catalogue.
+// BengalExport catalogue.
 // Prices: indicative FOB USD, November 2026. b:"M" = based on published Bangladeshi supplier prices; otherwise our estimate.
 import type { Category, Family } from './types'
 

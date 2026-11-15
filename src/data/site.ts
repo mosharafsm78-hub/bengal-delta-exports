@@ -1,6 +1,6 @@
 // Business settings and shared page content. Change contact details here before going live.
 export const SITE = {
-  name: 'Bengal Delta Exports',
+  name: 'BengalExport',
   tagline: 'Sourced in Bangladesh · Shipped worldwide',
   email: 'sales@bengaldeltaexports.com',
   whatsapp: '', // international digits only, e.g. 88018XXXXXXXX — leave empty to hide WhatsApp buttons
@@ -20,7 +20,7 @@ export const SITE = {
 export const STEPS: [string, string, string][] = [
   ['Request a proforma invoice', 'Add products and quantities to your quote, or describe any requirement, and send one request.', 'Day 0'],
   ['Receive the proforma invoice', 'Prices, specifications, packing, Incoterm, latest shipment date and the LC terms we need, in one document.', 'Within 24 h'],
-  ['Approve samples', 'Pre-production samples by courier, or photos and video for fresh produce. Sample cost is refunded on your first order.', '3–10 days'],
+  ['Get samples in 24 hours', 'Pay the sample invoice and ready-style samples leave by express courier within 24 hours. Custom samples take 5–10 days. Sample cost is credited on your first order.', '24 h after payment'],
   ['Open a 100% LC at sight', 'Your bank issues an irrevocable Letter of Credit at sight for the full proforma value. We check it and confirm acceptance.', '3–7 days'],
   ['Production or harvest', 'Starts the day the LC is accepted. You get progress photos and updates at every stage.', 'Per product'],
   ['Inspection and certificates', 'Our final inspection or your third-party inspector, plus the certificates your market requires.', '1–3 days'],
@@ -34,7 +34,7 @@ export const PAYMENT_TERMS: [string, string][] = [
   ['All orders', '100% irrevocable documentary Letter of Credit at sight, issued by your bank under UCP 600. Production or harvest starts once we receive and accept the LC.'],
   ['Why we use LC', 'It protects both sides. Your bank pays only when our bank presents shipping documents that match the LC, which proves the goods were shipped as agreed.'],
   ['Confirmed LC', 'For some issuing banks or countries we may ask for the LC to be confirmed by a first-class international bank. We tell you on the proforma invoice.'],
-  ['Samples', 'Sample cost and courier are quoted separately and credited against your first LC order.'],
+  ['Samples', 'Pay the sample invoice (sample cost plus express courier) and ready-style samples are dispatched within 24 hours. The sample cost is credited against your first LC order.'],
   ['Bank charges', 'Standard practice: charges at your bank are for your account, charges in Bangladesh are for ours.'],
 ]
 
@@ -134,7 +134,8 @@ export const FAQ: [string, string][] = [
   ['Are the prices on the site final?', 'No. They are indicative FOB ranges, updated November 2026. Your proforma invoice confirms the exact price for your quantity, specifications and delivery date.'],
   ['How do I pay?', 'Every order is paid by a 100% irrevocable Letter of Credit (LC) at sight, issued by your bank under UCP 600. Your bank pays only against shipping documents that match the LC, so your money is protected until the goods are shipped as agreed.'],
   ['How do I open an LC?', 'Accept our proforma invoice, then give it to your bank and ask for an irrevocable LC at sight for the full amount. Our How to order page lists exactly what the LC should say. Most banks issue it in 2–5 working days.'],
-  ['Can I pay by bank transfer (T/T) instead?', 'For orders we work only on 100% LC at sight, because it protects both sides. Small sample charges can be settled separately.'],
+  ['Can I pay by bank transfer (T/T) instead?', 'For orders we work only on 100% LC at sight, because it protects both sides. Sample invoices are paid separately.'],
+  ['How fast can I get samples?', 'Pay the sample invoice and samples of ready styles are dispatched within 24 hours by express courier (DHL, FedEx or UPS), usually arriving in 3–6 days. Custom samples with your fabric, colour or logo take 5–10 days. For fresh produce we send photos and video of the actual lot, or an air sample on request. The sample cost is credited against your first order.'],
   ['Can you make products under my brand?', 'Yes. Garments, footwear, bags, food and home textiles can carry your labels, hang tags, packaging and logos.'],
   ['Can I order a ready style instead of a custom design?', 'Yes. Every product page lists the standard types we make. Pick one and we quote it as is, or change the fabric, colour or branding with the price calculator.'],
   ['Where do Bangladeshi goods enter duty-free?', 'The EU, UK, Canada, Australia and China charge 0% on practically everything; Japan, South Korea and India on most goods. The Gulf charges 5% (0% on fresh produce) and the USA a 19% reciprocal tariff plus normal duty.'],

@@ -10,10 +10,10 @@ import { mailtoFor, submitLead, type LeadPayload } from '@/lib/leads'
 import { slug, usd } from '@/lib/slug'
 import { cn } from '@/lib/utils'
 
-interface QuoteSearch { tab?: 'requirement'; msg?: string }
+interface QuoteSearch { tab?: 'requirement'; msg?: string; samples?: boolean }
 
 export const Route = createFileRoute('/quote')({
-  validateSearch: (s: Record<string, unknown>): QuoteSearch => ({ tab: s.tab === 'requirement' ? 'requirement' : undefined, msg: typeof s.msg === 'string' ? s.msg.slice(0, 300) : undefined }),
+  validateSearch: (s: Record<string, unknown>): QuoteSearch => ({ tab: s.tab === 'requirement' ? 'requirement' : undefined, msg: typeof s.msg === 'string' ? s.msg.slice(0, 300) : undefined, samples: s.samples === true || s.samples === 'true' ? true : undefined }),
   head: () => pageHead('/quote'),
   component: QuotePage,
 })
@@ -38,6 +38,7 @@ function QuotePage() {
   const [ref, setRef] = useState('')
   const [pick, setPick] = useState('')
   const [certs, setCerts] = useState<string[]>([])
+  const [wantSamples, setWantSamples] = useState(Boolean(search.samples))
   const [form, setForm] = useState({ quantity: '', unit: 'pieces', requirement: search.msg ?? '', country: '', port: '', incoterm: 'FOB Bangladesh', neededBy: '', company: '', buyerType: 'Importer / distributor', name: '', email: '', phone: '', website: '', notes: '', hp: '' })
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => setForm((f) => ({ ...f, [k]: e.target.value }))
   const total = items.reduce((s, i) => s + (i.unitMid && i.qtyNum ? i.unitMid * i.qtyNum : 0), 0)
@@ -87,7 +88,7 @@ function QuotePage() {
       quantity: qty, country: form.country, port: form.port || undefined, incoterm: form.incoterm,
       neededBy: form.neededBy || undefined, certificates: certs, company: form.company.trim() || '-', buyerType: form.buyerType,
       name: form.name.trim(), email: form.email.trim(), phone: form.phone || undefined, website: form.website || undefined,
-      notes: [total > 0 ? `Estimated value ≈ ${usd(total)} FOB` : '', form.notes].filter(Boolean).join(' · ') || undefined,
+      notes: [wantSamples ? 'SAMPLES REQUESTED FIRST' : '', total > 0 ? `Estimated value ≈ ${usd(total)} FOB` : '', form.notes].filter(Boolean).join(' · ') || undefined,
       sourcePage: typeof window !== 'undefined' ? window.location.pathname : undefined, consent: true,
     }
     setBusy(true)
@@ -176,6 +177,10 @@ function QuotePage() {
                 <textarea id="req" rows={5} className="field" value={form.requirement} onChange={set('requirement')} placeholder="Product, quantity, specification, packing, target price, or any question." />
               </>
             )}
+            <label className={cn('mt-5 flex cursor-pointer items-start gap-3 rounded-xl border-2 p-4', wantSamples ? 'border-jute bg-jute-soft' : 'border-border')}>
+              <input type="checkbox" className="mt-1 size-4 accent-[hsl(var(--jute))]" checked={wantSamples} onChange={(e) => setWantSamples(e.target.checked)} />
+              <span className="text-[14.5px]"><b>Send me samples first.</b> We email a sample invoice (sample cost + express courier). Pay it and ready-style samples ship within 24 hours; custom samples take 5–10 days. The cost is credited on your order.</span>
+            </label>
           </section>
 
           <section className="rounded-2xl border border-border bg-card p-6 sm:p-7">
@@ -222,7 +227,7 @@ function QuotePage() {
           <div className="rounded-2xl border border-border bg-card p-6">
             <h2 className="mt-0 mb-4 font-sans text-base font-semibold tracking-normal">After you send</h2>
             <ol className="m-0 grid list-none gap-3 p-0 text-[14.5px]">
-              {['Firm price (proforma invoice) by email within 24 hours', 'Samples or photos for your approval', 'Your bank opens a 100% LC at sight', 'We produce, inspect and ship', 'Your bank pays only against shipping documents'].map((t, i) => (
+              {['Firm price (proforma invoice) by email within 24 hours', 'Samples: pay the sample invoice, they ship within 24 hours', 'Your bank opens a 100% LC at sight', 'We produce, inspect and ship', 'Your bank pays only against shipping documents'].map((t, i) => (
                 <li key={t} className="flex gap-2.5"><span className="num grid size-6 flex-none place-items-center rounded-full bg-brand-soft text-xs font-semibold text-brand">{i + 1}</span>{t}</li>
               ))}
             </ol>

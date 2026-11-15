@@ -12,7 +12,7 @@ export function pageHead(path: string, override?: { title: string; description: 
     { property: 'og:title', content: m.title },
     { property: 'og:description', content: m.description },
     { property: 'og:type', content: 'website' },
-    { property: 'og:site_name', content: 'Bengal Delta Exports' },
+    { property: 'og:site_name', content: 'BengalExport' },
     { name: 'twitter:card', content: 'summary_large_image' },
   ]
   if (override?.image) meta.push({ property: 'og:image', content: override.image })

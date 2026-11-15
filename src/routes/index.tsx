@@ -65,7 +65,7 @@ function Home() {
               <button type="submit" className="rounded-full bg-jute px-6 font-semibold text-white hover:opacity-90">Search</button>
             </form>
             <ul className="mt-6 flex list-none flex-wrap gap-x-5 gap-y-2 p-0 text-[14.5px] text-paper/90">
-              {['Price in 24 hours', 'Samples before you order', 'Pay safely by bank LC', '0% duty in EU & UK'].map((t) => (
+              {['Price in 24 hours', 'Samples ship in 24 hours', 'Pay safely by bank LC', '0% duty in EU & UK'].map((t) => (
                 <li key={t} className="flex items-center gap-1.5"><CheckCircle2 className="size-4 text-jute" aria-hidden="true" />{t}</li>
               ))}
             </ul>
@@ -106,7 +106,7 @@ function Home() {
         <ol className="m-0 grid list-none gap-5 p-0 md:grid-cols-3">
           {[
             { icon: MousePointerClick, color: 'garments', t: 'Choose', d: 'Pick products and quantity. You see the estimated price instantly.' },
-            { icon: FileText, color: 'footwear', t: 'Get your offer', d: 'We send a firm price (proforma invoice) within 24 hours, and samples if you need them.' },
+            { icon: FileText, color: 'footwear', t: 'Get your offer', d: 'We send a firm price (proforma invoice) within 24 hours. Need samples? Pay the sample invoice and they ship within 24 hours.' },
             { icon: Landmark, color: 'produce', t: 'Pay safely and receive', d: 'Pay by 100% LC through your own bank. We ship; your bank pays only against shipping documents.' },
           ].map((s, i) => (
             <li key={s.t} style={catStyle(s.color)} className="cat-soft relative rounded-xl p-7">

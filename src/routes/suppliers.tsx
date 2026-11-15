@@ -78,7 +78,7 @@ function Suppliers() {
             <a href="#apply" className="btn btn-primary mt-7 px-7 py-3.5 text-base">Apply to become a supplier</a>
           </div>
           <ul className="m-0 grid list-none gap-3 p-0">
-            {[[Handshake, 'One buyer: us', 'You sell to Bengal Delta Exports in Bangladesh, in Taka, under a simple purchase order.'], [Banknote, 'Secure orders', 'We place orders only after the overseas buyer has opened a 100% LC with us.'], [Truck, 'No export paperwork', 'We handle LC, inspection, certificates, freight and customs.'], [Globe2, 'Reach buyers worldwide', 'Your products appear in our catalogue for importers in Europe, the Gulf, Asia and America.']].map(([I, t, d]) => {
+            {[[Handshake, 'One buyer: us', 'You sell to BengalExport in Bangladesh, in Taka, under a simple purchase order.'], [Banknote, 'Secure orders', 'We place orders only after the overseas buyer has opened a 100% LC with us.'], [Truck, 'No export paperwork', 'We handle LC, inspection, certificates, freight and customs.'], [Globe2, 'Reach buyers worldwide', 'Your products appear in our catalogue for importers in Europe, the Gulf, Asia and America.']].map(([I, t, d]) => {
               const Icon = I as typeof Handshake
               return (
                 <li key={t as string} className="flex gap-3 rounded-xl bg-card p-4 shadow-sm">
