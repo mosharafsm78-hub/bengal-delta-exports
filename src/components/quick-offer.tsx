@@ -81,7 +81,7 @@ export function QuickOffer({ cat, family, style, qty, unit, estimate, leadMin, l
         {state === 'done' ? (
           <div className="flex items-start gap-3 rounded-lg bg-brand-soft p-4 text-[14.5px]">
             <CheckCircle2 className="mt-0.5 size-5 flex-none text-brand" aria-hidden="true" />
-            <span><b className="block">Request received.</b>Your free offer for {qty > 0 ? `${qty.toLocaleString('en-US')} ${unit} of ` : ''}{style} delivered to {m?.ports.split(',')[0] ?? country} comes by email within 24 hours. Nothing to pay now.</span>
+            <span><b className="block">Request received.</b>The proforma invoice for {qty > 0 ? `${qty.toLocaleString('en-US')} ${unit} of ` : ''}{style} delivered to {m?.ports.split(',')[0] ?? country} follows by email within 24 hours. No payment is due at this stage.</span>
           </div>
         ) : (
           <form onSubmit={send} className="grid gap-2.5">

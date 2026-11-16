@@ -12,7 +12,7 @@ export const Route = createFileRoute('/how-we-work')({
 function HowWeWork() {
   return (
     <div className="mx-auto max-w-7xl px-4 pt-12">
-      <PageHead eyebrow="How to order and pay" title="From your first request to goods at your port" lead="Eight clear steps. You pay by a 100% Letter of Credit at sight through your own bank, so your money is released only when the goods have shipped as agreed." />
+      <PageHead eyebrow="How we work" title="From your first request to goods at your port" lead="Eight steps, one counterparty. Every order is contracted on our proforma invoice, priced CIF under Incoterms 2020 and settled by an irrevocable Letter of Credit at sight under UCP 600. Your bank releases funds only against compliant shipping documents." />
 
       <div className="mb-12 grid gap-5 rounded-lg border border-brand/25 bg-brand-soft p-7 md:grid-cols-[auto_1fr_auto] md:items-center">
         <Landmark className="size-10 text-brand" aria-hidden="true" />

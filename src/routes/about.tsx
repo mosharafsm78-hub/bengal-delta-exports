@@ -50,10 +50,10 @@ function About() {
       <section className="bg-ink text-paper">
         <div className="mx-auto max-w-7xl px-4 py-16">
           <div className="eyebrow mb-3 text-jute">About {SITE.name}</div>
-          <h1 className="m-0 max-w-4xl text-[clamp(2.2rem,5vw,3.6rem)] leading-[1.06] text-paper">Your sourcing partner in Bangladesh.</h1>
-          <p className="mt-5 max-w-[62ch] text-lg text-paper/80">One accountable team between you and 10,000+ Bangladeshi suppliers.</p>
+          <h1 className="m-0 max-w-4xl text-[clamp(2.2rem,5vw,3.6rem)] leading-[1.06] text-paper">An export trading house, accountable for the whole order.</h1>
+          <p className="mt-5 max-w-[62ch] text-lg text-paper/80">BengalExport contracts, inspects and ships Bangladeshi goods under its own proforma invoice and Letter of Credit, standing between you and 10,000+ audited factories and farms.</p>
           <dl className="m-0 mt-10 grid max-w-3xl grid-cols-3 gap-4 sm:gap-6">
-            {[[Users, '10,000+', 'Suppliers in our network'], [CalendarDays, '24 h', 'Quotation turnaround'], [MapPin, 'Bangladesh', 'Head office']].map(([I, b, s]) => {
+            {[[Users, '10,000+', 'Suppliers in our network'], [CalendarDays, '24 h', 'Proforma invoice turnaround'], [MapPin, 'Bangladesh', 'Head office']].map(([I, b, s]) => {
               const Icon = I as typeof Users
               return (
                 <div key={s as string}>
@@ -162,7 +162,7 @@ function About() {
             </div>
             <div className="flex flex-wrap gap-3">
               <Link to="/suppliers" className="btn border border-brand-ink/40 text-brand-ink">Become a supplier</Link>
-              <Link to="/quote" className="btn bg-white text-brand">Request a quote</Link>
+              <Link to="/quote" className="btn bg-white text-brand">Request a quotation</Link>
             </div>
           </div>
         </section>

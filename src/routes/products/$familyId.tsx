@@ -120,7 +120,7 @@ function FamilyBody() {
                     <div className="mt-auto grid grid-cols-2 gap-2 pt-3">
                       <Link to="/products/$familyId/$itemId" params={{ familyId: f.id, itemId: id }} className="btn btn-primary px-3 py-2 text-sm">View details</Link>
                       <button type="button" onClick={() => { basket.add({ familyId: f.id, family: f.name, style: s.n, itemId: id, estimate: `${money(s.p[0])}–${s.p[1].toFixed(2)}/${s.u ?? 'pc'}` }); setStyleIndex(i) }} className="btn btn-outline px-3 py-2 text-sm">
-                        {inBasket ? <><CheckCircle2 className="size-4" aria-hidden="true" /> In quote</> : 'Add to quote'}
+                        {inBasket ? <><CheckCircle2 className="size-4" aria-hidden="true" /> In RFQ</> : 'Add to RFQ'}
                       </button>
                     </div>
                   </div>
@@ -203,7 +203,7 @@ function FamilyBody() {
               <h2 className="m-0 text-[clamp(1.5rem,3vw,2rem)]">Ready to price your {f.name.toLowerCase()} order?</h2>
               <p className="mt-2 mb-0 opacity-85">Add types to your quote, then send one request for everything.</p>
             </div>
-            <Link to="/quote" className="btn bg-brand-ink text-brand">Request a quote{items.length ? ` (${items.length})` : ''}</Link>
+            <Link to="/quote" className="btn bg-brand-ink text-brand">Request a quotation{items.length ? ` (${items.length})` : ''}</Link>
           </div>
         </section>
 

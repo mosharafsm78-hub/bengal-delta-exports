@@ -12,7 +12,7 @@ const BUYER_TYPES = ['Importer / wholesaler', 'Brand / private label', 'Retailer
 const VOLUMES = ['Under $10,000 a year', '$10,000 – $50,000', '$50,000 – $250,000', '$250,000 – $1 million', 'Over $1 million']
 
 export const TIERS = [
-  { id: 'registered', name: 'Registered buyer', how: 'Free', perks: ['Free offers in 24 hours', 'Live order tracker', 'AI answers 24/7'] },
+  { id: 'registered', name: 'Registered buyer', how: 'No fee', perks: ['Proforma invoices within 24 hours', 'Order and shipment tracking', 'Round-the-clock assistant'] },
   { id: 'verified', name: 'Verified buyer', how: 'Company checked', perks: ['Verified buyer badge', 'Your own sourcing agent', 'Priority offers and samples'] },
   { id: 'trusted', name: 'Trusted buyer', how: 'After first order', perks: ['Priority factory booking', 'Inspection reports in your account', 'First look at surplus stock'] },
 ]
@@ -45,7 +45,7 @@ function AuthScreens() {
   return (
     <div className="mx-auto grid max-w-6xl gap-10 px-4 py-10 lg:grid-cols-[1fr_1.1fr] lg:py-14">
       <div>
-        <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-[13px] font-semibold text-brand"><ShieldCheck className="size-4" aria-hidden="true" />Free for buyers, always</span>
+        <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-[13px] font-semibold text-brand"><ShieldCheck className="size-4" aria-hidden="true" />Buyer accounts carry no fee</span>
         <h1 className="mt-4 mb-3 text-[clamp(2rem,4vw,2.8rem)] leading-tight">Your buyer account</h1>
         <p className="text-[17px] text-muted-foreground">Offers, samples, orders and your own agent. No fees.</p>
         <div className="mt-6 grid gap-3">
@@ -127,9 +127,9 @@ function SignUp({ onIn }: { onIn: () => void }) {
         {other !== null && <input className={cn(field, 'mt-2')} autoFocus placeholder="What else do you buy? e.g. leather jackets, ceramics" value={other} onChange={(e) => setOther(e.target.value)} aria-label="Other products" />}
       </div>
       <input className="hidden" tabIndex={-1} autoComplete="off" value={f.website_url} onChange={set('website_url')} aria-hidden="true" />
-      <p className="m-0 text-[12.5px] text-muted-foreground">Company email + website = instant Verified badge.</p>
+      <p className="m-0 text-[12.5px] text-muted-foreground">A company email address and website speed up verification.</p>
       {err && <p className="m-0 text-[13.5px] text-danger">{err}</p>}
-      <button disabled={busy} className="btn btn-primary">{busy ? 'Creating your account…' : 'Create free account'}</button>
+      <button disabled={busy} className="btn btn-primary">{busy ? 'Creating your account…' : 'Create account'}</button>
     </form>
   )
 }
@@ -285,7 +285,7 @@ function AgentTab({ b, agent, msgs, setMsgs, reload }: { b: Buyer; agent: Agent 
         </div>
       </aside>
       <section className="flex min-h-[520px] flex-col rounded-xl border border-border bg-card">
-        <div className="border-b border-border px-5 py-3 text-[14px] text-muted-foreground"><Bot className="mr-1 inline size-4 text-brand" aria-hidden="true" />The AI assistant replies instantly{verified && agent ? `; ${agent.name} joins whenever a person is needed` : '; our team joins whenever a person is needed'}.</div>
+        <div className="border-b border-border px-5 py-3 text-[14px] text-muted-foreground"><Bot className="mr-1 inline size-4 text-brand" aria-hidden="true" />The assistant answers immediately{verified && agent ? `; ${agent.name} joins whenever a person is needed` : '; our team joins whenever a person is needed'}.</div>
         <div className="flex-1 space-y-3 overflow-y-auto px-5 py-4" style={{ maxHeight: 560 }}>
           {msgs.map((m) => <Bubble key={m.id} m={m} agentName={agent?.name} />)}
           {busy && <p className="m-0 flex items-center gap-2 text-[13.5px] text-muted-foreground"><Loader2 className="size-4 animate-spin" />Typing…</p>}
@@ -350,7 +350,7 @@ function NewRequest({ onDone }: { onDone: () => void }) {
   return (
     <form onSubmit={go} className="grid max-w-3xl gap-3 rounded-xl border border-border bg-card p-6">
       <h2 className="m-0 text-[20px]">What do you need?</h2>
-      <p className="m-0 text-[14px] text-muted-foreground">Anything made or grown in Bangladesh, in our catalogue or not. Free offer within 24 hours (48 hours outside our catalogue). Nothing to pay now.</p>
+      <p className="m-0 text-[14px] text-muted-foreground">Anything made or grown in Bangladesh, in our catalogue or not. Proforma invoice within 24 hours (48 hours for products outside our catalogue). No payment is due at this stage.</p>
       <input className={field} required placeholder="Product, e.g. 220 gsm organic cotton hoodie" value={f.product} onChange={set('product')} aria-label="Product" />
       <div className="grid gap-3 sm:grid-cols-3">
         <input className={field} required placeholder="Quantity" value={f.quantity} onChange={set('quantity')} aria-label="Quantity" />

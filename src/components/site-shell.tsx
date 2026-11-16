@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils'
 import { catStyle } from '@/lib/cat-style'
 
 const PRIMARY = [
-  { to: '/how-we-work', label: 'How to order' },
+  { to: '/how-we-work', label: 'How we work' },
   { to: '/suppliers', label: 'For suppliers' },
   { to: '/about', label: 'About us' },
   { to: '/faq', label: 'FAQ' },
@@ -123,16 +123,16 @@ function HeaderSearch({ onDone }: { onDone?: () => void }) {
     >
       <label htmlFor="header-search" className="sr-only">Search products</label>
       <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
-      <input id="header-search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search products" className="w-full rounded-full border border-input bg-paper py-2 pr-3 pl-9 text-[14px] outline-none focus:border-brand xl:w-52" />
+      <input id="header-search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search products" className="w-full rounded-full border border-input bg-paper py-2 pr-3 pl-9 text-[14px] outline-none focus:border-brand 2xl:w-44" />
     </form>
   )
 }
 
 const TRUST = [
-  [Landmark, '100% LC at sight', '/how-we-work'],
+  [Landmark, 'Irrevocable LC at sight', '/how-we-work'],
   [ShieldCheck, 'Pre-shipment inspection', '/quality'],
   [FlaskConical, 'Samples in 24 hours', '/quote'],
-  [BadgeCheck, 'Vetted manufacturers', '/suppliers'],
+  [BadgeCheck, 'Audited suppliers', '/suppliers'],
 ] as const
 
 /** Small trust badges used on product pages. */
@@ -190,7 +190,7 @@ export function SiteHeader() {
             <Logo />
             <span className="leading-none">
               <span className="block font-display text-[17px] font-semibold tracking-tight sm:text-[19px]">{SITE.name}</span>
-              <span className="mt-1 hidden text-[10.5px] font-medium tracking-[0.12em] text-muted-foreground uppercase sm:block">Bangladesh export hub</span>
+              <span className="mt-1 hidden text-[10.5px] font-medium tracking-[0.12em] text-muted-foreground uppercase sm:block">Export trading house · Bangladesh</span>
             </span>
           </Link>
           <nav aria-label="Main" className="hidden items-center gap-0.5 lg:flex">
@@ -202,12 +202,13 @@ export function SiteHeader() {
             ))}
           </nav>
           <div className="ml-auto flex items-center gap-2">
-            <div className="hidden xl:block"><HeaderSearch /></div>
-            <Link to="/account" className="hidden items-center gap-1.5 whitespace-nowrap rounded-md px-2.5 py-2 text-[14.5px] font-medium text-foreground no-underline hover:bg-muted hover:text-brand md:inline-flex"><User className="size-4" aria-hidden="true" />Buyer account</Link>
-            <Link to="/quote" className="btn btn-primary px-3 py-2.5 text-[14.5px] sm:px-4">
+            <div className="hidden 2xl:block"><HeaderSearch /></div>
+            <Link to="/account" className="hidden items-center gap-1.5 whitespace-nowrap rounded-md px-2.5 py-2 text-[14.5px] font-medium text-foreground no-underline hover:bg-muted hover:text-brand md:inline-flex"><User className="size-4" aria-hidden="true" /><span className="lg:hidden xl:inline">Buyer account</span></Link>
+            <Link to="/quote" className="btn btn-primary px-3 py-2.5 text-[14.5px] sm:px-3.5">
               <ShoppingBag className="size-4" aria-hidden="true" />
-              <span className="hidden sm:inline">Request a quote</span>
-              <span className="sm:hidden">Quote</span>
+              <span className="hidden 2xl:inline">Request a quotation</span>
+              <span className="hidden sm:inline 2xl:hidden">Quotation</span>
+              <span className="sm:hidden">RFQ</span>
               {items.length > 0 && <span className="num rounded-full bg-brand-ink px-1.5 text-xs text-brand">{items.length}</span>}
             </Link>
             <button type="button" className="rounded-md border border-border bg-card p-2 lg:hidden" aria-expanded={open} aria-controls="mobile-nav" aria-label="Menu" onClick={() => setOpen((o) => !o)}>
@@ -226,7 +227,7 @@ export function SiteHeader() {
             </div>
             <div className="eyebrow mt-4 mb-1">Buyer guide</div>
             <div className="grid grid-cols-2 gap-x-2">
-              {[...PRIMARY, { to: '/account', label: 'Buyer account (free)' } as const, ...GUIDES].map((n) => (
+              {[...PRIMARY, { to: '/account', label: 'Buyer account' } as const, ...GUIDES].map((n) => (
                 <Link key={n.to} to={n.to} className="rounded-md py-2 text-[15px] font-medium text-foreground no-underline">{n.label}</Link>
               ))}
             </div>
@@ -257,8 +258,8 @@ export function SiteFooter() {
             <Logo />
             <span className="font-display text-xl font-semibold">{SITE.name}</span>
           </div>
-          <p className="mt-4 max-w-sm opacity-75">An export trading house in Bangladesh. Garments, footwear, home textiles, jute, fresh produce, food and handicrafts, delivered insured to your port worldwide.</p>
-          <Link to="/quote" className="btn mt-5 bg-paper text-ink">Request a quote <ArrowRight className="size-4" aria-hidden="true" /></Link>
+          <p className="mt-4 max-w-sm opacity-75">Export trading house, Bangladesh. Garments, footwear, home textiles, jute, fresh produce, food and handicrafts, contracted on our proforma invoice and delivered CIF, insured, to ports worldwide.</p>
+          <Link to="/quote" className="btn mt-5 bg-paper text-ink">Request a quotation <ArrowRight className="size-4" aria-hidden="true" /></Link>
         </div>
         <div>
           <h4 className="mb-3 text-[13px] font-semibold tracking-[0.12em] uppercase opacity-60">Products</h4>
@@ -290,7 +291,7 @@ export function SiteFooter() {
       </div>
       <div className="border-t border-paper/10">
         <div className="mx-auto flex max-w-7xl flex-wrap justify-between gap-3 px-4 py-5 text-[13px] opacity-60">
-          <span>© 2026 {SITE.name}. Prices are indicative and confirmed only by a signed proforma invoice. Duty and route information updated {SITE.updated}.</span>
+          <span className="max-w-3xl">© 2026 {SITE.name}. All sales are contracted on our proforma invoice under Incoterms 2020 and settled by irrevocable documentary credit under UCP 600. Export proceeds are received through our authorised-dealer bank in accordance with Bangladesh Bank regulations. Prices shown are indicative and confirmed only by a signed proforma invoice. Duty and route information updated {SITE.updated}.</span>
           <span className="flex gap-4"><Link to="/privacy" className="text-paper">Privacy</Link><Link to="/terms" className="text-paper">Terms</Link><Link to="/photo-credits" className="text-paper">Photo credits</Link></span>
         </div>
       </div>

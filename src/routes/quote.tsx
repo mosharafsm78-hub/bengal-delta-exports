@@ -81,7 +81,7 @@ function QuotePage() {
     e.preventDefault()
     setError('')
     if (form.hp) return
-    if (kind === 'quote' && items.length === 0) return setError('Your list is empty. Add a product, or switch to “Describe what you need”.')
+    if (kind === 'quote' && items.length === 0) return setError('Your list is empty. Add a product, or switch to “Describe your requirement”.')
     if (kind === 'requirement' && !form.requirement.trim()) return setError('Please tell us what you need.')
     if (!form.name.trim() || !form.country.trim()) return setError('Please enter your name and country.')
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) return setError('Please enter a valid email address so we can send your price.')
@@ -119,16 +119,16 @@ function QuotePage() {
     <div className="mx-auto max-w-6xl px-4 pt-10">
       <div className="mb-8">
         <h1 className="m-0 text-[clamp(2rem,4vw,2.8rem)]">Request a quotation</h1>
-        <p className="mt-2 mb-0 text-[17px] text-muted-foreground">Proforma invoice within 24 hours. No commitment.</p>
+        <p className="mt-2 mb-0 text-[17px] text-muted-foreground">Proforma invoice within 24 hours, priced CIF to your port.</p>
       </div>
 
       <div className="grid gap-8 lg:grid-cols-[1.5fr_.7fr]">
         <form onSubmit={onSubmit} noValidate className="grid gap-6">
           <section className="rounded-2xl border border-border bg-card p-6 sm:p-7">
-            <h2 className="mt-0 mb-4 flex items-center gap-2 font-sans text-lg font-semibold tracking-normal"><span className="grid size-7 place-items-center rounded-full bg-brand text-sm text-brand-ink">1</span> What do you need?</h2>
+            <h2 className="mt-0 mb-4 flex items-center gap-2 font-sans text-lg font-semibold tracking-normal"><span className="grid size-7 place-items-center rounded-full bg-brand text-sm text-brand-ink">1</span> Requirement</h2>
             <div className="mb-5 inline-flex w-full gap-1 rounded-xl bg-muted p-1 sm:w-auto" role="tablist">
-              <button type="button" role="tab" aria-selected={kind === 'quote'} onClick={() => setKind('quote')} className={tab(kind === 'quote')}>My product list{items.length ? ` (${items.length})` : ''}</button>
-              <button type="button" role="tab" aria-selected={kind === 'requirement'} onClick={() => setKind('requirement')} className={tab(kind === 'requirement')}>Describe what you need</button>
+              <button type="button" role="tab" aria-selected={kind === 'quote'} onClick={() => setKind('quote')} className={tab(kind === 'quote')}>Selected products{items.length ? ` (${items.length})` : ''}</button>
+              <button type="button" role="tab" aria-selected={kind === 'requirement'} onClick={() => setKind('requirement')} className={tab(kind === 'requirement')}>Describe your requirement</button>
             </div>
 
             {kind === 'quote' ? (
@@ -181,7 +181,7 @@ function QuotePage() {
               </>
             ) : (
               <>
-                <label htmlFor="req" className="sr-only">What do you need?</label>
+                <label htmlFor="req" className="sr-only">Requirement</label>
                 <textarea id="req" rows={5} className="field" value={form.requirement} onChange={set('requirement')} placeholder="Product, quantity, specification, packing, target price, or any question." />
               </>
             )}
@@ -192,7 +192,7 @@ function QuotePage() {
           </section>
 
           <section className="rounded-2xl border border-border bg-card p-6 sm:p-7">
-            <h2 className="mt-0 mb-4 flex items-center gap-2 font-sans text-lg font-semibold tracking-normal"><span className="grid size-7 place-items-center rounded-full bg-brand text-sm text-brand-ink">2</span> Where should we send your price?</h2>
+            <h2 className="mt-0 mb-4 flex items-center gap-2 font-sans text-lg font-semibold tracking-normal"><span className="grid size-7 place-items-center rounded-full bg-brand text-sm text-brand-ink">2</span> Where should we send the proforma invoice?</h2>
             <div className="grid gap-4 sm:grid-cols-2">
               <div><label htmlFor="name" className={label}>Your name *</label><input id="name" autoComplete="name" className="field" value={form.name} onChange={set('name')} /></div>
               <div><label htmlFor="email" className={label}>Email *</label><input id="email" type="email" autoComplete="email" className="field" value={form.email} onChange={set('email')} placeholder="you@company.com" /></div>
@@ -226,7 +226,7 @@ function QuotePage() {
             <div className="hidden" aria-hidden="true"><label htmlFor="hp">Leave empty</label><input id="hp" tabIndex={-1} autoComplete="off" value={form.hp} onChange={set('hp')} /></div>
 
             {error && <p role="alert" className="mt-5 mb-0 rounded-lg bg-danger-soft px-4 py-3 text-sm font-semibold text-danger">{error}</p>}
-            <button type="submit" disabled={busy} className="btn btn-primary mt-6 w-full py-4 text-base sm:w-auto sm:px-10">{busy ? 'Sending…' : 'Send — get my price in 24 h'}</button>
+            <button type="submit" disabled={busy} className="btn btn-primary mt-6 w-full py-4 text-base sm:w-auto sm:px-10">{busy ? 'Sending…' : 'Request proforma invoice'}</button>
             <p className="mt-3 mb-0 flex items-center gap-1.5 text-[13px] text-muted-foreground"><Lock className="size-3.5" aria-hidden="true" /> We only use your details to reply to this request. <Link to="/privacy" className="text-brand">Privacy policy</Link></p>
           </section>
         </form>
@@ -235,14 +235,14 @@ function QuotePage() {
           <div className="rounded-2xl border border-border bg-card p-6">
             <h2 className="mt-0 mb-4 font-sans text-base font-semibold tracking-normal">After you send</h2>
             <ol className="m-0 grid list-none gap-3 p-0 text-[14.5px]">
-              {['Firm price (proforma invoice) by email within 24 hours', 'Samples: pay the sample invoice, they ship within 24 hours', 'Your bank opens a 100% LC at sight', 'We produce, inspect and ship', 'Your bank pays only against shipping documents'].map((t, i) => (
+              {['Proforma invoice by email within 24 hours: product, freight and insurance to your port', 'Samples against sample invoice, dispatched within 24 hours by express courier', 'Your bank issues an irrevocable LC at sight for the proforma value', 'Production, pre-shipment inspection and shipment before the LC\'s latest date', 'Your bank pays against compliant shipping documents'].map((t, i) => (
                 <li key={t} className="flex gap-2.5"><span className="num grid size-6 flex-none place-items-center rounded-full bg-brand-soft text-xs font-semibold text-brand">{i + 1}</span>{t}</li>
               ))}
             </ol>
           </div>
           <div className="flex gap-3 rounded-2xl bg-brand-soft p-6 text-[14.5px]">
             <Landmark className="mt-0.5 size-5 flex-none text-brand" aria-hidden="true" />
-            <p className="m-0"><b>Nothing to pay now.</b> Payment later by {PAYMENT_HEADLINE}. <Link to="/how-we-work" className="font-semibold text-brand">How it works</Link></p>
+            <p className="m-0"><b>No payment at this stage.</b> Orders are settled by {PAYMENT_HEADLINE}, under UCP 600, after you accept the proforma invoice. <Link to="/how-we-work" className="font-semibold text-brand">Trade terms</Link></p>
           </div>
           <div className="rounded-2xl border border-border bg-card p-6 text-[14.5px]">
             <p className="m-0 font-semibold">Prefer email?</p>

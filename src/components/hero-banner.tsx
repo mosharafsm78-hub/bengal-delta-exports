@@ -50,23 +50,24 @@ export function HeroBanner() {
       <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#0b2545] via-[#0b2545]/85 to-transparent lg:via-[#0b2545]/70" aria-hidden="true" />
 
       <div className="mx-auto max-w-7xl px-4 pt-16 pb-14 sm:pt-24 sm:pb-20 lg:pt-28 lg:pb-24">
-        <h1 className="m-0 max-w-[16ch] text-[clamp(2.4rem,6vw,4.4rem)] leading-[1.02] font-semibold tracking-tight text-white">
-          Sourcing from Bangladesh, <span className="text-[#5eead4]">at scale.</span>
+        <p className="eyebrow m-0 mb-4 text-[#99f6e4]">Export trading house · Bangladesh</p>
+        <h1 className="m-0 max-w-[18ch] text-[clamp(2.3rem,5.4vw,4.1rem)] leading-[1.04] font-semibold tracking-tight text-white">
+          One counterparty for everything Bangladesh exports.
         </h1>
-        <p className="mt-5 mb-0 max-w-[46ch] text-[clamp(1.05rem,1.6vw,1.25rem)] text-white/75">Apparel, footwear, home textiles, jute and agro products. From vetted manufacturers to your port.</p>
+        <p className="mt-5 mb-0 max-w-[54ch] text-[clamp(1.05rem,1.5vw,1.2rem)] text-white/78">Apparel, footwear, home textiles, jute and agro products from audited factories and farms. We contract, inspect and ship CIF to your port under an irrevocable Letter of Credit.</p>
 
         <form onSubmit={go} role="search" className="mt-8 grid max-w-3xl gap-2 rounded-2xl bg-white p-2 text-ink shadow-2xl sm:grid-cols-[1.4fr_1fr_auto]">
           <label className="relative block">
-            <span className="sr-only">What do you want to buy?</span>
+            <span className="sr-only">Product, e.g. men’s polo shirts, 20,000 pcs</span>
             <Search className="pointer-events-none absolute top-1/2 left-3 size-5 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="What do you want to buy?" className="w-full rounded-lg border border-transparent bg-transparent py-3 pr-3 pl-10 text-[16px] outline-none focus:border-brand" />
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Product, e.g. men’s polo shirts, 20,000 pcs" className="w-full rounded-lg border border-transparent bg-transparent py-3 pr-3 pl-10 text-[16px] outline-none focus:border-brand" />
           </label>
           <div className="sm:border-l sm:border-border sm:pl-2"><CountrySelect value={country} onChange={setCountry} placeholder="Deliver to" className="border-transparent py-3 text-[16px]" /></div>
           <button className="rounded-xl bg-brand px-7 py-3 text-[16px] font-semibold text-white hover:opacity-90">Request a quotation</button>
         </form>
 
         <ul className="mt-7 mb-0 flex flex-wrap gap-x-7 gap-y-3 p-0 text-[15px] text-white/85">
-          {([[Landmark, 'Irrevocable LC at sight'], [ShieldCheck, 'Pre-shipment inspection'], [Container, 'FCL and LCL to any port']] as const).map(([Icon, t]) => (
+          {([[Landmark, 'Irrevocable LC at sight · UCP 600'], [ShieldCheck, 'Pre-shipment inspection on every order'], [Container, 'CIF to your port · Incoterms 2020']] as const).map(([Icon, t]) => (
             <li key={t} className="flex list-none items-center gap-2"><span className="grid size-8 place-items-center rounded-full bg-white/10"><Icon className="size-4 text-[#5eead4]" aria-hidden="true" /></span>{t}</li>
           ))}
         </ul>

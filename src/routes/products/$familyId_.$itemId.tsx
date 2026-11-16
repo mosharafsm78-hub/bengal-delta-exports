@@ -91,7 +91,7 @@ function ItemBody() {
     setAdded(true)
   }
 
-  const tabs: [Tab, string][] = [['details', 'Details'], ['shipping', 'Packing & shipping'], ['duty', 'Import duty'], ['quality', 'Quality'], ['order', 'How to order & pay']]
+  const tabs: [Tab, string][] = [['details', 'Details'], ['shipping', 'Packing & shipping'], ['duty', 'Import duty'], ['quality', 'Quality'], ['order', 'Trade terms']]
 
   return (
     <div className="pb-24 lg:pb-0 print:pb-0" style={catStyle(f.cat)}>
@@ -207,7 +207,7 @@ function ItemBody() {
 
             <div className="mt-5 grid gap-2.5">
               <Link to="/quote" onClick={() => { if (!inBasket && !added) add() }} className="btn btn-primary py-3.5 text-base">Request a quotation <ArrowRight className="size-4" aria-hidden="true" /></Link>
-              <button type="button" onClick={add} className="btn btn-outline">{added || inBasket ? <><CheckCircle2 className="size-4" aria-hidden="true" /> Added to quote list</> : 'Add to quote list'}</button>
+              <button type="button" onClick={add} className="btn btn-outline">{added || inBasket ? <><CheckCircle2 className="size-4" aria-hidden="true" /> Added to RFQ</> : 'Add to RFQ'}</button>
             </div>
             {(added || inBasket) && <p className="mt-2 mb-0 text-center text-[13.5px]"><Link to="/quote" className="font-semibold text-brand">View your list ({items.length}) →</Link></p>}
 
