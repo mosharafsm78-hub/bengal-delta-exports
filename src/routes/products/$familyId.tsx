@@ -203,7 +203,7 @@ function FamilyBody() {
               <h2 className="m-0 text-[clamp(1.5rem,3vw,2rem)]">Ready to price your {f.name.toLowerCase()} order?</h2>
               <p className="mt-2 mb-0 opacity-85">Add types to your quote, then send one request for everything.</p>
             </div>
-            <Link to="/quote" className="btn bg-brand-ink text-brand">Get a free quote{items.length ? ` (${items.length})` : ''}</Link>
+            <Link to="/quote" className="btn bg-brand-ink text-brand">Request a quote{items.length ? ` (${items.length})` : ''}</Link>
           </div>
         </section>
 

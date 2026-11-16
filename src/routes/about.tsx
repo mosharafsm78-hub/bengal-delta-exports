@@ -162,7 +162,7 @@ function About() {
             </div>
             <div className="flex flex-wrap gap-3">
               <Link to="/suppliers" className="btn border border-brand-ink/40 text-brand-ink">Become a supplier</Link>
-              <Link to="/quote" className="btn bg-white text-brand">Get a free quote</Link>
+              <Link to="/quote" className="btn bg-white text-brand">Request a quote</Link>
             </div>
           </div>
         </section>

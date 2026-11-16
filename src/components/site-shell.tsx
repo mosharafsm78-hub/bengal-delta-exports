@@ -206,7 +206,7 @@ export function SiteHeader() {
             <Link to="/account" className="hidden items-center gap-1.5 whitespace-nowrap rounded-md px-2.5 py-2 text-[14.5px] font-medium text-foreground no-underline hover:bg-muted hover:text-brand md:inline-flex"><User className="size-4" aria-hidden="true" />Buyer account</Link>
             <Link to="/quote" className="btn btn-primary px-3 py-2.5 text-[14.5px] sm:px-4">
               <ShoppingBag className="size-4" aria-hidden="true" />
-              <span className="hidden sm:inline">Get a free quote</span>
+              <span className="hidden sm:inline">Request a quote</span>
               <span className="sm:hidden">Quote</span>
               {items.length > 0 && <span className="num rounded-full bg-brand-ink px-1.5 text-xs text-brand">{items.length}</span>}
             </Link>
@@ -258,7 +258,7 @@ export function SiteFooter() {
             <span className="font-display text-xl font-semibold">{SITE.name}</span>
           </div>
           <p className="mt-4 max-w-sm opacity-75">An export trading house in Bangladesh. Garments, footwear, home textiles, jute, fresh produce, food and handicrafts, delivered insured to your port worldwide.</p>
-          <Link to="/quote" className="btn mt-5 bg-paper text-ink">Get a free quote <ArrowRight className="size-4" aria-hidden="true" /></Link>
+          <Link to="/quote" className="btn mt-5 bg-paper text-ink">Request a quote <ArrowRight className="size-4" aria-hidden="true" /></Link>
         </div>
         <div>
           <h4 className="mb-3 text-[13px] font-semibold tracking-[0.12em] uppercase opacity-60">Products</h4>

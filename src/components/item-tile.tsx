@@ -12,7 +12,7 @@ export function inSeason(s: Style) {
 }
 
 /** One product (e.g. "Bitter gourd") linking to its own page. */
-export function ItemTile({ f, s, className }: { f: Family; s: Style; className?: string }) {
+export function ItemTile({ f, s, className, price = true }: { f: Family; s: Style; className?: string; price?: boolean }) {
   const unit = s.u ?? 'pc'
   return (
     <Link
@@ -28,9 +28,9 @@ export function ItemTile({ f, s, className }: { f: Family; s: Style; className?:
       <div className="flex flex-1 flex-col p-3">
         <span className="text-[15px] leading-snug font-semibold group-hover:text-brand">{s.n}</span>
         <span className="cat-text mt-0.5 text-xs font-semibold">{f.name}</span>
-        <span className="num mt-auto pt-2 text-sm font-semibold">
+        {price && <span className="num mt-auto pt-2 text-sm font-semibold">
           ${s.p[0].toFixed(2)}–{s.p[1].toFixed(2)} <span className="font-normal text-muted-foreground">/ {unit}</span>
-        </span>
+        </span>}
       </div>
     </Link>
   )

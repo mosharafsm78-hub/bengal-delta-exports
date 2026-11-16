@@ -206,7 +206,7 @@ function ItemBody() {
             )}
 
             <div className="mt-5 grid gap-2.5">
-              <Link to="/quote" onClick={() => { if (!inBasket && !added) add() }} className="btn btn-primary py-3.5 text-base">Get my free offer <ArrowRight className="size-4" aria-hidden="true" /></Link>
+              <Link to="/quote" onClick={() => { if (!inBasket && !added) add() }} className="btn btn-primary py-3.5 text-base">Request a quotation <ArrowRight className="size-4" aria-hidden="true" /></Link>
               <button type="button" onClick={add} className="btn btn-outline">{added || inBasket ? <><CheckCircle2 className="size-4" aria-hidden="true" /> Added to your list</> : 'Add to list and keep shopping'}</button>
             </div>
             {(added || inBasket) && <p className="mt-2 mb-0 text-center text-[13.5px]"><Link to="/quote" className="font-semibold text-brand">View your list ({items.length}) →</Link></p>}
