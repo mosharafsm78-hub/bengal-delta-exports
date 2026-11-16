@@ -31,7 +31,9 @@ const aiReady = () => !!(Deno.env.get('GEMINI_API_KEY') || Deno.env.get('ANTHROP
 
 // ---------- What we sell, to whom, where ----------
 type Target = { fam: string; cat: string; label: string; buyers: string; markets: string[] }
-const APPAREL = ['United Kingdom', 'Netherlands', 'France', 'Spain', 'Italy', 'Poland', 'Belgium', 'Denmark', 'Sweden', 'Ireland', 'Canada', 'Australia', 'Japan', 'United States', 'Germany']
+// Buyers are everywhere: every market we can reach in English or with a public company email.
+const WORLD = ['United States', 'Canada', 'Mexico', 'Brazil', 'Chile', 'Colombia', 'United Kingdom', 'Ireland', 'Netherlands', 'Belgium', 'France', 'Spain', 'Portugal', 'Italy', 'Poland', 'Czech Republic', 'Denmark', 'Sweden', 'Norway', 'Finland', 'Switzerland', 'Greece', 'Turkey', 'United Arab Emirates', 'Saudi Arabia', 'Qatar', 'Kuwait', 'Oman', 'Israel', 'Egypt', 'South Africa', 'Kenya', 'Nigeria', 'India', 'Sri Lanka', 'Singapore', 'Malaysia', 'Thailand', 'Philippines', 'Indonesia', 'Hong Kong', 'South Korea', 'Japan', 'China', 'Australia', 'New Zealand', 'Germany', 'Austria']
+const APPAREL = WORLD
 const TARGETS: Target[] = [
   { fam: 'tshirts', cat: 'garments', label: 'cotton T-shirts', buyers: 'promotional merchandise suppliers, uniform and workwear distributors, private-label clothing brands, apparel importers', markets: APPAREL },
   { fam: 'polos', cat: 'garments', label: 'polo shirts', buyers: 'corporate uniform suppliers, workwear distributors, golf and club-wear brands', markets: APPAREL },
@@ -45,9 +47,9 @@ const TARGETS: Target[] = [
   { fam: 'bedding', cat: 'home', label: 'bed linen', buyers: 'hotel linen suppliers, home textile importers and wholesalers', markets: APPAREL },
   { fam: 'jute-bags', cat: 'jute', label: 'jute and juco bags', buyers: 'promotional bag suppliers, eco packaging companies, retail packaging distributors', markets: APPAREL },
   { fam: 'jute-decor', cat: 'jute', label: 'jute rugs and home decor', buyers: 'home decor importers, rug wholesalers, interior retailers with own import', markets: APPAREL },
-  { fam: 'vegetables', cat: 'produce', label: 'fresh vegetables from Bangladesh', buyers: 'Asian and ethnic grocery importers, fresh produce importers', markets: ['United Kingdom', 'Italy', 'Malaysia', 'Singapore', 'Saudi Arabia', 'Netherlands'] },
-  { fam: 'spices', cat: 'food', label: 'spices and aromatic rice', buyers: 'spice importers, Asian and ethnic food wholesalers', markets: ['United Kingdom', 'United States', 'Canada', 'Australia', 'Malaysia', 'Saudi Arabia', 'Italy'] },
-  { fam: 'frozen', cat: 'food', label: 'frozen fish and shrimp', buyers: 'seafood importers, Asian food wholesalers', markets: ['United Kingdom', 'United States', 'Canada', 'Australia', 'Japan', 'Netherlands'] },
+  { fam: 'vegetables', cat: 'produce', label: 'fresh vegetables from Bangladesh', buyers: 'Asian and ethnic grocery importers, fresh produce importers', markets: ['United Kingdom', 'Italy', 'Malaysia', 'Singapore', 'Saudi Arabia', 'United Arab Emirates', 'Qatar', 'Kuwait', 'Oman', 'Netherlands', 'Canada', 'United States', 'Australia'] },
+  { fam: 'spices', cat: 'food', label: 'spices and aromatic rice', buyers: 'spice importers, Asian and ethnic food wholesalers', markets: WORLD },
+  { fam: 'frozen', cat: 'food', label: 'frozen fish and shrimp', buyers: 'seafood importers, Asian food wholesalers', markets: WORLD },
   { fam: 'handicrafts', cat: 'crafts', label: 'handicrafts and handloom', buyers: 'home decor and fair-trade importers, gift wholesalers', markets: APPAREL },
 ]
 // Who the lead engine looks for. Weighted: companies already buying from Bangladesh come first.
@@ -61,7 +63,7 @@ const SEGMENTS: { id: string; label: string; brief: string; w: number }[] = [
 ]
 function pickSegment() { let r = Math.random() * SEGMENTS.reduce((a, s) => a + s.w, 0); for (const s of SEGMENTS) { r -= s.w; if (r <= 0) return s } return SEGMENTS[0] }
 const DUTY_FREE = new Set(['United Kingdom', 'Netherlands', 'France', 'Spain', 'Italy', 'Poland', 'Belgium', 'Denmark', 'Sweden', 'Ireland', 'Germany', 'Austria', 'Canada', 'Australia', 'Japan', 'Norway', 'Switzerland', 'New Zealand'])
-const UTC_OFFSET: Record<string, number> = { 'United Kingdom': 0, Ireland: 0, Netherlands: 1, France: 1, Spain: 1, Italy: 1, Poland: 1, Belgium: 1, Denmark: 1, Sweden: 1, Germany: 1, Austria: 1, Norway: 1, Switzerland: 1, Canada: -5, 'United States': -5, Australia: 10, Japan: 9, Malaysia: 8, Singapore: 8, 'Saudi Arabia': 3, 'New Zealand': 12 }
+const UTC_OFFSET: Record<string, number> = { Mexico: -6, Brazil: -3, Chile: -3, Colombia: -5, Portugal: 0, 'Czech Republic': 1, Finland: 2, Greece: 2, Turkey: 3, 'United Arab Emirates': 4, Qatar: 3, Kuwait: 3, Oman: 4, Israel: 2, Egypt: 2, 'South Africa': 2, Kenya: 3, Nigeria: 1, India: 5.5, 'Sri Lanka': 5.5, Thailand: 7, Philippines: 8, Indonesia: 7, 'Hong Kong': 8, 'South Korea': 9, China: 8, 'United Kingdom': 0, Ireland: 0, Netherlands: 1, France: 1, Spain: 1, Italy: 1, Poland: 1, Belgium: 1, Denmark: 1, Sweden: 1, Germany: 1, Austria: 1, Norway: 1, Switzerland: 1, Canada: -5, 'United States': -5, Australia: 10, Japan: 9, Malaysia: 8, Singapore: 8, 'Saudi Arabia': 3, 'New Zealand': 12 }
 const ROLE = ['sales', 'purchasing', 'purchase', 'buying', 'buyer', 'sourcing', 'procurement', 'import', 'trade', 'info', 'contact', 'hello', 'office', 'enquiries', 'inquiries', 'mail', 'service', 'kontakt', 'admin']
 const SKIP_DOMAINS = /(amazon|alibaba|ebay|etsy|facebook|linkedin|instagram|google|wikipedia|yelp|indiamart|made-in-china|tradekey|europages|kompass|yellowpages|zoominfo|bloomberg|dnb\.com|crunchbase|globalsources|exporthub|go4worldbusiness)\./i
 
@@ -281,10 +283,11 @@ async function sendBatch(force = false) {
   const batch = force ? Math.min(room, 10) : Math.max(1, Math.min(room, hourRoom, Math.ceil(perHour / 6) + 1))
   const { data: due } = await db.from('bde_contacts').select('*').contains('tags', ['prospect']).eq('status', 'subscribed').is('replied_at', null).lt('seq_step', 3).lte('next_touch_at', new Date().toISOString()).order('seq_step', { ascending: false }).order('score', { ascending: false }).limit(200)
   let sent = 0; const errors: string[] = []
-  for (const c of due ?? []) {
+  // Buyers in office hours go first; if there are not enough, send anyway so the hourly target is met (the email waits in their inbox).
+  const inHours = (c: any) => { const { h, dow } = localHour(c.country ?? ''); return dow > 0 && dow < 6 && h >= 8 && h < 17 }
+  const ordered = [...(due ?? [])].sort((a, b) => Number(inHours(b)) - Number(inHours(a)))
+  for (const c of ordered) {
     if (sent >= batch) break
-    const { h, dow } = localHour(c.country ?? '')
-    if (!force && (dow === 0 || dow === 6 || h < 9 || h >= 16)) continue // their business hours only
     try { await sendOne(c, c.seq_step ?? 0, cfg, email.physical_address ?? ''); sent++ } catch (e) {
       errors.push(clean(e).slice(0, 160))
       await db.from('bde_outreach').insert({ contact_id: c.id, step: c.seq_step ?? 0, subject: '-', body: '-', status: 'failed', error: clean(e).slice(0, 300) })
