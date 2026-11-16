@@ -58,7 +58,7 @@ function AuthScreens() {
           ))}
         </div>
       </div>
-      <div className="rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">
+      <div className="order-first self-start rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8 lg:order-none">
         {mode === 'in' && <SignIn onUp={() => setMode('up')} onReset={() => setMode('reset')} />}
         {mode === 'up' && <SignUp onIn={() => setMode('in')} />}
         {mode === 'reset' && <Reset onIn={() => setMode('in')} />}

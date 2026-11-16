@@ -2,7 +2,7 @@
 export const SITE = {
   name: 'BengalExport',
   tagline: 'Sourced in Bangladesh · Shipped worldwide',
-  email: 'sales@bengaldeltaexports.com',
+  email: 'sales@bengalexport.online',
   whatsapp: '8801805070650',
   whatsappDisplay: '+880 1805-070650',
   phone: '+880 1805-070650',

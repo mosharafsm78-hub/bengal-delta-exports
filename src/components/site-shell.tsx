@@ -207,7 +207,7 @@ export function SiteHeader() {
           </nav>
           <div className="ml-auto flex items-center gap-2">
             <div className="hidden xl:block"><HeaderSearch /></div>
-            <Link to="/account" className="hidden items-center gap-1.5 rounded-md px-2.5 py-2 text-[14.5px] font-medium text-foreground no-underline hover:bg-muted hover:text-brand md:inline-flex"><User className="size-4" aria-hidden="true" />Buyer account</Link>
+            <Link to="/account" className="hidden items-center gap-1.5 whitespace-nowrap rounded-md px-2.5 py-2 text-[14.5px] font-medium text-foreground no-underline hover:bg-muted hover:text-brand md:inline-flex"><User className="size-4" aria-hidden="true" />Buyer account</Link>
             <Link to="/quote" className="btn btn-primary px-3 py-2.5 text-[14.5px] sm:px-4">
               <ShoppingBag className="size-4" aria-hidden="true" />
               <span className="hidden sm:inline">Get a free quote</span>
