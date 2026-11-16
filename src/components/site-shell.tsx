@@ -129,10 +129,10 @@ function HeaderSearch({ onDone }: { onDone?: () => void }) {
 }
 
 const TRUST = [
-  [Landmark, 'Pay by LC after shipping', '/how-we-work'],
-  [ShieldCheck, 'Every order inspected', '/quality'],
+  [Landmark, '100% LC at sight', '/how-we-work'],
+  [ShieldCheck, 'Pre-shipment inspection', '/quality'],
   [FlaskConical, 'Samples in 24 hours', '/quote'],
-  [BadgeCheck, 'Checked factories only', '/suppliers'],
+  [BadgeCheck, 'Vetted manufacturers', '/suppliers'],
 ] as const
 
 /** Small trust badges used on product pages. */

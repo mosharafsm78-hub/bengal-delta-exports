@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { FlaskConical, Landmark, Search, ShieldCheck } from 'lucide-react'
+import { Container, Landmark, Search, ShieldCheck } from 'lucide-react'
 import { MAP_H, MAP_W, ORIGIN, PORTS } from '@/data/map-points'
 import { CountrySelect } from '@/components/country-select'
 
@@ -50,10 +50,10 @@ export function HeroBanner() {
       <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#0b1d19] via-[#0b1d19]/85 to-transparent lg:via-[#0b1d19]/70" aria-hidden="true" />
 
       <div className="mx-auto max-w-7xl px-4 pt-16 pb-14 sm:pt-24 sm:pb-20 lg:pt-28 lg:pb-24">
-        <h1 className="m-0 max-w-[15ch] text-[clamp(2.4rem,6vw,4.4rem)] leading-[1.02] font-semibold tracking-tight text-white">
-          Buy from Bangladesh. <span className="text-[#5eead4]">Pay only when it ships.</span>
+        <h1 className="m-0 max-w-[16ch] text-[clamp(2.4rem,6vw,4.4rem)] leading-[1.02] font-semibold tracking-tight text-white">
+          Sourcing from Bangladesh, <span className="text-[#5eead4]">at scale.</span>
         </h1>
-        <p className="mt-5 mb-0 max-w-[46ch] text-[clamp(1.05rem,1.6vw,1.25rem)] text-white/75">Clothing, footwear, textiles, jute and food. Inspected and delivered to your port.</p>
+        <p className="mt-5 mb-0 max-w-[46ch] text-[clamp(1.05rem,1.6vw,1.25rem)] text-white/75">Apparel, footwear, home textiles, jute and agro products. From vetted manufacturers to your port.</p>
 
         <form onSubmit={go} role="search" className="mt-8 grid max-w-3xl gap-2 rounded-2xl bg-white p-2 text-ink shadow-2xl sm:grid-cols-[1.4fr_1fr_auto]">
           <label className="relative block">
@@ -62,11 +62,11 @@ export function HeroBanner() {
             <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="What do you want to buy?" className="w-full rounded-lg border border-transparent bg-transparent py-3 pr-3 pl-10 text-[16px] outline-none focus:border-brand" />
           </label>
           <div className="sm:border-l sm:border-border sm:pl-2"><CountrySelect value={country} onChange={setCountry} placeholder="Deliver to" className="border-transparent py-3 text-[16px]" /></div>
-          <button className="rounded-xl bg-brand px-7 py-3 text-[16px] font-semibold text-white hover:opacity-90">Get prices</button>
+          <button className="rounded-xl bg-brand px-7 py-3 text-[16px] font-semibold text-white hover:opacity-90">Request a quotation</button>
         </form>
 
         <ul className="mt-7 mb-0 flex flex-wrap gap-x-7 gap-y-3 p-0 text-[15px] text-white/85">
-          {([[Landmark, 'Your money stays in your bank'], [ShieldCheck, 'Every order inspected'], [FlaskConical, 'Samples in 24 hours']] as const).map(([Icon, t]) => (
+          {([[Landmark, 'Irrevocable LC at sight'], [ShieldCheck, 'Pre-shipment inspection'], [Container, 'FCL and LCL to any port']] as const).map(([Icon, t]) => (
             <li key={t} className="flex list-none items-center gap-2"><span className="grid size-8 place-items-center rounded-full bg-white/10"><Icon className="size-4 text-[#5eead4]" aria-hidden="true" /></span>{t}</li>
           ))}
         </ul>
