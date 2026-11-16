@@ -5,7 +5,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2'
 const URL_ = Deno.env.get('SUPABASE_URL')!
 const SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const ANON = Deno.env.get('SUPABASE_ANON_KEY')!
-const SITE = Deno.env.get('BDE_SITE_URL') ?? 'https://mosharafsm78-hub.github.io/bengal-delta-exports/'
+const SITE = Deno.env.get('BDE_SITE_URL') ?? 'https://bengalexport.online/'
 const db = createClient(URL_, SERVICE, { auth: { persistSession: false } })
 const FN = `${URL_}/functions/v1/bde-mail`
 

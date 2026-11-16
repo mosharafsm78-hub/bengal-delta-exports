@@ -1,5 +1,5 @@
 // Starter email templates. Product images sit in a row with the text below each image.
-const SITE = (import.meta.env.VITE_SITE_URL as string | undefined)?.replace(/\/?$/, '/') ?? 'https://mosharafsm78-hub.github.io/bengal-delta-exports/'
+const SITE = (import.meta.env.VITE_SITE_URL as string | undefined)?.replace(/\/?$/, '/') ?? 'https://bengalexport.online/'
 const img = (k: string) => `${SITE}email/${k}.jpg`
 
 type P = { key: string; title: string; line: string; url: string }

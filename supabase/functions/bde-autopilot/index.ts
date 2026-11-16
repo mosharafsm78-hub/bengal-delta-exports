@@ -13,7 +13,7 @@ import nodemailer from 'npm:nodemailer@6.9.16'
 const URL_ = Deno.env.get('SUPABASE_URL')!
 const ANON = Deno.env.get('SUPABASE_ANON_KEY')!
 const SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-const SITE = Deno.env.get('BDE_SITE_URL') ?? 'https://mosharafsm78-hub.github.io/bengal-delta-exports/'
+const SITE = Deno.env.get('BDE_SITE_URL') ?? 'https://bengalexport.online/'
 const FN = `${URL_}/functions/v1/bde-autopilot`
 const db = createClient(URL_, SERVICE, { auth: { persistSession: false } })
 const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type', 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS' }

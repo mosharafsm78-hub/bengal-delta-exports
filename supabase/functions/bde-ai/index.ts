@@ -5,7 +5,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2'
 const URL_ = Deno.env.get('SUPABASE_URL')!
 const ANON = Deno.env.get('SUPABASE_ANON_KEY')!
 const SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-const SITE = Deno.env.get('BDE_SITE_URL') ?? 'https://mosharafsm78-hub.github.io/bengal-delta-exports/'
+const SITE = Deno.env.get('BDE_SITE_URL') ?? 'https://bengalexport.online/'
 const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type', 'Access-Control-Allow-Methods': 'POST, OPTIONS' }
 
 const COMPANY = `You write for BengalExport, an export trading house in Chattogram, Bangladesh (founded 2022, about 22 people).
