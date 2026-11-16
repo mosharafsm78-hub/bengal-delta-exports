@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
-import { Search, ArrowRight, Leaf, CheckCircle2, MousePointerClick, FileText, Landmark, Globe2, ShieldCheck, Factory, Ship } from 'lucide-react'
+import { Search, ArrowRight, Leaf, CheckCircle2, MousePointerClick, FileText, Landmark, Globe2, ShieldCheck, Factory, Ship, BadgeCheck, Headset, ClipboardList } from 'lucide-react'
 import { pageHead } from '@/lib/head'
 import { CATS, FAMILIES } from '@/data/catalog'
 import { Photo } from '@/components/photo'
@@ -115,6 +115,23 @@ function Home() {
             <span className="mt-1 text-[14px] text-muted-foreground">Tell us. We find it in Bangladesh.</span>
             <span className="mt-3 inline-flex items-center gap-1 text-[14px] font-semibold text-brand">Ask us {arrow}</span>
           </Link>
+        </div>
+      </section>
+
+      {/* Buyer desk */}
+      <section className="mx-auto max-w-7xl px-4 pt-20">
+        <div className="grid items-center gap-8 overflow-hidden rounded-2xl bg-ink p-8 text-paper md:grid-cols-[1.2fr_1fr] md:p-12">
+          <div>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-paper/10 px-3 py-1 text-[13px] font-semibold"><BadgeCheck className="size-4" aria-hidden="true" />Free for buyers</span>
+            <h2 className="mt-4 mb-3 text-[clamp(1.8rem,3.4vw,2.5rem)] text-paper">Your own sourcing agent in Bangladesh</h2>
+            <p className="m-0 text-[17px] text-paper/80">Open a free buyer account. Verified buyers get a named personal agent, an AI assistant that answers at any hour, and a live tracker for every offer, sample and shipment.</p>
+            <Link to="/account" hash="signup" className="btn mt-6 bg-paper text-ink">Create free account <ArrowRight className="size-4" aria-hidden="true" /></Link>
+          </div>
+          <ul className="m-0 grid gap-3 p-0">
+            {([[Headset, 'A named agent who knows your business', 'Plus instant AI answers, day and night'], [BadgeCheck, 'Verified buyer badge', 'Earned by checks on your company, never bought'], [ClipboardList, 'Every request tracked live', 'From offer to samples, LC, production and shipping']] as const).map(([Icon, t, d]) => (
+              <li key={t} className="flex list-none gap-3 rounded-xl bg-paper/5 p-4"><Icon className="mt-0.5 size-5 flex-none text-[hsl(var(--brand-soft))]" aria-hidden="true" /><span><b className="block">{t}</b><span className="text-[14px] text-paper/70">{d}</span></span></li>
+            ))}
+          </ul>
         </div>
       </section>
 

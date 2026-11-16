@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { CheckCircle2, Clock, Globe2, Landmark, Send, Ship } from 'lucide-react'
+import { BadgeCheck, CheckCircle2, Clock, Globe2, Landmark, Send, Ship } from 'lucide-react'
+import { Link } from '@tanstack/react-router'
 import { MARKETS, dutyLine, marketDuty } from '@/data/markets'
 import type { CategoryId } from '@/data/types'
 import { submitLead } from '@/lib/leads'
@@ -88,6 +89,10 @@ export function QuickOffer({ cat, family, style, qty, unit, estimate, leadMin, l
           </form>
         )}
       </div>
+      <Link to="/account" hash="signup" className="flex items-center gap-3 border-t border-border bg-brand-soft/60 px-5 py-3 text-[13.5px] text-foreground no-underline hover:bg-brand-soft">
+        <BadgeCheck className="size-5 flex-none text-brand" aria-hidden="true" />
+        <span><b>Buying regularly?</b> Open a free buyer account: Verified badge, your own sourcing agent and live order tracking.</span>
+      </Link>
     </div>
   )
 }

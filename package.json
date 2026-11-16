@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev --port 3000",
-    "build": "vite build && node scripts/postbuild.mjs",
+    "build": "vite build && node scripts/postbuild.mjs && node --experimental-strip-types --no-warnings scripts/catalog-json.mjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
