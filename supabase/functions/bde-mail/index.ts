@@ -89,6 +89,10 @@ async function send(req: Request) {
   const { data: isAdmin } = await userDb.rpc('bde_is_admin')
   if (!isAdmin) return Response.json({ error: 'Not allowed' }, { status: 403, headers: cors })
   const { campaignId, testEmail } = await req.json()
+  return await runCampaign(campaignId, testEmail)
+}
+
+async function runCampaign(campaignId: number, testEmail?: string) {
   const { data: settings } = await db.from('bde_settings').select('value').eq('key', 'email').single()
   const s = settings!.value as Record<string, any>
   if (!s.connected || !s.from_email) return Response.json({ error: 'Email sending is not connected yet. Finish Settings → Email first.' }, { status: 400, headers: cors })
@@ -109,12 +113,17 @@ async function send(req: Request) {
   const { count: queued } = await db.from('bde_sends').select('id', { count: 'exact', head: true }).eq('campaign_id', camp.id)
   if (!queued) {
     const a = camp.audience ?? {}
+    if (a.unopenedOf) {
+      const { data: prev } = await db.from('bde_sends').select('contact_id').eq('campaign_id', a.unopenedOf).eq('status', 'sent').eq('open_count', 0).limit(50000)
+      const rows0 = (prev ?? []).map((r: { contact_id: number }) => ({ campaign_id: camp.id, contact_id: r.contact_id }))
+      for (let i = 0; i < rows0.length; i += 1000) await db.from('bde_sends').upsert(rows0.slice(i, i + 1000), { onConflict: 'campaign_id,contact_id', ignoreDuplicates: true })
+    }
     let q = db.from('bde_contacts').select('id').eq('status', 'subscribed')
     if (a.tags?.length) q = q.overlaps('tags', a.tags)
     if (a.interests?.length) q = q.overlaps('interests', a.interests)
     if (a.countries?.length) q = q.in('country', a.countries)
     if (a.minScore) q = q.gte('score', a.minScore)
-    const { data: ids } = await q.limit(50000)
+    const { data: ids } = a.unopenedOf ? { data: [] } : await q.limit(50000)
     const rows = (ids ?? []).map((r: { id: number }) => ({ campaign_id: camp.id, contact_id: r.id }))
     for (let i = 0; i < rows.length; i += 1000) await db.from('bde_sends').upsert(rows.slice(i, i + 1000), { onConflict: 'campaign_id,contact_id', ignoreDuplicates: true })
   }
@@ -143,6 +152,43 @@ async function send(req: Request) {
   return Response.json({ ok: true, sent, failed, remaining: left ?? 0, dailyRoomLeft: Math.max(0, room - sent) }, { headers: cors })
 }
 
+const cronOk = (req: Request) => { const t = Deno.env.get('BDE_CRON_TOKEN'); return !!t && req.headers.get('x-bde-cron') === t }
+
+async function settingsOf(key: string) { return ((await db.from('bde_settings').select('value').eq('key', key).maybeSingle()).data?.value ?? {}) as Record<string, any> }
+
+/** Hourly: continue campaigns that hit the daily limit, and start scheduled ones. */
+async function tick() {
+  const auto = await settingsOf('automations')
+  const out: unknown[] = []
+  if (auto.auto_continue === false) return { skipped: true }
+  const { data: due } = await db.from('bde_campaigns').select('id, status, scheduled_at').or(`status.eq.sending,and(status.eq.scheduled,scheduled_at.lte.${new Date().toISOString()})`).limit(5)
+  for (const c of due ?? []) { const r = await runCampaign(c.id); out.push({ id: c.id, ...(await r.json()) }) }
+  return { ran: out }
+}
+
+/** New quote request: instant confirmation to the buyer and an alert to the team. */
+async function leadAlert(leadId: number) {
+  const s = await settingsOf('email'); const auto = await settingsOf('automations'); const alerts = await settingsOf('alerts')
+  if (!s.connected || !s.from_email) return { skipped: 'email not connected' }
+  const { data: l } = await db.from('bde_leads').select('*').eq('id', leadId).single()
+  if (!l) return { skipped: 'no lead' }
+  const items = (l.items ?? []).map((i: any) => `<li>${String(i.style).replace(/[<>&]/g, '')}${i.qty ? ` — ${String(i.qty).replace(/[<>&]/g, '')}` : ''}</li>`).join('')
+  const done: string[] = []
+  if (auto.auto_reply !== false) {
+    const first = String(l.name ?? '').split(' ')[0].replace(/[<>&]/g, '') || 'there'
+    const html = `<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.6;color:#14211d;max-width:560px"><p>Hello ${first},</p><p>Thank you for your request to BengalExport. Your reference is <b>${l.reference}</b>. A member of our sales team will reply within 24 hours with your price delivered to ${String(l.port || l.country).replace(/[<>&]/g, '')}, or with a few questions if we need details.</p>${items ? `<p>Products in your request:</p><ul>${items}</ul>` : ''}<p>Need samples first? Paid samples of ready styles ship within 24 hours. You can also reach us on WhatsApp: +880 1805-070650.</p><p>Kind regards,<br>BengalExport sales team<br>${s.physical_address ?? ''}</p></div>`
+    await deliver(s.provider, { from: s.from_email, fromName: s.from_name || 'BengalExport', replyTo: s.reply_to, to: l.email, subject: `We received your request ${l.reference}`, html, unsub: `${FN}/u` })
+    await db.from('bde_activity').insert({ entity: 'lead', entity_id: l.id, actor: 'automation', kind: 'auto', body: 'Instant confirmation email sent to the buyer' })
+    done.push('auto_reply')
+  }
+  if (auto.lead_alert !== false && alerts.new_lead_email) {
+    const html = `<div style="font-family:Arial,sans-serif;font-size:14px"><h2 style="margin:0 0 8px">New quote request ${l.reference}</h2><p><b>${String(l.company).replace(/[<>&]/g, '')}</b> · ${String(l.name).replace(/[<>&]/g, '')} · ${String(l.country).replace(/[<>&]/g, '')}${l.port ? `, ${String(l.port).replace(/[<>&]/g, '')}` : ''}<br>${l.email}${l.phone ? ` · ${l.phone}` : ''}</p><ul>${items}</ul><p>${String(l.requirement ?? '').replace(/[<>&]/g, '')}</p><p><a href="${SITE}admin#leads">Open in the admin panel</a></p></div>`
+    await deliver(s.provider, { from: s.from_email, fromName: 'BengalExport alerts', to: alerts.new_lead_email, subject: `New quote: ${l.company !== '-' ? l.company : l.name}, ${l.country}`, html, unsub: `${FN}/u` })
+    done.push('alert')
+  }
+  return { done }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
   const url = new URL(req.url)
@@ -169,6 +215,8 @@ Deno.serve(async (req) => {
       return page('Unsubscribe from BengalExport emails?', `<form method="post"><button style="background:#0f6b5c;color:#fff;border:0;border-radius:8px;padding:12px 20px;font-size:16px;cursor:pointer">Yes, unsubscribe me</button></form>`)
     }
     if (route === 'send' && req.method === 'POST') return await send(req)
+    if (route === 'tick' && req.method === 'POST') return cronOk(req) ? Response.json(await tick()) : new Response('no', { status: 403 })
+    if (route === 'lead' && req.method === 'POST') { if (!cronOk(req)) return new Response('no', { status: 403 }); const { id } = await req.json(); return Response.json(await leadAlert(Number(id))) }
     return new Response('Not found', { status: 404, headers: cors })
   } catch (e) {
     return Response.json({ error: String(e).slice(0, 300) }, { status: 500, headers: cors })

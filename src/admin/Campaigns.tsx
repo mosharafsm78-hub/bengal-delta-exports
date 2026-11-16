@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ArrowLeft, Copy, Plus, Send, TestTube2 } from 'lucide-react'
+import { ArrowLeft, Copy, Plus, Repeat, Send, Sparkles, TestTube2 } from 'lucide-react'
+import { bestSendHour, subjectCheck } from './smart'
 import { cn } from '@/lib/utils'
 import type { PageProps } from './AdminApp'
-import { countBy, fetchAll, fmtTime, FN_URL, pct, sb, type Campaign, type WebEvent } from './client'
+import { ai, countBy, fetchAll, fmtTime, FN_URL, pct, sb, type Campaign, type WebEvent } from './client'
 import { INTERESTS } from './Contacts'
-import { TEMPLATES } from './templates'
+import { buildEmail, TEMPLATES } from './templates'
 import { Badge, Bars, btn, Card, Empty, ErrorNote, Field, input, Kpi, Loading, useAsync } from './ui'
 
 type Stats = { sent: number; failed: number; queued: number; opened: number; clicked: number }
@@ -74,6 +75,7 @@ function Editor({ camp, me, settings, onBack }: { camp: Campaign | null; me: str
   const locked = !!camp && camp.status !== 'draft'
 
   useEffect(() => {
+    if (a.unopenedOf) { sb().from('bde_sends').select('id', { count: 'exact', head: true }).eq('campaign_id', a.unopenedOf).eq('status', 'sent').eq('open_count', 0).then((r) => setAudienceCount(r.count ?? 0)); return }
     let q = sb().from('bde_contacts').select('id', { count: 'exact', head: true }).eq('status', 'subscribed')
     if (a.tags?.length) q = q.overlaps('tags', a.tags)
     if (a.interests?.length) q = q.overlaps('interests', a.interests)
@@ -123,7 +125,7 @@ function Editor({ camp, me, settings, onBack }: { camp: Campaign | null; me: str
         {camp && (<div className="flex rounded-lg border border-border bg-card p-0.5 text-[13px]">{(['write', 'report'] as const).map((t) => <button key={t} type="button" onClick={() => setTab(t)} className={cn('rounded-md px-3 py-1.5 font-medium', tab === t && 'bg-brand text-white')}>{t === 'write' ? 'Email' : 'Results'}</button>)}</div>)}
         {locked && <button type="button" onClick={async () => { const r = await sb().from('bde_campaigns').insert({ name: `${c.name} (copy)`, subject: c.subject, preheader: c.preheader, from_name: c.from_name, body_html: c.body_html, audience: c.audience, created_by: me }).select().single(); if (r.data) { setC(r.data); setTab('write') } }} className={cn(btn, 'btn-outline ml-auto')}><Copy className="size-4" />Duplicate</button>}
       </div>
-      {tab === 'report' && camp ? <Report camp={camp} /> : (
+      {tab === 'report' && camp ? <Report camp={camp} onResend={async () => { const r = await sb().from('bde_campaigns').insert({ name: `${c.name} — resend to non-openers`, subject: c.subject, preheader: c.preheader, from_name: c.from_name, body_html: c.body_html, audience: { unopenedOf: camp.id }, created_by: me }).select().single(); if (r.data) { setC(r.data); setTab('write') } }} /> : (
         <div className="grid gap-4 xl:grid-cols-[1fr_1.1fr]">
           <div className="grid content-start gap-4">
             {!camp && (
@@ -131,16 +133,26 @@ function Editor({ camp, me, settings, onBack }: { camp: Campaign | null; me: str
                 <div className="grid gap-2 sm:grid-cols-2">{TEMPLATES.map((t) => <button key={t.id} type="button" onClick={() => setC({ ...c, name: t.name, subject: t.subject, body_html: t.html })} className="rounded-lg border border-border p-3 text-left text-[13.5px] hover:border-brand"><b>{t.name}</b></button>)}</div>
               </Card>
             )}
+            {!locked && <AiWriter onApply={(subject, html) => setC({ ...c, subject, body_html: html })} />}
             <Card title="Email">
               <div className="grid gap-3">
                 <Field label="Campaign name (internal)"><input disabled={locked} className={input} value={c.name ?? ''} onChange={(e) => setC({ ...c, name: e.target.value })} /></Field>
                 <Field label="Subject line" hint="Use {{first_name}}, {{company}} or {{country}} to personalise."><input disabled={locked} className={input} value={c.subject ?? ''} onChange={(e) => setC({ ...c, subject: e.target.value })} /></Field>
+                <SubjectMeter subject={c.subject ?? ''} />
                 <Field label="Sender name"><input disabled={locked} className={input} value={c.from_name ?? ''} onChange={(e) => setC({ ...c, from_name: e.target.value })} /></Field>
                 <Field label="Email body (HTML)" hint="Links to the BengalExport website are tracked automatically, so you see which product each buyer clicks and what they do on the site."><textarea disabled={locked} className={cn(input, 'min-h-[260px] font-mono text-[12px]')} value={c.body_html ?? ''} onChange={(e) => setC({ ...c, body_html: e.target.value })} /></Field>
               </div>
             </Card>
             <Card title={`Audience: ${audienceCount ?? '…'} subscribed contacts`}>
               <div className="grid gap-3">
+                {!locked && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {([['Everyone', {}], ['Hot (score 20+)', { minScore: 20 }], ['Website leads', { tags: ['lead'] }], ['Engaged (score 5+)', { minScore: 5 }]] as [string, Record<string, unknown>][]).map(([label, aud]) => (
+                      <button key={label} type="button" onClick={() => setC({ ...c, audience: aud })} className="rounded-lg border border-dashed border-brand/50 px-2.5 py-1 text-[12.5px] font-medium text-brand hover:bg-brand-soft"><Sparkles className="mr-1 inline size-3" />{label}</button>
+                    ))}
+                  </div>
+                )}
+                {a.unopenedOf && <p className="m-0 rounded-lg bg-brand-soft px-3 py-2 text-[13px] text-brand">Sending only to people who did not open campaign #{a.unopenedOf}.</p>}
                 <div><div className="mb-1.5 text-[13px] font-semibold">Interested in</div><div className="flex flex-wrap gap-1.5">{INTERESTS.map((i) => <button key={i} type="button" disabled={locked} onClick={() => toggle('interests', i)} className={cn('rounded-full border px-2.5 py-1 text-[12.5px]', (a.interests ?? []).includes(i) ? 'border-brand bg-brand-soft text-brand' : 'border-border')}>{i}</button>)}</div></div>
                 <Field label="Tags (comma separated)"><input disabled={locked} className={input} value={(a.tags ?? []).join(', ')} onChange={(e) => setC({ ...c, audience: { ...a, tags: e.target.value.split(',').map((t) => t.trim().toLowerCase()).filter(Boolean) } })} placeholder="lead, importer" /></Field>
                 <Field label="Countries (comma separated)"><input disabled={locked} className={input} value={(a.countries ?? []).join(', ')} onChange={(e) => setC({ ...c, audience: { ...a, countries: e.target.value.split(',').map((t) => t.trim()).filter(Boolean) } })} placeholder="Germany, United Kingdom" /></Field>
@@ -169,7 +181,7 @@ function Editor({ camp, me, settings, onBack }: { camp: Campaign | null; me: str
   )
 }
 
-function Report({ camp }: { camp: Campaign }) {
+function Report({ camp, onResend }: { camp: Campaign; onResend: () => void }) {
   const { data, loading } = useAsync(async () => {
     const sends = await fetchAll<any>((a, b) => sb().from('bde_sends').select('id, status, open_count, click_count, first_open_at, contact_id, error, bde_contacts(email, company, name, country)').eq('campaign_id', camp.id).range(a, b), 100000)
     const ev = await fetchAll<any>((a, b) => sb().from('bde_email_events').select('kind, url, created_at, contact_id').eq('campaign_id', camp.id).range(a, b), 100000)
@@ -187,8 +199,14 @@ function Report({ camp }: { camp: Campaign }) {
   const links = countBy(ev.filter((e: any) => e.kind === 'click'), (e: any) => String(e.url).replace(/^https?:\/\/[^/]+/, '').split('?')[0] || '/')
   const hours = countBy(opened, (s: any) => s.first_open_at && `${new Date(s.first_open_at).getHours()}:00`)
   const engaged = [...sent].sort((x: any, y: any) => y.click_count * 5 + y.open_count - (x.click_count * 5 + x.open_count)).slice(0, 12)
+  const best = bestSendHour(sent)
   return (
     <div className="grid gap-4">
+      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-brand/25 bg-brand-soft/60 px-4 py-3 text-[13.5px]">
+        <Sparkles className="size-4 text-brand" />
+        <span className="flex-1">{sent.length - opened.length > 0 ? `${sent.length - opened.length} people have not opened yet. Resending to them with a new subject line usually adds another third to your opens.` : 'Everyone opened this campaign.'}{best !== null && ` Best open time: around ${best}:00 Bangladesh time.`}</span>
+        {sent.length - opened.length > 0 && <button type="button" onClick={onResend} className={cn(btn, 'btn-primary')}><Repeat className="size-4" />Resend to non-openers</button>}
+      </div>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
         <Kpi label="Sent" value={sent.length} sub={`${sends.filter((s: any) => s.status === 'failed').length} failed · ${sends.filter((s: any) => s.status === 'queued').length} queued`} />
         <Kpi label="Opened" value={pct(opened.length, sent.length)} sub={`${opened.length} people`} tone="good" />
@@ -211,5 +229,48 @@ function Report({ camp }: { camp: Campaign }) {
       {!!sends.filter((s: any) => s.error).length && <Card title="Delivery problems"><ul className="m-0 grid gap-1 p-0 pl-4 text-[13px]">{sends.filter((s: any) => s.error).slice(0, 20).map((s: any) => <li key={s.id}>{s.bde_contacts?.email}: {s.error}</li>)}</ul></Card>}
       <p className="m-0 text-[12.5px] text-muted-foreground">Opens are counted when the email's images load, so they are an estimate (some email apps block or pre-load images). Clicks and website visits are exact.</p>
     </div>
+  )
+}
+
+function SubjectMeter({ subject }: { subject: string }) {
+  if (!subject) return null
+  const r = subjectCheck(subject)
+  return (
+    <div className="-mt-1 flex items-start gap-2 text-[12.5px]">
+      <span className={'num rounded-full px-2 py-0.5 font-bold ' + (r.score >= 80 ? 'bg-[#dcfce7] text-[#166534]' : r.score >= 60 ? 'bg-[#fef3c7] text-[#92400e]' : 'bg-[#fee2e2] text-[#991b1b]')}>{r.score}</span>
+      <span className="text-muted-foreground">{r.tips.join(' ')}</span>
+    </div>
+  )
+}
+
+const PRODUCT_KEYS: Record<string, string> = { garments: 'tshirt-crew', 'home-textiles': 'bath-towels', jute: 'jute-tote', footwear: 'leather-sandals', produce: 'mango', food: 'turmeric-powder', crafts: 'nakshi-kantha' }
+
+function AiWriter({ onApply }: { onApply: (subject: string, html: string) => void }) {
+  const [brief, setBrief] = useState('')
+  const [cats, setCats] = useState<string[]>(['garments', 'home-textiles', 'jute'])
+  const [res, setRes] = useState<{ subjects: string[]; intro: string; products: { title: string; line: string }[]; closing: string; button: string } | null>(null)
+  const [err, setErr] = useState('')
+  const [busy, setBusy] = useState(false)
+  async function go() {
+    setBusy(true); setErr('')
+    try { setRes(await ai('campaign_write', { brief: `${brief}. Feature these categories: ${cats.join(', ')}` })) } catch (e) { setErr((e as Error).message) } finally { setBusy(false) }
+  }
+  return (
+    <Card title={<span className="flex items-center gap-2"><Sparkles className="size-4 text-brand" />Write with AI</span>} className="border-brand/30">
+      <div className="grid gap-3">
+        <textarea className={cn(input, 'min-h-[70px]')} value={brief} onChange={(e) => setBrief(e.target.value)} placeholder="e.g. Winter promotion for UK and German importers: fleece hoodies and bath towels, samples in 24 hours" />
+        <div className="flex flex-wrap gap-1.5">{Object.keys(PRODUCT_KEYS).map((k) => <button key={k} type="button" onClick={() => setCats(cats.includes(k) ? cats.filter((x) => x !== k) : [...cats, k].slice(-3))} className={cn('rounded-full border px-2.5 py-1 text-[12.5px]', cats.includes(k) ? 'border-brand bg-brand-soft text-brand' : 'border-border')}>{k}</button>)}</div>
+        <button type="button" onClick={go} disabled={busy || brief.length < 8} className={cn(btn, 'btn-primary w-fit disabled:opacity-50')}><Sparkles className="size-4" />{busy ? 'Writing…' : 'Write the email'}</button>
+        {err && <p className="m-0 text-[13px] text-[#991b1b]">{err}</p>}
+        {res && (
+          <div className="grid gap-2">
+            <p className="m-0 text-[13px] font-semibold">Pick a subject line to use this email:</p>
+            {res.subjects.map((s) => (
+              <button key={s} type="button" onClick={() => onApply(s, buildEmail(res.intro, res.products.map((p, i) => ({ ...p, key: PRODUCT_KEYS[cats[i] ?? 'garments'] ?? 'tshirt-crew', cat: cats[i] ?? 'garments' })), res.closing, res.button))} className="rounded-lg border border-border bg-card px-3 py-2 text-left text-[13.5px] hover:border-brand">{s}</button>
+            ))}
+          </div>
+        )}
+      </div>
+    </Card>
   )
 }

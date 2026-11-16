@@ -60,3 +60,15 @@ ${button('See this week’s produce', `${SITE}products/vegetables/`)}`),
   },
   { id: 'blank', name: 'Blank (plain letter)', subject: '', html: wrap(`<p style="margin:0 0 14px;font-size:16px">Hello {{first_name}},</p>\n<p style="margin:0;font-size:15px;line-height:1.6">Write your message here.</p>\n${button('Visit BengalExport', SITE)}`) },
 ]
+
+const CAT_URL: Record<string, string> = { garments: 'products/tshirts/', 'home-textiles': 'products/towels/', jute: 'products/jute-bags/', footwear: 'products/leather-shoes/', produce: 'products/vegetables/', food: 'products/spices/', crafts: 'products/handicrafts/' }
+
+/** Turn AI-written copy into a finished email in the house style. */
+export function buildEmail(intro: string, products: { title: string; line: string; key: string; cat: string }[], closing: string, buttonText: string) {
+  const esc = (s: string) => s.replace(/[<>&]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' })[c]!)
+  return wrap(`<p style="margin:0 0 14px;font-size:16px">Hello {{first_name}},</p>
+<p style="margin:0 0 18px;font-size:15px;line-height:1.6">${esc(intro)}</p>
+${row(products.map((p) => ({ key: p.key, title: esc(p.title), line: esc(p.line), url: SITE + (CAT_URL[p.cat] ?? 'products') })))}
+<p style="margin:22px 0 0;font-size:15px;line-height:1.6">${esc(closing)}</p>
+${button(esc(buttonText), `${SITE}quote`)}`)
+}

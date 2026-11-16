@@ -1,7 +1,9 @@
-import { AlertCircle, ArrowRight, Flame } from 'lucide-react'
+import { useState } from 'react'
+import { AlertCircle, ArrowRight, Flame, Sparkles, TrendingUp, TriangleAlert, Info } from 'lucide-react'
+import { insights } from './smart'
 import { usd } from '@/lib/slug'
 import type { PageProps } from './AdminApp'
-import { ago, countBy, daysAgo, fetchAll, fmtDate, pct, sb, SUPPLIER_STAGES, tzCountry, type Contact, type Lead, type WebEvent } from './client'
+import { ago, ai, countBy, daysAgo, fetchAll, fmtDate, pct, sb, SUPPLIER_STAGES, tzCountry, type Contact, type Lead, type WebEvent } from './client'
 import { Badge, Bars, Card, ErrorNote, Kpi, Loading, Spark, useAsync } from './ui'
 
 async function load() {
@@ -10,7 +12,7 @@ async function load() {
     fetchAll<Lead>((a, b) => sb().from('bde_leads').select('*').order('created_at', { ascending: false }).range(a, b)),
     sb().from('bde_suppliers').select('id, stage, company, created_at').then((r) => r.data ?? []),
     fetchAll<Contact>((a, b) => sb().from('bde_contacts').select('id, email, name, company, country, status, score, last_open_at, last_click_at, last_visit_at, tags').range(a, b)),
-    fetchAll<{ status: string; open_count: number; click_count: number; sent_at: string }>((a, b) => sb().from('bde_sends').select('status, open_count, click_count, sent_at').gte('created_at', since).range(a, b)),
+    fetchAll<{ status: string; open_count: number; click_count: number; sent_at: string; first_open_at: string | null }>((a, b) => sb().from('bde_sends').select('status, open_count, click_count, sent_at, first_open_at').gte('created_at', since).range(a, b)),
     fetchAll<WebEvent>((a, b) => sb().from('bde_web_events').select('*').gte('created_at', since).order('id').range(a, b)),
   ])
   return { leads, suppliers, contacts, sends, web }
@@ -45,8 +47,10 @@ export function Dashboard({ go }: PageProps) {
   const products = countBy(web.filter((e) => e.kind === 'product_view'), (e) => e.product?.replace(/-/g, ' '))
   const countries = countBy([...leads.map((l) => ({ c: l.country })), ...[...new Map(web.map((e) => [e.visitor_id, e])).values()].map((e) => ({ c: tzCountry(e.tz) }))], (r) => r.c)
 
+  const found = insights(leads, web, sends, suppliers as any[])
   return (
     <div className="grid gap-6">
+      <SmartPanel found={found} />
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
         <Kpi label="New quote requests (7 days)" value={newLeads.length} sub={`${leads.length} in total`} tone="good" />
         <Kpi label="Open pipeline value" value={pipeline ? usd(pipeline) : '—'} sub={`${open.length} open deals`} />
@@ -105,5 +109,30 @@ export function Dashboard({ go }: PageProps) {
         <Card title="Supplier pipeline"><Bars rows={countBy(suppliers as any[], (s: any) => SUPPLIER_STAGES.find((x) => x[0] === s.stage)?.[1] ?? s.stage)} empty="No supplier applications yet." /></Card>
       </div>
     </div>
+  )
+}
+
+function SmartPanel({ found }: { found: ReturnType<typeof insights> }) {
+  const [report, setReport] = useState('')
+  const [busy, setBusy] = useState(false)
+  async function weekly() {
+    setBusy(true); setReport('')
+    try { setReport((await ai<{ report: string }>('weekly_report')).report) } catch (e) { setReport((e as Error).message) } finally { setBusy(false) }
+  }
+  const Icon = { good: TrendingUp, warn: TriangleAlert, info: Info }
+  return (
+    <section className="overflow-hidden rounded-xl border border-brand/25 bg-gradient-to-br from-brand-soft via-card to-card p-5">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <h2 className="m-0 flex items-center gap-2 text-[15px] font-bold"><Sparkles className="size-4 text-brand" />Smart insights</h2>
+        <button type="button" onClick={weekly} disabled={busy} className="btn btn-outline px-3 py-1.5 text-[13px]"><Sparkles className="size-3.5" />{busy ? 'Writing report…' : 'AI weekly report'}</button>
+      </div>
+      <ul className="m-0 grid list-none gap-2 p-0 md:grid-cols-2">
+        {found.map((f, i) => { const I = Icon[f.tone]; return (
+          <li key={i} className="flex gap-2.5 rounded-lg bg-card/80 px-3 py-2.5 text-[13.5px] leading-snug">
+            <I className={'mt-0.5 size-4 flex-none ' + (f.tone === 'good' ? 'text-brand' : f.tone === 'warn' ? 'text-[#b45309]' : 'text-muted-foreground')} />{f.text}
+          </li>) })}
+      </ul>
+      {report && <div className="mt-3 rounded-lg border border-border bg-card p-4 text-[14px] whitespace-pre-wrap">{report}</div>}
+    </section>
   )
 }

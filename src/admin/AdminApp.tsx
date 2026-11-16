@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { BarChart3, Building2, FileText, LayoutDashboard, LogOut, Mail, Menu, Settings, Users, X } from 'lucide-react'
+import { BarChart3, Building2, FileText, LayoutDashboard, LogOut, Mail, Menu, Settings, Sparkles, Users, X } from 'lucide-react'
+import { Advisor } from './Advisor'
 import { cn } from '@/lib/utils'
 import { sb } from './client'
 import { btn, ErrorNote, Field, input } from './ui'
@@ -11,10 +12,12 @@ import { Contacts } from './Contacts'
 import { Campaigns } from './Campaigns'
 import { Analytics } from './Analytics'
 import { SettingsPage } from './Settings'
+import { CommandBar } from './Command'
 
-export type View = 'dashboard' | 'leads' | 'suppliers' | 'contacts' | 'campaigns' | 'analytics' | 'settings'
+export type View = 'dashboard' | 'advisor' | 'leads' | 'suppliers' | 'contacts' | 'campaigns' | 'analytics' | 'settings'
 const NAV: [View, string, typeof LayoutDashboard][] = [
   ['dashboard', 'Dashboard', LayoutDashboard],
+  ['advisor', 'AI Advisor', Sparkles],
   ['leads', 'Quote requests', FileText],
   ['suppliers', 'Suppliers', Building2],
   ['contacts', 'Contacts', Users],
@@ -141,7 +144,7 @@ function Shell({ email, owner }: { email: string; owner: boolean }) {
     addEventListener('hashchange', on); addEventListener('popstate', on)
     return () => { removeEventListener('hashchange', on); removeEventListener('popstate', on) }
   }, [])
-  const Page = { dashboard: Dashboard, leads: Leads, suppliers: Suppliers, contacts: Contacts, campaigns: Campaigns, analytics: Analytics, settings: SettingsPage }[view]
+  const Page = { dashboard: Dashboard, advisor: Advisor, leads: Leads, suppliers: Suppliers, contacts: Contacts, campaigns: Campaigns, analytics: Analytics, settings: SettingsPage }[view]
   return (
     <div className="min-h-screen bg-muted/40 lg:grid lg:grid-cols-[240px_1fr]">
       <aside className={cn('fixed inset-y-0 left-0 z-40 w-[240px] border-r border-border bg-card p-4 transition-transform lg:sticky lg:top-0 lg:h-screen lg:translate-x-0', open ? 'translate-x-0' : '-translate-x-full')}>
@@ -164,9 +167,11 @@ function Shell({ email, owner }: { email: string; owner: boolean }) {
         <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-border bg-card/95 px-4 py-3 backdrop-blur lg:px-8">
           <button type="button" className="rounded-lg p-1.5 hover:bg-muted lg:hidden" onClick={() => setOpen(true)} aria-label="Open menu"><Menu className="size-5" /></button>
           <h1 className="m-0 text-lg">{NAV.find((n) => n[0] === view)![1]}</h1>
-          <a href={import.meta.env.BASE_URL} target="_blank" rel="noreferrer" className="ml-auto text-[13px] text-brand">View website ↗</a>
+          <button type="button" onClick={() => dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }))} className="ml-auto hidden items-center gap-2 rounded-lg border border-border bg-muted/60 px-3 py-1.5 text-[13px] text-muted-foreground hover:border-brand md:flex">Search everything <kbd className="rounded border border-border bg-card px-1.5 text-[11px]">Ctrl K</kbd></button>
+          <a href={import.meta.env.BASE_URL} target="_blank" rel="noreferrer" className="text-[13px] text-brand md:ml-0 ml-auto">View website ↗</a>
         </header>
         <main className="mx-auto max-w-7xl p-4 lg:p-8"><Page go={setView} owner={owner} me={email} /></main>
+        <CommandBar go={setView} pages={NAV.map(([v, l]) => [v, l])} />
       </div>
     </div>
   )

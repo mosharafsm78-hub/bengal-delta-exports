@@ -6,11 +6,13 @@ import { ago, fmtTime, sb, SUPPLIER_CHECKS, SUPPLIER_STAGES, type Supplier } fro
 import { logActivity, Notes } from './Notes'
 import { Badge, btn, Card, Drawer, Empty, ErrorNote, Loading, useAsync } from './ui'
 import { csv } from './Leads'
+import { CATS, FAMILIES } from '@/data/catalog'
 
 const done = (s: Supplier) => SUPPLIER_CHECKS.filter(([k]) => s.checklist?.[k]).length
 
 export function Suppliers({ me }: PageProps) {
   const { data, error, loading, reload } = useAsync(async () => (await sb().from('bde_suppliers').select('*').order('created_at', { ascending: false })).data as Supplier[], [])
+  const demand = useAsync(async () => (await sb().from('bde_leads').select('items, created_at').limit(5000)).data ?? [], [])
   const [sel, setSel] = useState<Supplier | null>(null)
   if (loading && !data) return <Loading />
   if (error) return <ErrorNote error={error} />
@@ -21,6 +23,7 @@ export function Suppliers({ me }: PageProps) {
         <p className="m-0 max-w-2xl text-sm text-muted-foreground">Every application from the “For suppliers” page lands in <b>Applied</b>. Move it across as you check documents, visit the factory and approve a sample. Only approved suppliers should get orders.</p>
         <button type="button" onClick={() => csv(list, 'suppliers.csv')} className={cn(btn, 'btn-outline')}>Export CSV</button>
       </div>
+      <Coverage suppliers={list} leads={(demand.data ?? []) as any[]} />
       {!list.length ? <Empty title="No supplier applications yet">They arrive from the “Become a verified supplier” form on the website.</Empty> : (
         <div className="grid gap-3 overflow-x-auto pb-2 md:grid-cols-3 xl:grid-cols-6">
           {SUPPLIER_STAGES.map(([key, label]) => {
@@ -104,5 +107,33 @@ function SupplierDetail({ s, me, onChange }: { s: Supplier; me: string; onChange
       </Card>
       <Card title="Notes and history"><Notes entity="supplier" id={s.id} me={me} /></Card>
     </div>
+  )
+}
+
+/** Buyer demand per category against approved suppliers, so the team knows where to recruit. */
+function Coverage({ suppliers, leads }: { suppliers: Supplier[]; leads: { items: { family?: string }[] }[] }) {
+  const famCat = new Map(FAMILIES.map((f) => [f.name, f.cat]))
+  const rows = CATS.map((c) => {
+    const req = leads.reduce((n, l) => n + ((l.items ?? []).some((i) => famCat.get(i.family ?? '') === c.id) ? 1 : 0), 0)
+    const appr = suppliers.filter((s) => s.stage === 'approved' && (s.categories ?? []).includes(c.name)).length
+    const review = suppliers.filter((s) => !['approved', 'rejected'].includes(s.stage) && (s.categories ?? []).includes(c.name)).length
+    const status = req && !appr ? 'gap' : req > appr * 5 ? 'thin' : appr ? 'ok' : 'none'
+    return { c, req, appr, review, status }
+  }).sort((a, b) => b.req - a.req)
+  const gaps = rows.filter((r) => r.status === 'gap' || r.status === 'thin')
+  return (
+    <Card title="Supply vs buyer demand">
+      {gaps.length ? <p className="mt-0 mb-3 rounded-lg bg-[#fef3c7] px-3 py-2 text-[13.5px] text-[#78350f]"><b>Recruit next:</b> {gaps.map((g) => g.c.short).join(', ')}. Buyers are asking for these, but you have {gaps.every((g) => !g.appr) ? 'no' : 'too few'} approved suppliers.</p> : <p className="mt-0 mb-3 text-[13.5px] text-muted-foreground">Every category with buyer requests has approved suppliers.</p>}
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[560px] text-[13.5px]">
+          <thead><tr className="text-left text-[12px] text-muted-foreground uppercase"><th className="py-1.5">Category</th><th>Buyer requests</th><th>Approved suppliers</th><th>In review</th><th>Status</th></tr></thead>
+          <tbody>{rows.map((r) => (
+            <tr key={r.c.id} className="border-t border-border">
+              <td className="py-2 font-semibold">{r.c.short}</td><td className="num">{r.req}</td><td className="num">{r.appr}</td><td className="num">{r.review}</td>
+              <td>{r.status === 'gap' ? <Badge tone="bad">No supplier</Badge> : r.status === 'thin' ? <Badge tone="warn">Need more</Badge> : r.status === 'ok' ? <Badge tone="good">Covered</Badge> : <Badge>No demand yet</Badge>}</td>
+            </tr>))}</tbody>
+        </table>
+      </div>
+    </Card>
   )
 }

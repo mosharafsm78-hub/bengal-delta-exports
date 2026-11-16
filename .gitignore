@@ -4,3 +4,4 @@ dist
 .tanstack
 *.log
 .env.local
+supabase/pending/

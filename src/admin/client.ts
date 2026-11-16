@@ -81,3 +81,16 @@ export function tzCountry(tz?: string | null) {
   }
   return map[tz] ?? tz.split('/')[0]
 }
+
+/** Call the AI assistant (admins only). */
+export async function ai<T = any>(action: string, body: Record<string, unknown> = {}): Promise<T> {
+  const { data } = await sb().auth.getSession()
+  const r = await fetch(`${import.meta.env.VITE_SUPABASE_URL as string}/functions/v1/bde-ai`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', authorization: `Bearer ${data.session?.access_token}`, apikey: import.meta.env.VITE_SUPABASE_KEY as string },
+    body: JSON.stringify({ action, ...body }),
+  })
+  const j = await r.json().catch(() => ({ error: 'The AI service did not respond' }))
+  if (!r.ok || j.error) throw new Error(j.error ?? 'AI request failed')
+  return j as T
+}

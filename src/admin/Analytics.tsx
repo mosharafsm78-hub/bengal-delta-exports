@@ -3,6 +3,8 @@ import { cn } from '@/lib/utils'
 import type { PageProps } from './AdminApp'
 import { countBy, daysAgo, fetchAll, fmtDate, pct, sb, tzCountry, type WebEvent } from './client'
 import { Bars, Card, ErrorNote, Kpi, Loading, Spark, useAsync } from './ui'
+import { buyingDrivers } from './smart'
+import { Sparkles } from 'lucide-react'
 
 const host = (r: string | null) => { try { return r ? new URL(r).hostname.replace(/^www\./, '') : null } catch { return null } }
 
@@ -40,6 +42,7 @@ export function Analytics(_: PageProps) {
           <Card title="Visitors per day">
             <Spark labels={labels.map((d) => fmtDate(d).replace(/ \d{4}$/, ''))} series={[{ name: 'Visitors', color: '#0f6b5c', values: labels.map((d) => new Set(ev.filter((e) => e.created_at.startsWith(d)).map((e) => e.visitor_id)).size) }, { name: 'Quote requests', color: '#b8862b', values: labels.map((d) => ev.filter((e) => e.kind === 'quote_submitted' && e.created_at.startsWith(d)).length) }]} />
           </Card>
+          <WhyBuy ev={ev} />
           <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
             <Card title="Most viewed products"><Bars rows={countBy(ev.filter((e) => e.kind === 'product_view'), (e) => e.product?.replace(/-/g, ' '))} max={10} /></Card>
             <Card title="Most viewed categories"><Bars rows={countBy(ev.filter((e) => e.kind === 'category_view' || e.kind === 'product_view'), (e) => e.category?.replace(/-/g, ' '))} max={10} /></Card>
@@ -55,5 +58,28 @@ export function Analytics(_: PageProps) {
         </>
       )}
     </div>
+  )
+}
+
+function WhyBuy({ ev }: { ev: WebEvent[] }) {
+  const { drivers, buyers } = buyingDrivers(ev)
+  return (
+    <section className="rounded-xl border border-brand/25 bg-gradient-to-br from-brand-soft via-card to-card p-5">
+      <h2 className="m-0 flex items-center gap-2 text-[15px] font-bold"><Sparkles className="size-4 text-brand" />Why people buy</h2>
+      <p className="mt-1 mb-4 text-[13px] text-muted-foreground">What the {buyers} visitor{buyers === 1 ? '' : 's'} who sent a quote request did differently from everyone else.</p>
+      {buyers < 3 ? <p className="m-0 text-[14px]">This analysis becomes reliable after about 3 quote requests from the website. It updates automatically.</p> : !drivers.length ? <p className="m-0 text-[14px]">No clear difference yet between buyers and other visitors.</p> : (
+        <ul className="m-0 grid list-none gap-2.5 p-0 md:grid-cols-2">
+          {drivers.map((d) => (
+            <li key={d.factor} className="rounded-lg bg-card px-3 py-2.5 text-[13.5px]">
+              <div className="flex items-baseline justify-between gap-3"><b>{d.factor}</b><span className="num font-bold whitespace-nowrap text-brand">{d.lift.toFixed(1)}× more</span></div>
+              <div className="mt-1.5 grid grid-cols-[70px_1fr] items-center gap-x-2 gap-y-1 text-[12px] text-muted-foreground">
+                <span>Buyers</span><div className="h-2 rounded-full bg-muted"><div className="h-full rounded-full bg-brand" style={{ width: `${d.buyers * 100}%` }} /></div>
+                <span>Others</span><div className="h-2 rounded-full bg-muted"><div className="h-full rounded-full bg-muted-foreground/50" style={{ width: `${d.others * 100}%` }} /></div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   )
 }

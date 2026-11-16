@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { CheckCircle2, Circle, Trash2 } from 'lucide-react'
+import { CheckCircle2, Circle, Sparkles, Trash2, Zap } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { PageProps } from './AdminApp'
-import { sb } from './client'
+import { ai, sb } from './client'
 import { Badge, btn, Card, ErrorNote, Field, input, Loading, useAsync } from './ui'
 
 export function SettingsPage({ owner, me }: PageProps) {
@@ -68,6 +68,8 @@ export function SettingsPage({ owner, me }: PageProps) {
         <p className="mt-4 mb-0 text-[13px] text-muted-foreground">Claude connects the domain, sending service and DNS records once the domain is bought.</p>
       </Card>
 
+      <Automations owner={owner} value={(settings.data?.automations ?? {}) as Record<string, boolean>} alerts={(settings.data?.alerts ?? {}) as Record<string, string>} onSaved={settings.reload} />
+      <AiStatus />
       <EmailSettings key={JSON.stringify(es)} value={es} owner={owner} onSave={saveEmail} saved={saved} />
 
       <Card title="Your account">
@@ -93,6 +95,56 @@ function EmailSettings({ value, owner, onSave, saved }: { value: Record<string, 
       </div>
       {owner && <div className="mt-4 flex items-center gap-3"><button type="button" onClick={() => onSave(v)} className={cn(btn, 'btn-primary')}>Save email settings</button>{saved && <span className="text-sm text-muted-foreground">{saved}</span>}</div>}
       <p className="mt-3 mb-0 text-[12.5px] text-muted-foreground">The secret API key for the sending service is stored on the server, never in this panel. “Connected” switches on once the key is installed and the domain is verified.</p>
+    </Card>
+  )
+}
+
+const AUTOS: [string, string, string][] = [
+  ['auto_reply', 'Instant confirmation to buyers', 'Every quote request gets an immediate email with its reference number and what happens next.'],
+  ['lead_alert', 'New-lead alert to the team', 'An email to the alert address below for every new quote request.'],
+  ['auto_continue', 'Campaigns continue automatically', 'Big campaigns resume every hour within your daily limit, and scheduled campaigns start on time.'],
+  ['auto_interests', 'Contacts tag themselves', 'A contact’s interests are filled in from the products they view on the website.'],
+  ['hot_tagging', 'Hot buyer detection', 'Contacts who view 3+ products, click a quote or WhatsApp button, or click emails repeatedly get the “hot” tag.'],
+]
+
+function Automations({ owner, value, alerts, onSaved }: { owner: boolean; value: Record<string, boolean>; alerts: Record<string, string>; onSaved: () => void }) {
+  const [v, setV] = useState<Record<string, boolean>>(value)
+  const [mail, setMail] = useState(alerts.new_lead_email ?? '')
+  async function save(next: Record<string, boolean>, m = mail) {
+    setV(next)
+    await sb().from('bde_settings').upsert({ key: 'automations', value: next, updated_at: new Date().toISOString() })
+    await sb().from('bde_settings').upsert({ key: 'alerts', value: { ...alerts, new_lead_email: m }, updated_at: new Date().toISOString() })
+    onSaved()
+  }
+  return (
+    <Card title={<span className="flex items-center gap-2"><Zap className="size-4 text-brand" />Automations</span>} className="lg:col-span-2">
+      <ul className="m-0 grid list-none gap-2 p-0 md:grid-cols-2">
+        {AUTOS.map(([k, label, desc]) => {
+          const on = v[k] !== false
+          return (
+            <li key={k} className="flex items-start gap-3 rounded-lg border border-border p-3">
+              <button type="button" role="switch" aria-checked={on} disabled={!owner} onClick={() => save({ ...v, [k]: !on })} className={cn('relative mt-0.5 h-6 w-11 flex-none rounded-full transition', on ? 'bg-brand' : 'bg-muted-foreground/30')}><span className={cn('absolute top-0.5 size-5 rounded-full bg-white shadow transition-all', on ? 'left-[22px]' : 'left-0.5')} /></button>
+              <span><b className="block text-[14px]">{label}</b><span className="text-[12.5px] text-muted-foreground">{desc}</span></span>
+            </li>
+          )
+        })}
+      </ul>
+      <div className="mt-4 grid max-w-xl gap-2 sm:grid-cols-[1fr_auto] sm:items-end">
+        <Field label="Alert address for new quote requests"><input disabled={!owner} className={input} type="email" value={mail} onChange={(e) => setMail(e.target.value)} placeholder="sales@yourdomain.com" /></Field>
+        {owner && <button type="button" onClick={() => save(v, mail)} className={cn(btn, 'btn-outline')}>Save</button>}
+      </div>
+      <p className="mt-3 mb-0 text-[12.5px] text-muted-foreground">Email-based automations start working as soon as email sending is connected. Tagging and hot-buyer detection work right away.</p>
+    </Card>
+  )
+}
+
+function AiStatus() {
+  const { data } = useAsync(() => ai<{ ai: boolean }>('status').catch(() => ({ ai: false })), [])
+  return (
+    <Card title={<span className="flex items-center gap-2"><Sparkles className="size-4 text-brand" />AI</span>}>
+      {data?.ai ? <p className="m-0 flex items-center gap-2 text-[14px]"><Badge tone="good">Connected</Badge>AI Advisor, buyer analysis, campaign writing and weekly reports are on.</p> : (
+        <div className="text-[14px]"><p className="m-0 flex items-center gap-2"><Badge tone="warn">Not connected</Badge>Smart scoring and insights already work. Add a free Google Gemini key to switch on the AI Advisor, buyer analysis and AI writing.</p></div>
+      )}
     </Card>
   )
 }

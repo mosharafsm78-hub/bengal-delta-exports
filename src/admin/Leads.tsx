@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react'
-import { Download, Mail, MessageCircle, Search } from 'lucide-react'
+import { Copy, Download, Lightbulb, MessageCircle, Search, Sparkles } from 'lucide-react'
+import { leadScore, nextAction } from './smart'
 import { cn } from '@/lib/utils'
 import { usd } from '@/lib/slug'
 import type { PageProps } from './AdminApp'
-import { ago, fetchAll, fmtDate, LEAD_STAGES, sb, type Lead } from './client'
+import { ago, ai, fetchAll, fmtDate, LEAD_STAGES, sb, type Lead } from './client'
 import { Journey } from './Journey'
 import { logActivity, Notes } from './Notes'
 import { Badge, btn, Card, Drawer, Empty, ErrorNote, Field, input, Loading, useAsync } from './ui'
@@ -44,7 +45,7 @@ export function Leads({ me }: PageProps) {
       {!rows.length ? <Empty title="No quote requests here yet">Requests from the website quote form appear here instantly, with the buyer's full journey.</Empty> : (
         <div className="overflow-x-auto rounded-xl border border-border bg-card">
           <table className="w-full min-w-[860px] text-[13.5px]">
-            <thead><tr className="border-b border-border bg-muted/60 text-left text-[12px] text-muted-foreground uppercase">{['Received', 'Buyer', 'Country', 'Products', 'Value', 'Stage', 'Owner', 'Follow-up'].map((h) => <th key={h} className="px-3 py-2.5 font-semibold">{h}</th>)}</tr></thead>
+            <thead><tr className="border-b border-border bg-muted/60 text-left text-[12px] text-muted-foreground uppercase">{['Received', 'Buyer', 'Fit', 'Country', 'Products', 'Value', 'Stage', 'Owner', 'Follow-up'].map((h) => <th key={h} className="px-3 py-2.5 font-semibold">{h}</th>)}</tr></thead>
             <tbody>
               {rows.map((l) => {
                 const overdue = l.next_follow_up && l.next_follow_up <= new Date().toISOString().slice(0, 10) && !['Won', 'Lost'].includes(l.stage)
@@ -52,6 +53,7 @@ export function Leads({ me }: PageProps) {
                   <tr key={l.id} onClick={() => setSel(l)} className="cursor-pointer border-b border-border last:border-0 hover:bg-muted/50">
                     <td className="px-3 py-2.5 whitespace-nowrap">{ago(l.created_at)}<span className="block text-[11.5px] text-muted-foreground">{l.reference}</span></td>
                     <td className="px-3 py-2.5"><b>{l.company !== '-' ? l.company : l.name}</b><span className="block text-[12px] text-muted-foreground">{l.name} · {l.buyer_type ?? ''}</span></td>
+                    <td className="px-3 py-2.5"><ScoreBadge l={l} /></td>
                     <td className="px-3 py-2.5">{l.country}{l.port && <span className="block text-[12px] text-muted-foreground">{l.port}</span>}</td>
                     <td className="max-w-[240px] px-3 py-2.5"><span className="line-clamp-2">{(l.items ?? []).map((i: any) => i.style).join(', ') || l.requirement || '—'}</span></td>
                     <td className="num px-3 py-2.5">{l.deal_value_usd ? usd(Number(l.deal_value_usd)) : '—'}</td>
@@ -84,13 +86,9 @@ function LeadDetail({ lead, me, team, onSaved }: { lead: Lead; me: string; team:
     if (changes.length) await logActivity('lead', lead.id, me, changes.join(' · '))
     setSaving(false); if (data) onSaved(data as Lead)
   }
-  const wa = lead.phone ? `https://wa.me/${String(lead.phone).replace(/\D/g, '')}?text=${encodeURIComponent(`Hello ${lead.name}, thank you for your request ${lead.reference} to BengalExport.`)}` : ''
   return (
     <div className="grid gap-5">
-      <div className="flex flex-wrap gap-2">
-        <a href={`mailto:${lead.email}?subject=${encodeURIComponent(`Your BengalExport quote ${lead.reference}`)}`} className={cn(btn, 'btn-primary')}><Mail className="size-4" />Email {lead.name.split(' ')[0]}</a>
-        {wa && <a href={wa} target="_blank" rel="noreferrer" className={cn(btn, 'btn-outline')}><MessageCircle className="size-4" />WhatsApp</a>}
-      </div>
+      <SmartBox lead={lead} />
       <Card title="Deal">
         <div className="grid gap-3 sm:grid-cols-2">
           <Field label="Stage"><select className={input} value={f.stage} onChange={(e) => setF({ ...f, stage: e.target.value })}>{LEAD_STAGES.map((s) => <option key={s}>{s}</option>)}</select></Field>
@@ -114,5 +112,63 @@ function LeadDetail({ lead, me, team, onSaved }: { lead: Lead; me: string; team:
       <Card title="Notes and history"><Notes entity="lead" id={lead.id} me={me} /></Card>
       <Card title="Buyer journey (emails and website)"><Journey contactId={lead.contact_id} visitorId={lead.visitor_id} /></Card>
     </div>
+  )
+}
+
+export function ScoreBadge({ l }: { l: Lead }) {
+  const s = leadScore(l)
+  return <span title={s.reasons.join('\n')} className={'inline-grid size-8 place-items-center rounded-full text-[12.5px] font-bold ' + (s.grade === 'A' ? 'bg-[#dcfce7] text-[#166534]' : s.grade === 'B' ? 'bg-[#fef3c7] text-[#92400e]' : 'bg-muted text-muted-foreground')}>{s.score}</span>
+}
+
+type Analysis = { summary: string; intent: 'high' | 'medium' | 'low'; signals: string[]; risks: string[]; next_step: string; care_team_note: string }
+
+function handover(l: Lead) {
+  const items = (l.items ?? []).map((i: any) => `${i.style}${i.qty ? ` x ${i.qty}` : ''}`).join(', ') || l.requirement || '—'
+  return `New buyer ${l.reference}: ${l.company !== '-' ? l.company : l.name} (${l.name}), ${l.country}${l.port ? `, port ${l.port}` : ''}. Wants: ${items}. Contact: ${l.email}${l.phone ? `, ${l.phone}` : ''}. Stage: ${l.stage}.`
+}
+
+function SmartBox({ lead }: { lead: Lead }) {
+  const s = leadScore(lead)
+  const n = nextAction(lead)
+  const [res, setRes] = useState<Analysis | null>(null)
+  const [err, setErr] = useState('')
+  const [busy, setBusy] = useState(false)
+  const note = res?.care_team_note || handover(lead)
+  async function analyse() {
+    setBusy(true); setErr('')
+    try { setRes(await ai<Analysis>('buyer_analysis', { leadId: lead.id })) } catch (e) { setErr((e as Error).message) } finally { setBusy(false) }
+  }
+  return (
+    <section className="rounded-xl border border-brand/25 bg-gradient-to-br from-brand-soft to-card p-5">
+      <div className="flex flex-wrap items-start gap-4">
+        <div className={'grid size-16 flex-none place-items-center rounded-2xl text-center font-display ' + (s.grade === 'A' ? 'bg-[#dcfce7] text-[#166534]' : s.grade === 'B' ? 'bg-[#fef3c7] text-[#92400e]' : 'bg-muted')}>
+          <span><b className="block text-2xl leading-none">{s.score}</b><span className="text-[11px] font-semibold">FIT {s.grade}</span></span>
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className={'m-0 flex items-start gap-1.5 text-[14px] font-semibold ' + (n.urgent ? 'text-[#b45309]' : '')}><Lightbulb className="mt-0.5 size-4 flex-none" />Next best action: {n.text}</p>
+          <ul className="m-0 mt-2 flex flex-wrap gap-1.5 p-0">{s.reasons.map((r) => <li key={r} className="list-none rounded-full bg-card px-2.5 py-0.5 text-[12px] text-muted-foreground">{r}</li>)}</ul>
+        </div>
+      </div>
+      {res && (
+        <div className="mt-4 grid gap-3 border-t border-brand/15 pt-4 text-[13.5px]">
+          <p className="m-0"><Badge tone={res.intent === 'high' ? 'good' : res.intent === 'medium' ? 'warn' : 'neutral'}>{res.intent} intent</Badge> <span className="ml-1">{res.summary}</span></p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div><b className="text-[12.5px] text-brand uppercase">Buying signals</b><ul className="m-0 mt-1 grid gap-1 pl-4">{res.signals.map((x) => <li key={x}>{x}</li>)}</ul></div>
+            <div><b className="text-[12.5px] text-[#b45309] uppercase">Watch out</b><ul className="m-0 mt-1 grid gap-1 pl-4">{res.risks.length ? res.risks.map((x) => <li key={x}>{x}</li>) : <li>No risk flags</li>}</ul></div>
+          </div>
+          <p className="m-0 font-semibold">Recommended: {res.next_step}</p>
+        </div>
+      )}
+      {err && <p className="mt-3 mb-0 text-[13px] text-[#991b1b]">{err}</p>}
+      <div className="mt-4 rounded-lg bg-card p-3 text-[13px]">
+        <b className="text-[12px] text-muted-foreground uppercase">Hand-over note for the care team</b>
+        <p className="m-0 mt-1">{note}</p>
+      </div>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <button type="button" onClick={analyse} disabled={busy} className={cn(btn, 'btn-primary')}><Sparkles className="size-4" />{busy ? 'Analysing…' : res ? 'Analyse again' : 'AI buyer analysis'}</button>
+        <a href={`https://wa.me/?text=${encodeURIComponent(note)}`} target="_blank" rel="noreferrer" className={cn(btn, 'btn-outline')}><MessageCircle className="size-4" />Send to care team</a>
+        <button type="button" onClick={() => navigator.clipboard.writeText(note)} className={cn(btn, 'btn-outline')}><Copy className="size-4" />Copy</button>
+      </div>
+    </section>
   )
 }
