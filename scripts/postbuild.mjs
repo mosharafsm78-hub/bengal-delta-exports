@@ -5,7 +5,17 @@ const dir = 'dist/client'
 const sm = `${dir}/sitemap.xml`
 if (existsSync(sm)) {
   const xml = readFileSync(sm, 'utf8')
-  const cleaned = xml.replace(/\s*<url>\s*<loc>[^<]*(\?|\/not-found|\/admin)[^<]*<\/loc>[\s\S]*?<\/url>/g, '')
+  const base = (process.env.BASE_PATH || '/').replace(/\/$/, '')
+  const seen = new Set()
+  // Crawled pages carry the base path twice; collapse it, use the trailing-slash URL GitHub Pages serves, and drop duplicates.
+  const cleaned = xml
+    .replace(/\s*<url>\s*<loc>[^<]*(\?|\/not-found|\/admin)[^<]*<\/loc>[\s\S]*?<\/url>/g, '')
+    .replace(/<loc>([^<]*)<\/loc>/g, (_, u) => {
+      let v = base ? u.split(base + base + '/').join(base + '/').replace(new RegExp(base + base + '$'), base) : u
+      if (!v.endsWith('/')) v += '/'
+      return `<loc>${v}</loc>`
+    })
+    .replace(/\s*<url>\s*<loc>([^<]*)<\/loc>[\s\S]*?<\/url>/g, (block, u) => (seen.has(u) ? '' : (seen.add(u), block)))
   writeFileSync(sm, cleaned)
   const count = (cleaned.match(/<loc>/g) || []).length
   console.log(`sitemap: ${count} URLs`)

@@ -17,6 +17,7 @@ const PRIMARY = [
 const GUIDES = [
   { to: '/prices', label: 'Price list' },
   { to: '/duty-free-markets', label: 'Duty-free markets' },
+  { to: '/export-to', label: 'Guides by country' },
   { to: '/shipping', label: 'Shipping and transit' },
   { to: '/season-calendar', label: 'Season calendar' },
   { to: '/quality', label: 'Quality and certificates' },

@@ -11,6 +11,7 @@ import { basket, useBasket } from '@/lib/quote-basket'
 import { money, slug } from '@/lib/slug'
 import { PHOTOS, photoAbs } from '@/data/photos'
 import { catStyle } from '@/lib/cat-style'
+import { MARKETS } from '@/data/markets'
 
 export const Route = createFileRoute('/products/$familyId')({
   loader: ({ params }) => {
@@ -78,6 +79,7 @@ function FamilyBody() {
               <p className="mt-4 text-sm text-muted-foreground">
                 Import duty: <b className="text-foreground">0%</b> in the EU, UK, Canada, Australia and China{isProduce ? ', and on fresh produce in the Gulf' : ''}. <Link to="/duty-free-markets" className="text-brand">All markets</Link>
               </p>
+              <p className="mt-2 flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground">Buying for:{MARKETS.filter((k) => k.cats.includes(f.cat)).map((k) => <Link key={k.id} to="/export-to/$market/$familyId" params={{ market: k.id, familyId: f.id }} className="rounded-full border border-border px-2 py-0.5 text-[12.5px] text-foreground no-underline hover:border-brand">{k.name}</Link>)}</p>
               <TrustRow className="mt-5 max-w-xl" />
             </div>
           </div>

@@ -5,7 +5,7 @@ const ORIGIN = (import.meta.env.VITE_SITE_URL as string | undefined)?.replace(/\
 
 export function pageHead(path: string, override?: { title: string; description: string; image?: string }) {
   const m = override ?? (siteMetadata[path as MetaKey] ?? siteMetadata.default)
-  const canonical = ORIGIN ? ORIGIN + (path === '/' ? '/' : path) : undefined
+  const canonical = ORIGIN ? ORIGIN + (path === '/' ? '/' : path.replace(/\/?$/, '/')) : undefined
   const meta: Record<string, string>[] = [
     { title: m.title },
     { name: 'description', content: m.description },

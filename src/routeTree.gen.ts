@@ -25,8 +25,11 @@ import { Route as SeasonCalendarRouteImport } from './routes/season-calendar'
 import { Route as ShippingRouteImport } from './routes/shipping'
 import { Route as SuppliersRouteImport } from './routes/suppliers'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as ExportToIndexRouteImport } from './routes/export-to/index'
+import { Route as ExportToMarketRouteImport } from './routes/export-to/$market'
 import { Route as ProductsIndexRouteImport } from './routes/products/index'
 import { Route as ProductsFamilyIdRouteImport } from './routes/products/$familyId'
+import { Route as ExportToMarketFamilyIdRouteImport } from './routes/export-to/$market_.$familyId'
 import { Route as ProductsFamilyIdItemIdRouteImport } from './routes/products/$familyId_.$itemId'
 
 const IndexRoute = IndexRouteImport.update({
@@ -109,6 +112,16 @@ const TermsRoute = TermsRouteImport.update({
   path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ExportToIndexRoute = ExportToIndexRouteImport.update({
+  id: '/export-to/',
+  path: '/export-to/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExportToMarketRoute = ExportToMarketRouteImport.update({
+  id: '/export-to/$market',
+  path: '/export-to/$market',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProductsIndexRoute = ProductsIndexRouteImport.update({
   id: '/products/',
   path: '/products/',
@@ -117,6 +130,11 @@ const ProductsIndexRoute = ProductsIndexRouteImport.update({
 const ProductsFamilyIdRoute = ProductsFamilyIdRouteImport.update({
   id: '/products/$familyId',
   path: '/products/$familyId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExportToMarketFamilyIdRoute = ExportToMarketFamilyIdRouteImport.update({
+  id: '/export-to/$market_/$familyId',
+  path: '/export-to/$market/$familyId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProductsFamilyIdItemIdRoute = ProductsFamilyIdItemIdRouteImport.update({
@@ -142,8 +160,11 @@ export interface FileRoutesByFullPath {
   '/shipping': typeof ShippingRoute
   '/suppliers': typeof SuppliersRoute
   '/terms': typeof TermsRoute
+  '/export-to/$market': typeof ExportToMarketRoute
   '/products/$familyId': typeof ProductsFamilyIdRoute
+  '/export-to/': typeof ExportToIndexRoute
   '/products/': typeof ProductsIndexRoute
+  '/export-to/$market/$familyId': typeof ExportToMarketFamilyIdRoute
   '/products/$familyId/$itemId': typeof ProductsFamilyIdItemIdRoute
 }
 export interface FileRoutesByTo {
@@ -163,8 +184,11 @@ export interface FileRoutesByTo {
   '/shipping': typeof ShippingRoute
   '/suppliers': typeof SuppliersRoute
   '/terms': typeof TermsRoute
+  '/export-to/$market': typeof ExportToMarketRoute
   '/products/$familyId': typeof ProductsFamilyIdRoute
+  '/export-to': typeof ExportToIndexRoute
   '/products': typeof ProductsIndexRoute
+  '/export-to/$market/$familyId': typeof ExportToMarketFamilyIdRoute
   '/products/$familyId/$itemId': typeof ProductsFamilyIdItemIdRoute
 }
 export interface FileRoutesById {
@@ -185,8 +209,11 @@ export interface FileRoutesById {
   '/shipping': typeof ShippingRoute
   '/suppliers': typeof SuppliersRoute
   '/terms': typeof TermsRoute
+  '/export-to/$market': typeof ExportToMarketRoute
   '/products/$familyId': typeof ProductsFamilyIdRoute
+  '/export-to/': typeof ExportToIndexRoute
   '/products/': typeof ProductsIndexRoute
+  '/export-to/$market_/$familyId': typeof ExportToMarketFamilyIdRoute
   '/products/$familyId_/$itemId': typeof ProductsFamilyIdItemIdRoute
 }
 export interface FileRouteTypes {
@@ -208,8 +235,11 @@ export interface FileRouteTypes {
     | '/shipping'
     | '/suppliers'
     | '/terms'
+    | '/export-to/$market'
     | '/products/$familyId'
+    | '/export-to/'
     | '/products/'
+    | '/export-to/$market/$familyId'
     | '/products/$familyId/$itemId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -229,8 +259,11 @@ export interface FileRouteTypes {
     | '/shipping'
     | '/suppliers'
     | '/terms'
+    | '/export-to/$market'
     | '/products/$familyId'
+    | '/export-to'
     | '/products'
+    | '/export-to/$market/$familyId'
     | '/products/$familyId/$itemId'
   id:
     | '__root__'
@@ -250,8 +283,11 @@ export interface FileRouteTypes {
     | '/shipping'
     | '/suppliers'
     | '/terms'
+    | '/export-to/$market'
     | '/products/$familyId'
+    | '/export-to/'
     | '/products/'
+    | '/export-to/$market_/$familyId'
     | '/products/$familyId_/$itemId'
   fileRoutesById: FileRoutesById
 }
@@ -272,8 +308,11 @@ export interface RootRouteChildren {
   ShippingRoute: typeof ShippingRoute
   SuppliersRoute: typeof SuppliersRoute
   TermsRoute: typeof TermsRoute
+  ExportToMarketRoute: typeof ExportToMarketRoute
   ProductsFamilyIdRoute: typeof ProductsFamilyIdRoute
+  ExportToIndexRoute: typeof ExportToIndexRoute
   ProductsIndexRoute: typeof ProductsIndexRoute
+  ExportToMarketFamilyIdRoute: typeof ExportToMarketFamilyIdRoute
   ProductsFamilyIdItemIdRoute: typeof ProductsFamilyIdItemIdRoute
 }
 
@@ -391,6 +430,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/export-to/': {
+      id: '/export-to/'
+      path: '/export-to'
+      fullPath: '/export-to/'
+      preLoaderRoute: typeof ExportToIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/export-to/$market': {
+      id: '/export-to/$market'
+      path: '/export-to/$market'
+      fullPath: '/export-to/$market'
+      preLoaderRoute: typeof ExportToMarketRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/products/': {
       id: '/products/'
       path: '/products'
@@ -403,6 +456,13 @@ declare module '@tanstack/react-router' {
       path: '/products/$familyId'
       fullPath: '/products/$familyId'
       preLoaderRoute: typeof ProductsFamilyIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/export-to/$market_/$familyId': {
+      id: '/export-to/$market_/$familyId'
+      path: '/export-to/$market/$familyId'
+      fullPath: '/export-to/$market/$familyId'
+      preLoaderRoute: typeof ExportToMarketFamilyIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/products/$familyId_/$itemId': {
@@ -432,8 +492,11 @@ const rootRouteChildren: RootRouteChildren = {
   ShippingRoute: ShippingRoute,
   SuppliersRoute: SuppliersRoute,
   TermsRoute: TermsRoute,
+  ExportToMarketRoute: ExportToMarketRoute,
   ProductsFamilyIdRoute: ProductsFamilyIdRoute,
+  ExportToIndexRoute: ExportToIndexRoute,
   ProductsIndexRoute: ProductsIndexRoute,
+  ExportToMarketFamilyIdRoute: ExportToMarketFamilyIdRoute,
   ProductsFamilyIdItemIdRoute: ProductsFamilyIdItemIdRoute,
 }
 export const routeTree = rootRouteImport
