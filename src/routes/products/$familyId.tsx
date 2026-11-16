@@ -9,7 +9,7 @@ import { PriceBuilder } from '@/components/price-builder'
 import { inSeason } from '@/components/item-tile'
 import { basket, useBasket } from '@/lib/quote-basket'
 import { money, slug } from '@/lib/slug'
-import { PHOTOS } from '@/data/photos'
+import { PHOTOS, photoAbs } from '@/data/photos'
 import { catStyle } from '@/lib/cat-style'
 
 export const Route = createFileRoute('/products/$familyId')({
@@ -23,7 +23,7 @@ export const Route = createFileRoute('/products/$familyId')({
       ? pageHead(`/products/${loaderData.family.id}`, {
           title: `${loaderData.family.name} from Bangladesh — prices, types, specs | BengalExport`,
           description: `${loaderData.family.tag} ${loaderData.family.styles.length} types with indicative FOB prices, minimum order ${loaderData.family.moq}, lead times and shipping.`,
-          image: PHOTOS[loaderData.family.photo]?.src,
+          image: photoAbs(loaderData.family.photo),
         })
       : pageHead('/products'),
   component: FamilyPage,

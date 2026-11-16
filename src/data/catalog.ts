@@ -34,7 +34,7 @@ export const FAMILIES: Family[] = [
     id: 'tshirts', cat: 'garments', name: 'T-shirts', hs: '6109.10 (cotton) · 6109.90 (other fibres)',
     tag: "Bangladesh's biggest export item. Every neck, sleeve, fit, fabric and print.",
     intro: 'T-shirts are cut and sewn from knitted fabric, mostly single jersey. You choose the style, the fabric, the yarn quality, the weight in GSM (grams per square metre), the colour method and the decoration. The price builder shows how each choice moves the FOB price.',
-    photo: 'tshirt-family', moq: '500 pcs per style per colour (300 pcs from stock fabric)', lead: LEAD_KNIT,
+    photo: 'tshirt-crew', moq: '500 pcs per style per colour (300 pcs from stock fabric)', lead: LEAD_KNIT,
     styles: [
       { n: 'Crew-neck basic tee', d: "Round rib neck, short sleeve, regular fit. The world's best-selling garment.", p: [1.65, 3.5], photo: 'tshirt-crew', b: 'M' },
       { n: 'V-neck tee', d: 'V-shaped neckline with rib binding.', p: [1.8, 3.6], photo: 'tshirt-v' },

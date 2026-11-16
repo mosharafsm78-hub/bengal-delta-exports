@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react'
 import { CheckCircle2, Ship, Clock, Package, ArrowRight, Landmark, Info, Settings2, Printer, MessageSquare, FlaskConical } from 'lucide-react'
 import { catById, findItem } from '@/data/catalog'
 import { DUTY, LC_TERMS, PAYMENT_HEADLINE, STEPS, TRANSIT, SITE } from '@/data/site'
-import { PHOTOS } from '@/data/photos'
+import { PHOTOS, photoAbs } from '@/data/photos'
 import { pageHead } from '@/lib/head'
 import { Photo } from '@/components/photo'
 import { ItemTile, inSeason } from '@/components/item-tile'
@@ -27,7 +27,7 @@ export const Route = createFileRoute('/products/$familyId_/$itemId')({
       ? pageHead(`/products/${loaderData.f.id}/${slug(loaderData.s.n)}`, {
           title: `${loaderData.s.n} — ${loaderData.f.name} from Bangladesh, price & specs | ${SITE.name}`,
           description: `${loaderData.s.d} Indicative FOB ${money(loaderData.s.p[0])}–${loaderData.s.p[1].toFixed(2)} per ${loaderData.s.u ?? 'pc'}. Minimum order ${loaderData.f.moq}. Firm offer in 24 hours, payment by LC.`,
-          image: PHOTOS[loaderData.s.photo]?.src,
+          image: photoAbs(loaderData.s.photo),
         })
       : pageHead('/products'),
   component: ItemPage,
@@ -80,7 +80,7 @@ function ItemBody() {
     name: s.n,
     description: s.d,
     category: f.name,
-    image: PHOTOS[s.photo]?.src,
+    image: photoAbs(s.photo),
     brand: { '@type': 'Brand', name: SITE.name },
     offers: { '@type': 'AggregateOffer', priceCurrency: 'USD', lowPrice: s.p[0].toFixed(2), highPrice: s.p[1].toFixed(2), availability: 'https://schema.org/InStock' },
   }
@@ -120,7 +120,7 @@ function ItemBody() {
           )}
           <p className="mt-3 flex items-start gap-2 text-[13px] text-muted-foreground">
             <Info className="mt-0.5 size-4 flex-none" aria-hidden="true" />
-            Photo shows the product type. Before shipping we send you photos and video of your actual goods.
+            Catalogue sample image: it shows the product type, not your exact lot. Order a paid sample to see the real goods, and before shipping we send photos and video of your order.
           </p>
         </div>
 

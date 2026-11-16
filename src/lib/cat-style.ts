@@ -8,5 +8,5 @@ const VARS: Record<string, string> = {
 export const catStyle = (cat: string) => ({ ['--c' as string]: `var(${VARS[cat] ?? '--brand'})` }) as CSSProperties
 
 export const CAT_PHOTO: Record<string, string> = {
-  garments: 'tshirt-family', footwear: 'slides', home: 'bath-towels', jute: 'jute-tote', produce: 'produce-market', food: 'turmeric-powder', crafts: 'seagrass-basket',
+  garments: 'tshirt-crew', footwear: 'slides', home: 'bath-towels', jute: 'jute-tote', produce: 'mango', food: 'turmeric-powder', crafts: 'seagrass-basket',
 }
