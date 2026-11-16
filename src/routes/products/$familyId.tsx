@@ -1,10 +1,10 @@
 import { createFileRoute, Link, notFound } from '@tanstack/react-router'
 import { useState } from 'react'
-import { CheckCircle2, ArrowRight } from 'lucide-react'
+import { CheckCircle2, ArrowRight, ShieldCheck, Landmark, Ship } from 'lucide-react'
 import { FAMILIES, catById } from '@/data/catalog'
 import { pageHead } from '@/lib/head'
 import { Photo } from '@/components/photo'
-import { DataTable, Pill, TrustRow } from '@/components/site-shell'
+import { DataTable, Pill } from '@/components/site-shell'
 import { PriceBuilder } from '@/components/price-builder'
 import { inSeason } from '@/components/item-tile'
 import { basket, useBasket } from '@/lib/quote-basket'
@@ -60,27 +60,51 @@ function FamilyBody() {
             <span className="mx-1.5">/</span>
             <span className="text-foreground">{f.name}</span>
           </nav>
-          <div className="grid gap-10 lg:grid-cols-[1fr_1.05fr]">
-            <Photo id={f.photo} alt={f.name} className="aspect-[4/3] rounded-lg" credit eager />
+          <div className="grid gap-10 lg:grid-cols-[1fr_1.1fr]">
             <div>
-              <span style={catStyle(f.cat)} className="cat-bg mb-3 inline-block rounded-full px-3 py-1 text-[12.5px] font-semibold">{cat?.name}</span>
+              <Photo id={f.photo} alt={f.name} className="aspect-[4/3] rounded-lg" credit eager />
+              <ul className="m-0 mt-4 grid list-none grid-cols-3 gap-2 p-0 text-[13px] text-muted-foreground">
+                {[[ShieldCheck, 'Inspected before shipment'], [Landmark, 'Settled by LC at sight'], [Ship, 'Insured to your port']].map(([Icon, t]) => {
+                  const I = Icon as typeof ShieldCheck
+                  return <li key={t as string} className="flex items-center gap-2"><I className="size-4 flex-none text-brand" aria-hidden="true" />{t as string}</li>
+                })}
+              </ul>
+            </div>
+            <div>
+              <p className="eyebrow m-0 mb-2" style={catStyle(f.cat)}><span className="cat-text">{cat?.name}</span></p>
               <h1 className="m-0 text-[clamp(2.1rem,4.4vw,3.2rem)]">{f.name}</h1>
-              <p className="mt-3 text-lg font-medium text-jute">{f.tag}</p>
-              <p className="mt-3 max-w-[65ch] text-muted-foreground">{f.intro}</p>
-              <dl className="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border text-sm">
-                {[['Product price', <span className="num font-display text-xl font-semibold">{money(lo)}–{hi.toFixed(2)} <span className="font-sans text-sm font-normal">/ {unit}</span></span>], [isProduce ? 'Order to dispatch' : 'Lead time', <span className="num font-display text-xl font-semibold">{leadMin}–{leadMax} days</span>], ['Minimum order', <span className="font-semibold">{f.moq}</span>], ['HS code', <span className="font-semibold">{f.hs}</span>]].map(([k, v]) => (
-                  <div key={k as string} className="bg-paper p-3"><dt className="text-muted-foreground">{k}</dt><dd className="m-0">{v}</dd></div>
-                ))}
-              </dl>
+              <p className="mt-3 max-w-[62ch] text-[17px] text-muted-foreground">{f.intro}</p>
+
+              <div className="mt-6 overflow-hidden rounded-lg border border-border">
+                <div className="flex items-center justify-between bg-ink px-4 py-2 text-[12.5px] font-semibold tracking-wide text-paper uppercase">
+                  <span>Commercial terms</span>
+                  <span className="font-normal normal-case tracking-normal opacity-70">Indicative · confirmed by proforma invoice</span>
+                </div>
+                <dl className="m-0 grid grid-cols-2 gap-px bg-border text-sm sm:grid-cols-3">
+                  {([
+                    ['Indicative price', <span className="num font-display text-xl font-semibold">{money(lo)}–{hi.toFixed(2)} <span className="font-sans text-sm font-normal text-muted-foreground">/ {unit}</span></span>],
+                    [isProduce ? 'Order to dispatch' : 'Lead time', <span className="num font-display text-xl font-semibold">{leadMin}–{leadMax} <span className="font-sans text-sm font-normal text-muted-foreground">days</span></span>],
+                    ['Minimum order', <span className="font-semibold">{f.moq}</span>],
+                    ['HS code', <span className="num font-semibold">{f.hs}</span>],
+                    ['Price basis', <span className="font-semibold">CIF your port · Incoterms 2020</span>],
+                    ['Payment', <span className="font-semibold">Irrevocable LC at sight · UCP 600</span>],
+                  ] as const).map(([k, v]) => (
+                    <div key={k} className="bg-card p-3.5"><dt className="text-[12.5px] text-muted-foreground">{k}</dt><dd className="m-0 mt-0.5 leading-snug">{v}</dd></div>
+                  ))}
+                </dl>
+                <div className="border-t border-border bg-paper px-4 py-2.5 text-[13.5px] text-muted-foreground">
+                  Import duty <b className="text-foreground">0%</b> in the EU, UK, Canada, Australia and China{isProduce ? ', and on fresh produce in the Gulf' : ''}. <Link to="/duty-free-markets" className="font-semibold text-brand">All markets</Link>
+                </div>
+              </div>
+
               <div className="mt-6 flex flex-wrap gap-3">
-                <a href="#types" className="btn btn-primary">See all {f.styles.length} types</a>
+                <Link to="/quote" className="btn btn-primary">Request a quotation</Link>
+                <a href="#types" className="btn btn-outline">All {f.styles.length} types</a>
                 <a href="#builder" className="btn btn-outline">Price calculator</a>
               </div>
-              <p className="mt-4 text-sm text-muted-foreground">
-                Import duty: <b className="text-foreground">0%</b> in the EU, UK, Canada, Australia and China{isProduce ? ', and on fresh produce in the Gulf' : ''}. <Link to="/duty-free-markets" className="text-brand">All markets</Link>
-              </p>
-              <p className="mt-2 flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground">Buying for:{MARKETS.filter((k) => k.cats.includes(f.cat)).map((k) => <Link key={k.id} to="/export-to/$market/$familyId" params={{ market: k.id, familyId: f.id }} className="rounded-full border border-border px-2 py-0.5 text-[12.5px] text-foreground no-underline hover:border-brand">{k.name}</Link>)}</p>
-              <TrustRow className="mt-5 max-w-xl" />
+              <p className="mt-3 mb-0 text-[13.5px] text-muted-foreground">Proforma invoice within 24 hours. Samples dispatched within 24 hours of the sample invoice.</p>
+
+              <p className="mt-5 flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground">Import guide by market:{MARKETS.filter((k) => k.cats.includes(f.cat)).map((k) => <Link key={k.id} to="/export-to/$market/$familyId" params={{ market: k.id, familyId: f.id }} className="rounded-full border border-border px-2 py-0.5 text-[12.5px] text-foreground no-underline hover:border-brand">{k.name}</Link>)}</p>
             </div>
           </div>
         </div>
@@ -96,7 +120,7 @@ function FamilyBody() {
       <div className="mx-auto max-w-7xl px-4">
         <section id="types" className="scroll-mt-32 py-12">
           <h2 className="mb-2 text-[clamp(1.6rem,3vw,2.1rem)]">{f.styles.length} types of {f.name.toLowerCase()}</h2>
-          <p className="mb-6 text-muted-foreground">Open any product for its full details, quantity calculator and order total.</p>
+          <p className="mb-6 text-muted-foreground">Each type has its own specification, packing data and quantity-based price. Add any of them to one request for quotation.</p>
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {f.styles.map((s, i) => {
               const inBasket = items.some((b) => b.familyId === f.id && b.style === s.n)
@@ -114,7 +138,7 @@ function FamilyBody() {
                     <p className="m-0 text-[14.5px] text-muted-foreground">{s.d}</p>
                     <div className="num text-xl font-semibold">{money(s.p[0])}–{s.p[1].toFixed(2)} <span className="text-sm font-normal text-muted-foreground">/ {s.u ?? 'pc'}</span></div>
                     <div className="flex flex-wrap gap-1.5">
-                      {s.b === 'M' ? <Pill>Market-checked price</Pill> : <Pill tone="jute">Indicative price</Pill>}
+                      {s.b === 'M' ? <Pill>Market-checked price</Pill> : <Pill tone="jute">Indicative</Pill>}
                       {s.season && <Pill tone="ok">Season: {s.season}</Pill>}
                     </div>
                     <div className="mt-auto grid grid-cols-2 gap-2 pt-3">
@@ -200,8 +224,8 @@ function FamilyBody() {
         <section className="py-12">
           <div className="flex flex-col items-start justify-between gap-6 rounded-lg bg-brand p-8 text-brand-ink md:flex-row md:items-center">
             <div>
-              <h2 className="m-0 text-[clamp(1.5rem,3vw,2rem)]">Ready to price your {f.name.toLowerCase()} order?</h2>
-              <p className="mt-2 mb-0 opacity-85">Add types to your quote, then send one request for everything.</p>
+              <h2 className="m-0 text-[clamp(1.5rem,3vw,2rem)]">Request a proforma invoice for {f.name.toLowerCase()}</h2>
+              <p className="mt-2 mb-0 opacity-85">Priced CIF to your port with specifications, packing, shipment date and LC terms. Within 24 hours.</p>
             </div>
             <Link to="/quote" className="btn bg-brand-ink text-brand">Request a quotation{items.length ? ` (${items.length})` : ''}</Link>
           </div>

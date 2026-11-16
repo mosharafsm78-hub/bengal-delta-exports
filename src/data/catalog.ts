@@ -278,8 +278,8 @@ export const FAMILIES: Family[] = [
   /* =================== FOOTWEAR & LEATHER =================== */
   {
     id: 'casual-footwear', cat: 'footwear', name: 'Slides, sandals & sneakers', hs: '6402.20 · 6402.99 · 6404.19',
-    tag: 'EVA and PU slides, sandals, flip-flops, mules and sneakers from verified factories.',
-    intro: 'We manufacture this range ourselves, so we control the moulds, materials, colours and delivery dates. Upper material and sole type set the price.',
+    tag: 'EVA and PU slides, sandals, flip-flops, mules and sneakers.',
+    intro: 'Injection-moulded EVA and PU footwear from audited factories with their own mould shops, so new designs, colours and delivery dates are controlled at source. Upper material and sole type set the price.',
     photo: 'slides', moq: '600 pairs per design (300 pairs on existing moulds)', lead: LEAD_SHOE,
     styles: [
       { n: 'EVA / PU slides', d: 'One-strap or two-strap, embossed logo.', p: [2.5, 4.0], u: 'pair', photo: 'slides' },

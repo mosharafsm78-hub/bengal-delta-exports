@@ -16,7 +16,7 @@ export function Photo({ id, alt, className, credit = false, eager = false, tag =
       <img src={p.src} alt={alt} loading={eager ? 'eager' : 'lazy'} decoding="async" className="h-full w-full object-cover" />
       {sample && (tag || credit) && (
         <figcaption className="absolute bottom-2 left-2 rounded-full bg-ink/60 px-2.5 py-0.5 text-[11px] font-medium text-paper">
-          Sample image
+          Reference image
         </figcaption>
       )}
       {!sample && credit && (
