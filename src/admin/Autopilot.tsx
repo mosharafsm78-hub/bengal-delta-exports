@@ -306,7 +306,7 @@ function Engines({ running, perHour }: { running: boolean; perHour: number }) {
   return (
     <div className="grid gap-3 lg:grid-cols-2">
       <Card title={<span className="flex items-center gap-2">{pulse}<Search className="size-4 text-brand" />Lead engine</span>}>
-        <p className="m-0 text-[13px] text-muted-foreground">Every 15 minutes: picks a market in office hours, finds real importers and wholesalers, checks their public company email.</p>
+        <p className="m-0 text-[13px] text-muted-foreground">Every hour (3 quick runs at :00, :05, :10): picks a market in office hours, finds about 10 real buyers and checks their public company email.</p>
         <div className="mt-3 grid grid-cols-3 gap-2 text-center">
           <div className="rounded-lg bg-muted/60 p-2"><b className="num block text-[22px]">{v?.foundH ?? '…'}</b><span className="text-[12px] text-muted-foreground">found last hour</span></div>
           <div className="rounded-lg bg-muted/60 p-2"><b className="num block text-[22px]">{v?.foundD ?? '…'}</b><span className="text-[12px] text-muted-foreground">found today</span></div>
