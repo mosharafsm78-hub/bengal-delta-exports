@@ -48,6 +48,18 @@ function Home() {
         </dl>
       </section>
 
+      {/* Certifications */}
+      <section className="border-b border-border bg-paper">
+        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-6 lg:flex-row lg:items-center lg:gap-8">
+          <p className="m-0 flex-none text-[13px] font-semibold tracking-wide text-muted-foreground uppercase">Partner factories certified to</p>
+          <ul className="m-0 flex list-none flex-wrap gap-2 p-0">
+            {['BSCI / amfori', 'WRAP', 'Sedex', 'OEKO-TEX', 'GOTS', 'ISO 9001', 'HACCP', 'ISO 22000', 'GlobalGAP', 'Halal'].map((c) => (
+              <li key={c} className="rounded-md border border-border bg-card px-3 py-1.5 text-[13.5px] font-semibold text-ink">{c}</li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
       {/* Categories */}
       <section className="mx-auto max-w-7xl px-4 pt-16">
         <div className="mb-8 flex flex-wrap items-end justify-between gap-3">
@@ -85,8 +97,8 @@ function Home() {
           {([
             [Network, 'Supplier sourcing', 'Matched from 10,000+ suppliers to your product, volume and price.', '/suppliers'],
             [BadgeCheck, 'Reliability', 'Capacity, track record and delivery checked before every order.', '/suppliers'],
-            [ShieldCheck, 'Compliance', 'Social and environmental audits, certificates and your code of conduct.', '/quality'],
-            [ClipboardCheck, 'Quality control', 'Inline checks and pre-shipment inspection on every order.', '/quality'],
+            [ShieldCheck, 'Compliance', 'BSCI, WRAP, Sedex, OEKO-TEX, GOTS and more, matched to your requirements.', '/quality'],
+            [ClipboardCheck, 'Quality control', 'Our own QC team inspects every order before shipment.', '/quality'],
             [Ship, 'Logistics', 'FCL, LCL and air freight, insured to your port.', '/shipping'],
             [FileText, 'Documentation and LC', 'Export documents, certificates of origin and LC handled for you.', '/how-we-work'],
           ] as const).map(([Icon, t, d, to]) => (
