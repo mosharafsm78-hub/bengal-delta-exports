@@ -1,7 +1,7 @@
 // Business settings and shared page content. Change contact details here before going live.
 export const SITE = {
   name: 'BengalExport',
-  tagline: 'Export trading house · Bangladesh',
+  tagline: 'Global sourcing & export house',
   email: 'sales@bengalexport.online',
   whatsapp: '8801805070650',
   whatsappDisplay: '+880 1805-070650',

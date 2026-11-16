@@ -190,7 +190,7 @@ export function SiteHeader() {
             <Logo />
             <span className="leading-none">
               <span className="block font-display text-[17px] font-semibold tracking-tight sm:text-[19px]">{SITE.name}</span>
-              <span className="mt-1 hidden text-[10.5px] font-medium tracking-[0.12em] text-muted-foreground uppercase sm:block">Export trading house · Bangladesh</span>
+              <span className="mt-1 hidden text-[10.5px] font-medium tracking-[0.12em] text-muted-foreground uppercase sm:block">Global sourcing &amp; export house</span>
             </span>
           </Link>
           <nav aria-label="Main" className="hidden items-center gap-0.5 lg:flex">
