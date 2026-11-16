@@ -29,10 +29,11 @@ const NAV: [View, string, typeof LayoutDashboard][] = [
 export function AdminApp() {
   const [session, setSession] = useState<Session | null | undefined>(undefined)
   const [role, setRole] = useState<'loading' | 'none' | 'staff' | 'owner'>('loading')
+  const [recovering, setRecovering] = useState(() => typeof window !== 'undefined' && /type=recovery/.test(window.location.hash + window.location.search))
 
   useEffect(() => {
     sb().auth.getSession().then(({ data }) => setSession(data.session))
-    const { data } = sb().auth.onAuthStateChange((_e, s) => setSession(s))
+    const { data } = sb().auth.onAuthStateChange((e, s) => { if (e === 'PASSWORD_RECOVERY') setRecovering(true); setSession(s) })
     return () => data.subscription.unsubscribe()
   }, [])
 
@@ -43,6 +44,7 @@ export function AdminApp() {
 
   if (session === undefined || (session && role === 'loading')) return <Center><p className="text-muted-foreground">Loading…</p></Center>
   if (!session) return <Login />
+  if (recovering) return <NewPassword onDone={() => { setRecovering(false); history.replaceState(null, '', location.pathname) }} />
   if (role === 'none') return <NotAdmin email={session.user.email ?? ''} onClaimed={() => location.reload()} />
   return <Shell email={session.user.email ?? ''} owner={role === 'owner'} />
 }
@@ -100,6 +102,32 @@ function Login() {
         <div className="mt-4 flex justify-between text-[13px]">
           {mode !== 'in' ? <button type="button" className="text-brand" onClick={() => setMode('in')}>Back to sign in</button> : <button type="button" className="text-brand" onClick={() => setMode('up')}>First time? Create account</button>}
           {mode === 'in' && <button type="button" className="text-muted-foreground" onClick={() => setMode('reset')}>Forgot password?</button>}
+        </div>
+      </form>
+    </Center>
+  )
+}
+
+function NewPassword({ onDone }: { onDone: () => void }) {
+  const [pw, setPw] = useState('')
+  const [err, setErr] = useState('')
+  const [busy, setBusy] = useState(false)
+  async function save(e: React.FormEvent) {
+    e.preventDefault(); setErr(''); setBusy(true)
+    const { error } = await sb().auth.updateUser({ password: pw })
+    setBusy(false)
+    if (error) setErr(error.message); else onDone()
+  }
+  return (
+    <Center>
+      <form onSubmit={save} className="w-full max-w-sm rounded-2xl border border-border bg-card p-7 shadow-sm">
+        <Brand />
+        <h1 className="mt-6 mb-1 text-2xl">Set a new password</h1>
+        <p className="mt-0 mb-5 text-sm text-muted-foreground">Choose the password you will use to sign in from now on.</p>
+        <div className="grid gap-3">
+          <Field label="New password" hint="At least 8 characters."><input className={input} type="password" required minLength={8} autoComplete="new-password" value={pw} onChange={(e) => setPw(e.target.value)} /></Field>
+          <ErrorNote error={err} />
+          <button disabled={busy} className={cn(btn, 'btn-primary w-full justify-center')}>{busy ? 'Saving…' : 'Save password'}</button>
         </div>
       </form>
     </Center>
