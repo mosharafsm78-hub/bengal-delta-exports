@@ -43,6 +43,10 @@ function useCloseOnRoute(close: () => void) {
 function Dropdown({ label, id, children, wide }: { label: string; id: string; children: React.ReactNode; wide?: boolean }) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const show = () => { if (timer.current) clearTimeout(timer.current); setOpen(true) }
+  const hide = () => { if (timer.current) clearTimeout(timer.current); timer.current = setTimeout(() => setOpen(false), 220) }
+  useEffect(() => () => { if (timer.current) clearTimeout(timer.current) }, [])
   useCloseOnRoute(() => setOpen(false))
   useEffect(() => {
     if (!open) return
@@ -53,12 +57,12 @@ function Dropdown({ label, id, children, wide }: { label: string; id: string; ch
     return () => { document.removeEventListener('mousedown', onDoc); document.removeEventListener('keydown', onKey) }
   }, [open])
   return (
-    <div ref={ref} className={wide ? '' : 'relative'} onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
+    <div ref={ref} className={wide ? '' : 'relative'} onMouseEnter={show} onMouseLeave={hide}>
       <button type="button" className={cn(navLink, 'inline-flex items-center gap-1', open && 'bg-muted')} aria-expanded={open} aria-controls={id} onClick={() => setOpen((o) => !o)}>
         {label} <ChevronDown className={cn('size-4 transition', open && 'rotate-180')} aria-hidden="true" />
       </button>
       {open && (
-        <div id={id} className={cn('absolute z-40 pt-2', wide ? 'inset-x-0 top-full' : 'top-full left-0')}>
+        <div id={id} onMouseEnter={show} onMouseLeave={hide} className={cn('absolute z-40 pt-2', wide ? 'inset-x-0 top-full' : 'top-full left-0')}>
           {children}
         </div>
       )}
