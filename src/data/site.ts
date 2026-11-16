@@ -6,7 +6,7 @@ export const SITE = {
   whatsapp: '8801805070650',
   whatsappDisplay: '+880 1805-070650',
   phone: '+880 1805-070650',
-  address: 'Jalalabad Co-operative Housing Society, West Khulshi, Chattogram, Bangladesh',
+  address: 'Bangladesh',
   founder: 'Mosharaf Hossain',
   founderRole: 'Founder and Managing Director',
   /** Registration numbers are shown on the About page only when filled in. */

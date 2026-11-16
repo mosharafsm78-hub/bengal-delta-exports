@@ -23,7 +23,7 @@ const DEPARTMENTS: [typeof Search, string, string, string][] = [
   [FileText, 'home', 'Export documents and LC', 'Checks your LC, prepares invoices, certificates of origin and phytosanitary papers, and presents documents to the bank.'],
   [Ship, 'jute', 'Logistics and shipping', 'Books containers and air cargo, handles customs and sends you tracking.'],
   [Headset, 'crafts', 'Sales and buyer support', 'Answers within one working day, sends proforma invoices and keeps you updated at every step.'],
-  [Palette, 'food', 'Design and product development', 'Our in-house design team helps with private-label packaging, labels and new styles.'],
+  [Palette, 'food', 'Design and product development', 'Private-label packaging, labels, tech packs and new styles developed with the factory.'],
   [Calculator, 'garments', 'Accounts and finance', 'Handles LCs with our bank, supplier payments and export-proceeds compliance.'],
 ]
 
@@ -36,7 +36,7 @@ function About() {
     ['BIN (VAT registration)', reg.bin],
   ] as [string, string][]).filter(([, v]) => v)
   const details: [string, string][] = ([
-    ['Head office', SITE.address],
+    ['Registered in', 'Bangladesh'],
     ['Export gateways', 'Chattogram Port · Dhaka (Hazrat Shahjalal) air cargo'],
     ['Phone', SITE.phone],
     ['WhatsApp', SITE.whatsappDisplay],
@@ -53,7 +53,7 @@ function About() {
           <h1 className="m-0 max-w-4xl text-[clamp(2.2rem,5vw,3.6rem)] leading-[1.06] text-paper">An export trading house, accountable for the whole order.</h1>
           <p className="mt-5 max-w-[62ch] text-lg text-paper/80">BengalExport contracts, inspects and ships Bangladeshi goods under its own proforma invoice and Letter of Credit, standing between you and 10,000+ audited factories and farms.</p>
           <dl className="m-0 mt-10 grid max-w-3xl grid-cols-3 gap-4 sm:gap-6">
-            {[[Users, '10,000+', 'Suppliers in our network'], [CalendarDays, '24 h', 'Proforma invoice turnaround'], [MapPin, 'Bangladesh', 'Head office']].map(([I, b, s]) => {
+            {[[Users, '10,000+', 'Suppliers in our network'], [CalendarDays, '24 h', 'Proforma invoice turnaround'], [MapPin, 'Bangladesh', 'Registered and operating']].map(([I, b, s]) => {
               const Icon = I as typeof Users
               return (
                 <div key={s as string}>
@@ -107,8 +107,8 @@ function About() {
 
         {/* Team */}
         <section className="pt-16">
-          <h2 className="m-0 mb-2 text-[clamp(1.8rem,3.4vw,2.4rem)]">Our team: 8 departments, one point of contact</h2>
-          <p className="mt-0 mb-8 max-w-[70ch] text-muted-foreground">Each order passes through the same people, from your first email to the day your goods arrive.</p>
+          <h2 className="m-0 mb-2 text-[clamp(1.8rem,3.4vw,2.4rem)]">Eight functions, one point of contact</h2>
+          <p className="mt-0 mb-8 max-w-[70ch] text-muted-foreground">Every order passes through the same eight functions, and you deal with one account manager throughout.</p>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {DEPARTMENTS.map(([Icon, c, t, d]) => (
               <div key={t} style={catStyle(c)} className="rounded-xl border border-border bg-card p-6">
@@ -128,7 +128,7 @@ function About() {
               <div className="eyebrow">Founder</div>
               <p className="m-0 mt-1 font-display text-2xl font-semibold">{SITE.founder}</p>
               <p className="m-0 mt-1 text-[15px] text-muted-foreground">{SITE.founderRole}. More than 15 years in business across fashion, branding and international sourcing.</p>
-              <p className="m-0 mt-3 text-[15px]">“We built {SITE.name} so that a buyer anywhere can order from Bangladesh as easily and safely as from home: clear prices, real samples, and payment through their own bank.”</p>
+              <p className="m-0 mt-3 text-[15px]">“An importer should be able to contract with one accountable counterparty, verify every stage, and pay through their own bank. {SITE.name} is built on that standard.”</p>
             </div>
           </div>
           <aside className="grid gap-5">
@@ -158,7 +158,7 @@ function About() {
           <div className="flex flex-col items-start justify-between gap-6 rounded-2xl bg-brand p-10 text-brand-ink md:flex-row md:items-center">
             <div>
               <h2 className="m-0 text-[clamp(1.6rem,3vw,2.2rem)]">Work with us</h2>
-              <p className="mt-2 mb-0 opacity-90">Buyers get a firm price in 24 hours. Producers can apply to become verified suppliers.</p>
+              <p className="mt-2 mb-0 opacity-90">Importers receive a proforma invoice within 24 hours. Producers can apply to join the onboard list.</p>
             </div>
             <div className="flex flex-wrap gap-3">
               <Link to="/suppliers" className="btn border border-brand-ink/40 text-brand-ink">Become a supplier</Link>

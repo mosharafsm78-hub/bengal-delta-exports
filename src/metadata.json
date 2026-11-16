@@ -62,5 +62,9 @@
   "/terms": {
     "title": "Terms of trade — BengalExport",
     "description": "Indicative prices, how a contract is made (proforma invoice and 100% LC at sight), samples, claims and governing law."
+  },
+  "/account": {
+    "title": "Buyer account — named account manager, verified status, order tracking | BengalExport",
+    "description": "Open a BengalExport buyer account: a named account manager, verified buyer status after company checks, proforma invoices within 24 hours and tracking from LC to shipment. No fee."
   }
 }

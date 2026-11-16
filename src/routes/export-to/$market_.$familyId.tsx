@@ -24,7 +24,7 @@ function faq(m: NonNullable<ReturnType<typeof load>>) {
     [`What is the import duty on ${name} from Bangladesh in ${k.name}?`, dutyLine(k, f.cat) + ' Your customs broker confirms the exact rate for your HS code (' + f.hs + ').'],
     [`What is the minimum order for ${name}?`, `${f.moq}. Several styles or products can share one container.`],
     [`How long does an order take to reach ${k.name}?`, `About ${lead[0]}–${lead[1]} days from order confirmation to dispatch, then ${k.transit} to ${k.ports}. Urgent or fresh goods can go by air from Dhaka in 1–4 days.`],
-    [`How do I pay safely?`, `Only by ${PAYMENT_HEADLINE.toLowerCase()} opened at your own bank. Your money is released only against the shipping documents after the goods have shipped.`],
+    [`What are the payment terms?`, `${PAYMENT_HEADLINE}, issued by your bank under UCP 600. Your bank releases funds only against the shipping documents, after the goods have shipped.`],
     [`Can I see samples before ordering?`, f.cat === 'produce' ? 'We send photos and video of the actual lot, or an air sample on request.' : 'Yes. Pay the sample invoice and ready-style samples ship by express courier within 24 hours; the cost is credited on your order.'],
     [`Who handles customs?`, `We handle everything on the Bangladesh side: export customs, the ${marketDuty(k).proof.toLowerCase()}, freight and insurance to ${k.ports.split(',')[0]}. Your broker clears import customs in ${k.inText} with the documents we send in advance.`],
   ] as [string, string][]
@@ -81,7 +81,7 @@ function Page() {
             ))}
           </dl>
           <div className="mt-6 flex flex-wrap gap-3">
-            <Link to="/quote" className="btn btn-primary">Get my price to {k.ports.split(',')[0]} <ArrowRight className="size-4" aria-hidden="true" /></Link>
+            <Link to="/quote" className="btn btn-primary">Request a quotation, CIF {k.ports.split(',')[0]} <ArrowRight className="size-4" aria-hidden="true" /></Link>
             <Link to="/products/$familyId" params={{ familyId: f.id }} className="btn btn-outline">Full specs and price calculator</Link>
           </div>
           <TrustRow className="mt-5 max-w-xl" />

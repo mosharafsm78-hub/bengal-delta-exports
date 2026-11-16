@@ -19,8 +19,8 @@ const SECTIONS: [string, string[]][] = [
   ]],
   ['Samples', ['Sample cost and courier charges are invoiced separately and payable in advance. Ready-style samples are dispatched within 24 hours of payment; custom samples take 5–10 days. The sample cost is credited against your first order.']],
   ['Quality and claims', ['Goods are inspected before shipment against the agreed specification. Any claim must be made in writing within 14 days of the goods arriving at the destination port, with photos and an independent survey report where relevant.']],
-  ['Photos', ['Product photos on this website illustrate the product type and come from Pexels under the Pexels License. Before shipment we send you photos and video of your actual goods.']],
-  ['Governing law', ['These terms and any contract with us are governed by the laws of Bangladesh. Disputes are settled first by negotiation, then by arbitration in Chattogram, unless the proforma invoice states otherwise.']],
+  ['Photos', ['Product images on this website are reference images illustrating the product type; they are not photographs of a specific lot. Before shipment we send photos and video of your actual goods.']],
+  ['Governing law', ['These terms and any contract with us are governed by the laws of Bangladesh. Disputes are settled first by negotiation, then by arbitration in Bangladesh, unless the proforma invoice states otherwise.']],
   ['Contact', [`${SITE.name}, ${SITE.address}. ${SITE.email}`]],
 ]
 

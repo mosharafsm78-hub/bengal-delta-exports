@@ -30,7 +30,7 @@ function MarketPage() {
   return (
     <div className="mx-auto max-w-7xl px-4 pt-12">
       <nav aria-label="Breadcrumb" className="mb-6 text-[13.5px] text-muted-foreground"><Link to="/export-to" className="text-muted-foreground no-underline hover:text-brand">Country guides</Link><span className="mx-1.5">/</span><span className="text-foreground">{k.name}</span></nav>
-      <PageHead eyebrow={`For ${k.buyer} importers`} title={`Import from Bangladesh to ${k.name}`} lead={`BengalExport checks the factory, inspects your goods, handles export customs and ships them insured to ${k.ports}. You pay by ${PAYMENT_HEADLINE.toLowerCase()} and collect the goods at your port.`} />
+      <PageHead eyebrow={`For ${k.buyer} importers`} title={`Import from Bangladesh to ${k.name}`} lead={`BengalExport checks the factory, inspects your goods, handles export customs and ships them insured to ${k.ports}. Settlement by ${PAYMENT_HEADLINE}; your broker clears the goods at your port.`} />
       <div className="mb-10 grid gap-4 md:grid-cols-3">
         <Fact title="Import duty" value={<Pill tone={d.zero ? 'ok' : 'warn'}>{d.duty}</Pill>} text={d.scheme} />
         <Fact title="Sea transit from Chattogram" value={<b>{k.transit}</b>} text={`Main ports: ${k.ports}. Air cargo from Dhaka takes 1–4 days for urgent or fresh goods.`} />
@@ -57,7 +57,7 @@ function MarketPage() {
         </section>
       ))}
       <section className="mb-10"><h2 className="mb-4 text-2xl">Who does what</h2><WhoDoesWhat /></section>
-      <Link to="/quote" className="btn btn-primary">Get my price delivered to {k.ports.split(',')[0]} <ArrowRight className="size-4" aria-hidden="true" /></Link>
+      <Link to="/quote" className="btn btn-primary">Request a quotation, CIF {k.ports.split(',')[0]} <ArrowRight className="size-4" aria-hidden="true" /></Link>
     </div>
   )
 }

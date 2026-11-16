@@ -62,7 +62,7 @@ export function PriceBuilder({ family, styleIndex, onStyleChange }: { family: Fa
           <div className="text-[13px] text-muted-foreground">per {unitName(unit, 1)}{quote.tierLabel ? ` · volume band ${quote.tierLabel}` : ''}</div>
         </div>
         <div className="border-t border-brand/15 pt-3">
-          <div className="text-[13px] text-muted-foreground">Approximate order value · nothing to pay now</div>
+          <div className="text-[13px] text-muted-foreground">Approximate order value · indicative</div>
           <div className="num font-display text-2xl font-semibold">{quote.total ? `${usd(quote.total[0])} – ${usd(quote.total[1])}` : '—'}</div>
         </div>
         <button

@@ -84,7 +84,7 @@ function HowWeWork() {
       <div className="mt-12 flex flex-col items-start justify-between gap-6 rounded-lg bg-brand p-8 text-brand-ink md:flex-row md:items-center print:hidden">
         <div>
           <h2 className="m-0 text-[clamp(1.5rem,3vw,2rem)]">Step 1: request your proforma invoice</h2>
-          <p className="mt-2 mb-0 opacity-85">It's free and carries no commitment until your LC is opened.</p>
+          <p className="mt-2 mb-0 opacity-85">No commitment arises until you accept the proforma invoice and your bank issues the LC.</p>
         </div>
         <div className="flex flex-wrap gap-3">
           <Link to="/products" className="btn border border-brand-ink/40 text-brand-ink">Browse products</Link>

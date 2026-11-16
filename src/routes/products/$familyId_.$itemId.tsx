@@ -229,7 +229,7 @@ function ItemBody() {
 
           <div className="mt-4 flex items-start gap-3 rounded-xl bg-brand-soft p-4 text-[14px]">
             <Landmark className="mt-0.5 size-5 flex-none text-brand" aria-hidden="true" />
-            <span><b>Safe payment:</b> {PAYMENT_HEADLINE} through your own bank. Your money is released only after the goods ship. <Link to="/how-we-work" className="font-semibold text-brand">How it works</Link></span>
+            <span><b>Settlement:</b> {PAYMENT_HEADLINE}, issued by your bank under UCP 600. Funds are released only against compliant shipping documents. <Link to="/how-we-work" className="font-semibold text-brand">Trade terms</Link></span>
           </div>
 
           <div className="mt-3 rounded-xl border border-border bg-card p-4 text-[14px]">
@@ -383,9 +383,9 @@ function ItemBody() {
       <div className="fixed inset-x-0 bottom-0 z-30 flex items-center gap-3 border-t border-border bg-card/95 px-4 py-3 backdrop-blur lg:hidden print:hidden">
         <div className="min-w-0 flex-1">
           <div className="num font-semibold">from {money(mid)} / {unitName(unit, 1)} <span className="text-[12px] font-normal text-muted-foreground">indicative</span></div>
-          <div className="truncate text-[12.5px] text-muted-foreground">Free offer · nothing to pay now</div>
+          <div className="truncate text-[12.5px] text-muted-foreground">Proforma invoice within 24 h</div>
         </div>
-        <Link to="/quote" onClick={() => { if (!inBasket && !added) add() }} className="btn btn-primary px-4 py-2.5 text-sm">Get free offer</Link>
+        <Link to="/quote" onClick={() => { if (!inBasket && !added) add() }} className="btn btn-primary px-4 py-2.5 text-sm">Request quotation</Link>
       </div>
     </div>
   )
