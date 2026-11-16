@@ -193,21 +193,27 @@ async function plan(n = 2) {
 }
 
 // ---------- 2. Research: real companies with a public role email ----------
-async function research(target: { fam: string; label: string; country: string; buyers: string }, want: number, save: boolean) {
+async function research(target: { fam: string; label: string; country: string; buyers: string }, want: number, save: boolean, stats: Record<string, number> = {}) {
   const { data: known } = await db.from('bde_contacts').select('email, website').limit(50000)
   const knownHosts = new Set((known ?? []).flatMap((k) => [hostOf(k.website ?? ''), String(k.email).split('@')[1]]).filter(Boolean))
   const seg = pickSegment()
   const text = await llm(COMPANY, `Use web search to find ${want + 10} real, currently operating companies in ${target.country} that buy ${target.label}.
 Focus on this buyer type: ${seg.brief}. Typical buyers of this product: ${target.buyers}.
 Exclude marketplaces, directories, B2B portals and factories in Asia.
-Return a JSON array: [{"company": "...", "website": "https://...", "type": "importer|wholesaler|brand|retail chain|online seller|distributor|promotional supplier", "why": "one short sentence on what they sell and why ${target.label} fits", "bd_evidence": "how we know they already buy from Bangladesh, or empty"}]. Only include companies whose website you actually found.`, { json: true, search: true })
-  let list: { company: string; website: string; type: string; why: string; bd_evidence?: string }[] = []
+Return a JSON array: [{"company": "...", "website": "https://...", "email": "their public company email (sales@, info@, purchasing@ etc.) if you saw it in the search results or on their site, else empty", "type": "importer|wholesaler|brand|retail chain|online seller|distributor|promotional supplier", "why": "one short sentence on what they sell and why ${target.label} fits", "bd_evidence": "how we know they already buy from Bangladesh, or empty"}]. Only include companies whose website you actually found. Prefer companies that show a public contact email.`, { json: true, search: true })
+  let list: { company: string; website: string; email?: string; type: string; why: string; bd_evidence?: string }[] = []
   try { list = parseJson(text) } catch { list = [] }
   const out: Record<string, unknown>[] = []
+  stats.candidates = list.length
   let noEmail = 0
   // Check candidate websites in parallel: much faster than one by one.
   const cands = list.map((c) => ({ c, h: hostOf(c.website ?? '') })).filter((x, i, arr) => x.h && !knownHosts.has(x.h) && !SKIP_DOMAINS.test(x.h) && arr.findIndex((y) => y.h === x.h) === i).slice(0, want + 8)
-  const checked = await Promise.all(cands.map(async (x) => ({ ...x, ...(await findEmail(x.h)) })))
+  const checked = await Promise.all(cands.map(async (x) => {
+    const f = await findEmail(x.h)
+    if (!f.email && x.c.email) { const e = pickEmail([String(x.c.email).toLowerCase().trim()], x.h); if (e && (await hasMx(e.split('@')[1]))) f.email = e }
+    return { ...x, ...f }
+  }))
+  stats.new_sites = cands.length; stats.with_email = checked.filter((x) => x.email).length
   for (const { c, h: host, email, contactUrl } of checked) {
     if (out.length >= want) break
     knownHosts.add(host)
@@ -507,13 +513,20 @@ async function researchDaily(force = false) {
   const cfg = await settings('autopilot')
   if (!cfg.enabled && !force) return { skipped: 'autopilot is off' }
   if (!aiReady()) return { skipped: 'AI is not connected' }
-  const { count: waiting } = await db.from('bde_contacts').select('id', { count: 'exact', head: true }).contains('tags', ['prospect']).eq('seq_step', 0).eq('status', 'subscribed')
-  const need = Math.max(0, Number(cfg.daily_new ?? 15) - Math.floor((waiting ?? 0) / 3))
-  if (!need) return { skipped: 'enough new buyers are waiting to be contacted', waiting }
+  const hourStart = new Date(); hourStart.setUTCMinutes(0, 0, 0)
+  const [{ count: thisHour }, { count: today }] = await Promise.all([
+    db.from('bde_contacts').select('id', { count: 'exact', head: true }).contains('tags', ['autopilot']).gte('created_at', hourStart.toISOString()),
+    db.from('bde_contacts').select('id', { count: 'exact', head: true }).contains('tags', ['autopilot']).gte('created_at', new Date(new Date().setUTCHours(0, 0, 0, 0)).toISOString()),
+  ])
+  const hourly = Number(cfg.hourly_new ?? cfg.per_hour ?? 10)
+  const need = Math.min(hourly - (thisHour ?? 0), Number(cfg.daily_new ?? 240) - (today ?? 0))
+  if (need <= 0 && !force) return { skipped: `found ${thisHour} new buyers this hour (target ${hourly})` }
   const targets = await plan(1)
   const results: any[] = []
   for (const t of targets) {
-    try { const got = await research(t, Math.min(12, need), true); results.push({ ...t, segment: (got[0] as any)?.research?.segment, found: got.length, companies: got.map((g: any) => g.company) }) } catch (e) { results.push({ ...t, error: clean(e).slice(0, 200) }) }
+    const stats: Record<string, number> = {}
+    const want = force ? 5 : new Date().getUTCMinutes() < 30 ? Math.min(need, Math.ceil(hourly / 2)) : Math.min(need, hourly)
+    try { const got = await research(t, Math.max(1, want), true, stats); results.push({ ...t, ...stats, segment: (got[0] as any)?.research?.segment, found: got.length, companies: got.map((g: any) => g.company) }) } catch (e) { results.push({ ...t, ...stats, error: clean(e).slice(0, 200) }) }
   }
   await log('research', { results })
   return { results }
