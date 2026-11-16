@@ -10,9 +10,9 @@ export const Route = createFileRoute('/about')({
 })
 
 const HISTORY: [string, string, string][] = [
-  ['2022', 'Founded in Chattogram', 'BengalExport was founded in Chattogram, close to Bangladesh\'s main seaport, to help overseas buyers source from Bangladesh.'],
+  ['2022', 'Founded in Bangladesh', 'BengalExport was founded close to Bangladesh\'s main seaport, to help overseas buyers source from Bangladesh.'],
   ['Growing', 'A verified sourcing network', 'We built relationships with garment and home-textile mills, footwear and leather factories, jute mills, farms and artisan groups, and a process to check each one.'],
-  ['Growing', 'A team of about 22', 'Sourcing, quality control, documentation, logistics and sales under one roof in Chattogram.'],
+  ['Growing', 'A team of about 22', 'Sourcing, quality control, documentation, logistics and sales under one roof.'],
   ['2026', 'BengalExport export hub', 'We opened our catalogue to importers worldwide: one exporter for clothing, footwear, fresh produce, food, jute, home textiles and handicrafts.'],
 ]
 
@@ -37,7 +37,6 @@ function About() {
   ] as [string, string][]).filter(([, v]) => v)
   const details: [string, string][] = ([
     ['Head office', SITE.address],
-    ['Offices', SITE.offices.join(' · ')],
     ['Export gateways', 'Chattogram Port · Dhaka (Hazrat Shahjalal) air cargo'],
     ['Phone', SITE.phone],
     ['WhatsApp', SITE.whatsappDisplay],
@@ -51,10 +50,10 @@ function About() {
       <section className="bg-ink text-paper">
         <div className="mx-auto max-w-7xl px-4 py-16">
           <div className="eyebrow mb-3 text-jute">About {SITE.name}</div>
-          <h1 className="m-0 max-w-4xl text-[clamp(2.2rem,5vw,3.6rem)] leading-[1.06] text-paper">A Chattogram company that makes, sources and exports the best of Bangladesh.</h1>
-          <p className="mt-5 max-w-[62ch] text-lg text-paper/80">{SITE.name} was founded in 2022 in Chattogram. Today a team of about 22 people helps importers buy clothing, footwear, fresh produce, food, jute and home textiles from one accountable exporter.</p>
+          <h1 className="m-0 max-w-4xl text-[clamp(2.2rem,5vw,3.6rem)] leading-[1.06] text-paper">A Bangladeshi company that makes, sources and exports the best of Bangladesh.</h1>
+          <p className="mt-5 max-w-[62ch] text-lg text-paper/80">{SITE.name} was founded in 2022 in Bangladesh. Today a team of about 22 people helps importers buy clothing, footwear, fresh produce, food, jute and home textiles from one accountable exporter.</p>
           <dl className="m-0 mt-10 grid max-w-3xl grid-cols-3 gap-4 sm:gap-6">
-            {[[CalendarDays, '2022', 'Founded'], [Users, '≈ 22', 'People on our team'], [MapPin, 'Chattogram', 'Head office, West Khulshi']].map(([I, b, s]) => {
+            {[[CalendarDays, '2022', 'Founded'], [Users, '≈ 22', 'People on our team'], [MapPin, 'Bangladesh', 'Head office']].map(([I, b, s]) => {
               const Icon = I as typeof Users
               return (
                 <div key={s as string}>

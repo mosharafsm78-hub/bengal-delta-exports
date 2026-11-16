@@ -13,6 +13,7 @@ import { defaultPicks, priceFor, tierMin, unitName } from '@/lib/pricing'
 import { money, slug, usd } from '@/lib/slug'
 import { cn } from '@/lib/utils'
 import { catStyle } from '@/lib/cat-style'
+import { QuickOffer } from '@/components/quick-offer'
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
@@ -123,6 +124,21 @@ function ItemBody() {
             Catalogue sample image: it shows the product type, not your exact lot. Order a paid sample to see the real goods, and before shipping we send photos and video of your order.
           </p>
           <TrustRow className="mt-4" />
+          <QuickOffer cat={f.cat} family={f.name} style={s.n} qty={q} unit={unitName(unit, q || 2)} estimate={`≈${money(mid)}/${unit}${custom ? ` · ${quote.specParts.join(' · ')}` : ''}`} leadMin={leadMin} leadMax={leadMax} />
+          {siblings.length > 0 && (
+            <div className="mt-5">
+              <p className="mb-2 text-[14px] font-semibold">Other {f.name.toLowerCase()} we supply</p>
+              <div className="scroll-row flex gap-3 overflow-x-auto pb-1">
+                {siblings.slice(0, 8).map((x) => (
+                  <Link key={x.n} to="/products/$familyId/$itemId" params={{ familyId: f.id, itemId: slug(x.n) }} className="group w-28 flex-none text-foreground no-underline">
+                    <Photo id={x.photo} alt={x.n} className="aspect-square rounded-lg" />
+                    <span className="mt-1 block truncate text-[12.5px] group-hover:text-brand">{x.n}</span>
+                    <span className="num block text-[12px] text-muted-foreground">from {money(x.p[0])}</span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Buy box */}

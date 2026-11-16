@@ -12,7 +12,7 @@ export const SITE = {
   /** Registration numbers are shown on the About page only when filled in. */
   registration: { erc: '', tradeLicence: '', tin: '', bin: '' },
   hours: 'Sat–Thu, 9:00–19:00 Bangladesh time (GMT+6)',
-  offices: ['Chattogram (head office)'],
+  offices: [],
   updated: 'November 2026',
 }
 

@@ -166,7 +166,7 @@ function TopBar() {
         <span className="flex items-center gap-4 whitespace-nowrap">
           <span className="hidden items-center gap-1.5 xl:flex">
             <MapPin className="size-3.5 text-jute-soft" aria-hidden="true" />
-            Chattogram, Bangladesh · Since 2022
+            Bangladesh · Since 2022
           </span>
           {SITE.whatsapp && (
             <a href={`https://wa.me/${SITE.whatsapp}`} target="_blank" rel="noopener noreferrer" className="hidden items-center gap-1.5 font-semibold text-paper no-underline hover:underline md:flex">
@@ -260,7 +260,7 @@ export function SiteFooter() {
             <Logo />
             <span className="font-display text-xl font-semibold">{SITE.name}</span>
           </div>
-          <p className="mt-4 max-w-sm opacity-75">An export trading house in Chattogram, Bangladesh. Garments, footwear, home textiles, jute, fresh produce, food and handicrafts, delivered insured to your port worldwide.</p>
+          <p className="mt-4 max-w-sm opacity-75">An export trading house in Bangladesh. Garments, footwear, home textiles, jute, fresh produce, food and handicrafts, delivered insured to your port worldwide.</p>
           <Link to="/quote" className="btn mt-5 bg-paper text-ink">Get a free quote <ArrowRight className="size-4" aria-hidden="true" /></Link>
         </div>
         <div>
@@ -285,7 +285,7 @@ export function SiteFooter() {
             <li><a href={`mailto:${SITE.email}`} className="text-paper no-underline">{SITE.email}</a></li>
             {SITE.whatsappDisplay && <li>WhatsApp {SITE.whatsappDisplay}</li>}
             {SITE.phone && <li>Phone {SITE.phone}</li>}
-            {SITE.address && <li>{SITE.address}</li>}
+            <li>Bangladesh</li>
             {SITE.offices.map((o) => <li key={o}>{o}</li>)}
             <li>{SITE.hours}</li>
           </ul>

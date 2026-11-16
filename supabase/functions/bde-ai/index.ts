@@ -8,7 +8,7 @@ const SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const SITE = Deno.env.get('BDE_SITE_URL') ?? 'https://bengalexport.online/'
 const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type', 'Access-Control-Allow-Methods': 'POST, OPTIONS' }
 
-const COMPANY = `You write for BengalExport, an export trading house in Chattogram, Bangladesh (founded 2022, about 22 people).
+const COMPANY = `You write for BengalExport, an export trading house in Bangladesh (founded 2022, about 22 people).
 It exports garments, footwear, home textiles, jute, fresh vegetables and fruit, food and spices, and handicrafts from verified Bangladeshi producers.
 Terms: payment by 100% irrevocable LC at sight only. Prices are normally CIF to the buyer's port (CIP by air): product, export customs, freight and 110% cargo insurance included; the buyer clears import customs.
 Paid samples of ready styles ship within 24 hours by express courier; sample cost is credited on the first order.
@@ -25,7 +25,8 @@ async function llm(system: string, prompt: string, json = false): Promise<string
     if (!r.ok) throw new Error(`Gemini ${r.status}: ${(await r.text()).slice(0, 200)}`)
     const j = await r.json(); return j.candidates?.[0]?.content?.parts?.map((p: { text?: string }) => p.text ?? '').join('') ?? ''
   }
-  const a = Deno.env.get('ANTHROPIC_API_KEY')
+  // Accept a pasted key even if extra text came with it, and never echo it back.
+  const a = (Deno.env.get('ANTHROPIC_API_KEY') ?? '').match(/sk-ant-[A-Za-z0-9_-]+/)?.[0]
   if (a) {
     const r = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST', headers: { 'x-api-key': a, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
@@ -37,6 +38,7 @@ async function llm(system: string, prompt: string, json = false): Promise<string
   throw new Error('AI is not connected yet. Add a free Gemini API key in Supabase (GEMINI_API_KEY) to switch it on.')
 }
 
+const clean = (e: unknown) => String(e).replace(/sk-ant-[A-Za-z0-9_-]+/g, '[key]').replace(/x-api-key[^\n"]*/gi, '[header]')
 const parse = (s: string) => JSON.parse(s.replace(/^```(json)?|```$/gm, '').trim())
 
 Deno.serve(async (req) => {
@@ -122,6 +124,6 @@ Write a short weekly report for the owner: 3 headline findings, then 3 specific 
     }
     return Response.json({ error: 'Unknown action' }, { status: 400, headers: cors })
   } catch (e) {
-    return Response.json({ error: String((e as Error).message ?? e).slice(0, 300) }, { status: 500, headers: cors })
+    return Response.json({ error: clean((e as Error).message ?? e).slice(0, 300) }, { status: 500, headers: cors })
   }
 })

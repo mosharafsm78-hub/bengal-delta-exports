@@ -25,7 +25,7 @@ export const Route = createRootRoute({
           '@context': 'https://schema.org',
           '@type': 'Organization',
           name: SITE.name,
-          description: 'Export trading house in Chattogram, Bangladesh: garments, footwear, home textiles, jute, fresh produce, food and handicrafts.',
+          description: 'Export trading house in Bangladesh: garments, footwear, home textiles, jute, fresh produce, food and handicrafts.',
           email: SITE.email,
           telephone: SITE.phone || undefined,
           foundingDate: '2022',

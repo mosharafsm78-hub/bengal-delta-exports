@@ -37,20 +37,16 @@ function Home() {
   return (
     <div>
       {/* Hero */}
-      <section className="relative overflow-hidden bg-ink text-paper">
-        <div className="absolute inset-0 opacity-40">
-          <Photo id="produce-market" alt="" className="h-full w-full" eager />
-        </div>
-        <div className="absolute inset-0 bg-gradient-to-r from-ink via-ink/85 to-ink/25" />
-        <div className="relative mx-auto max-w-7xl px-4 py-16 lg:py-24">
-          <div className="max-w-2xl">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-paper/10 px-3 py-1 text-[13px] font-medium">Export hub · Chattogram, Bangladesh</div>
-            <h1 className="m-0 text-[clamp(2.4rem,5.6vw,4.2rem)] leading-[1.04] text-paper">Buy direct from Bangladesh. Simple, safe, worldwide.</h1>
-            <p className="mt-5 max-w-[52ch] text-lg leading-relaxed text-paper/85">
-              Clothing, shoes, fresh vegetables, fruit, food, jute and home textiles. See the price, choose your quantity, and get a firm offer in 24 hours.
+      <section className="relative overflow-hidden border-b border-border bg-gradient-to-br from-brand-soft/70 via-paper to-paper">
+        <div className="relative mx-auto grid max-w-7xl items-center gap-10 px-4 py-12 lg:grid-cols-[1.05fr_1fr] lg:py-20">
+          <div>
+            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-brand/20 bg-card px-3 py-1 text-[13px] font-semibold text-brand"><ShieldCheck className="size-4" aria-hidden="true" />Export house in Bangladesh · Since 2022</div>
+            <h1 className="m-0 text-[clamp(2.3rem,5vw,3.9rem)] leading-[1.05]">Buy direct from Bangladesh. <span className="text-brand">Simple, safe, worldwide.</span></h1>
+            <p className="mt-5 max-w-[54ch] text-lg leading-relaxed text-muted-foreground">
+              Clothing, shoes, home textiles, jute, fresh produce and food from checked factories and farms. We inspect every order and deliver it insured to your port. Free offer in 24 hours.
             </p>
             <form
-              className="mt-8 flex max-w-xl gap-2 rounded-full bg-paper p-1.5 shadow-lg"
+              className="mt-7 flex max-w-xl gap-2 rounded-full border border-border bg-card p-1.5 shadow-md"
               role="search"
               onSubmit={(e) => {
                 e.preventDefault()
@@ -62,13 +58,35 @@ function Home() {
                 <Search className="pointer-events-none absolute top-1/2 left-3.5 size-5 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
                 <input id="hub-search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="What do you want to buy?" className="w-full rounded-full border-0 bg-transparent py-2.5 pr-3 pl-11 text-base text-ink outline-none" />
               </div>
-              <button type="submit" className="rounded-full bg-jute px-6 font-semibold text-white hover:opacity-90">Search</button>
+              <button type="submit" className="rounded-full bg-brand px-6 font-semibold text-white hover:opacity-90">Search</button>
             </form>
-            <ul className="mt-6 flex list-none flex-wrap gap-x-5 gap-y-2 p-0 text-[14.5px] text-paper/90">
-              {['Price in 24 hours', 'Samples ship in 24 hours', 'Pay safely by bank LC', '0% duty in EU & UK'].map((t) => (
-                <li key={t} className="flex items-center gap-1.5"><CheckCircle2 className="size-4 text-jute" aria-hidden="true" />{t}</li>
+            <div className="mt-4 flex flex-wrap gap-3">
+              <Link to="/quote" className="btn btn-primary">Get a free offer {arrow}</Link>
+              <Link to="/how-we-work" className="btn btn-outline">How buying works</Link>
+            </div>
+            <ul className="mt-6 grid max-w-xl list-none grid-cols-2 gap-x-5 gap-y-2 p-0 text-[14.5px]">
+              {['Pay by LC at sight, money safe', 'Inspected before shipment', 'Samples ship in 24 hours', '0% duty in EU, UK, Canada, Australia'].map((t) => (
+                <li key={t} className="flex items-start gap-1.5"><CheckCircle2 className="mt-0.5 size-4 flex-none text-brand" aria-hidden="true" />{t}</li>
               ))}
             </ul>
+          </div>
+          <div className="relative">
+            <div className="grid grid-cols-3 gap-3">
+              {([['tshirt-crew', 'T-shirts', 'col-span-2 row-span-2'], ['slides', 'Footwear', ''], ['bath-towels', 'Towels', ''], ['jute-tote', 'Jute bags', ''], ['polo-classic', 'Polos', ''], ['mango', 'Fresh produce', '']] as const).map(([id, label, span]) => (
+                <div key={id} className={`group relative overflow-hidden rounded-2xl border border-border bg-card shadow-sm ${span}`}>
+                  <Photo id={id} alt={label} className="aspect-square h-full w-full transition duration-500 group-hover:scale-[1.03]" eager />
+                  <span className="absolute bottom-2 left-2 rounded-full bg-card/90 px-2.5 py-0.5 text-[12px] font-semibold text-ink shadow-sm">{label}</span>
+                </div>
+              ))}
+            </div>
+            <div className="absolute -bottom-5 -left-3 hidden max-w-[230px] items-start gap-2.5 rounded-xl border border-border bg-card p-3.5 shadow-lg sm:flex">
+              <Landmark className="mt-0.5 size-5 flex-none text-brand" aria-hidden="true" />
+              <span className="text-[13px] leading-snug"><b className="block">Your money stays safe</b>Paid by LC through your own bank, released only after shipment.</span>
+            </div>
+            <div className="absolute -top-4 -right-2 hidden items-center gap-2 rounded-xl border border-border bg-card px-3.5 py-2.5 shadow-lg sm:flex">
+              <Ship className="size-5 text-brand" aria-hidden="true" />
+              <span className="text-[13px] leading-tight"><b className="block">Delivered to your port</b>Insured, export cleared</span>
+            </div>
           </div>
         </div>
       </section>

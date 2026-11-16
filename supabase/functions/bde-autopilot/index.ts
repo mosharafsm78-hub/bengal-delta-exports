@@ -56,7 +56,7 @@ const ROLE = ['sales', 'purchasing', 'purchase', 'buying', 'buyer', 'sourcing', 
 const SKIP_DOMAINS = /(amazon|alibaba|ebay|etsy|facebook|linkedin|instagram|google|wikipedia|yelp|indiamart|made-in-china|tradekey|europages|kompass|yellowpages|zoominfo|bloomberg|dnb\.com|crunchbase|globalsources|exporthub|go4worldbusiness)\./i
 
 // ---------- AI ----------
-const COMPANY = `You work for BengalExport, an export trading house in Chattogram, Bangladesh (since 2022, about 22 people).
+const COMPANY = `You work for BengalExport, an export trading house in Bangladesh (since 2022, about 22 people).
 BengalExport sources from verified Bangladeshi factories and farms, checks the factory, inspects goods before shipping, and handles export packing, export customs, documents, freight and insurance. Prices are delivered to the buyer's port (CIF by sea, CIP by air). Payment only by 100% irrevocable LC at sight, so the buyer's money is safe until goods ship. Paid samples of ready styles ship within 24 hours. Most goods enter the EU, UK, Canada, Australia and Japan at 0% import duty. Never invent prices, certificates, customers, awards or facts.`
 
 async function llm(system: string, prompt: string, opts: { json?: boolean; search?: boolean } = {}): Promise<string> {
@@ -68,7 +68,8 @@ async function llm(system: string, prompt: string, opts: { json?: boolean; searc
     if (!r.ok) throw new Error(`Gemini ${r.status}: ${(await r.text()).slice(0, 200)}`)
     const j = await r.json(); return j.candidates?.[0]?.content?.parts?.map((p: { text?: string }) => p.text ?? '').join('') ?? ''
   }
-  const a = Deno.env.get('ANTHROPIC_API_KEY')
+  // Accept a pasted key even if extra text came with it, and never echo it back.
+  const a = (Deno.env.get('ANTHROPIC_API_KEY') ?? '').match(/sk-ant-[A-Za-z0-9_-]+/)?.[0]
   if (a) {
     const r = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST', headers: { 'x-api-key': a, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
@@ -79,6 +80,7 @@ async function llm(system: string, prompt: string, opts: { json?: boolean; searc
   }
   throw new Error('AI is not connected')
 }
+const clean = (e: unknown) => String(e).replace(/sk-ant-[A-Za-z0-9_-]+/g, '[key]').replace(/x-api-key[^\n"]*/gi, '[header]')
 function parseJson<T>(s: string): T {
   const t = s.replace(/```(json)?/g, '').trim()
   const start = t.search(/[[{]/); const end = Math.max(t.lastIndexOf(']'), t.lastIndexOf('}'))
@@ -236,7 +238,7 @@ async function sendOne(c: any, step: number, cfg: Record<string, any>, address: 
   const fam = c.research?.fam
   const link = `${SITE}products/${fam ? fam + '/' : ''}?utm_source=outreach&utm_medium=email&utm_campaign=c${c.id}`
   const unsub = `${FN}/u?c=${c.id}&h=${await sign(`u|${c.id}`)}`
-  const signature = `\n\n${cfg.sender_name || 'BengalExport sales team'}\nBengalExport, Chattogram, Bangladesh\nWhatsApp +880 1805-070650\nCatalogue: ${link}\n\n${address ? address + '\n' : ''}If this is not relevant, reply "no" or unsubscribe here: ${unsub}`
+  const signature = `\n\n${cfg.sender_name || 'BengalExport sales team'}\nBengalExport, Bangladesh\nWhatsApp +880 1805-070650\nCatalogue: ${link}\n\n${address ? address + '\n' : ''}If this is not relevant, reply "no" or unsubscribe here: ${unsub}`
   const info = await mailer().sendMail({ from: { name: cfg.sender_name || 'BengalExport', address: SMTP.user }, to: c.email, subject, text: body + signature, headers: { 'List-Unsubscribe': `<${unsub}>, <mailto:${SMTP.user}?subject=unsubscribe>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' } })
   const now = new Date()
   const gap = step === 0 ? 4 : 6
@@ -265,8 +267,8 @@ async function sendBatch(force = false) {
     const { h, dow } = localHour(c.country ?? '')
     if (!force && (dow === 0 || dow === 6 || h < 9 || h >= 16)) continue // their business hours only
     try { await sendOne(c, c.seq_step ?? 0, cfg, email.physical_address ?? ''); sent++ } catch (e) {
-      errors.push(String(e).slice(0, 160))
-      await db.from('bde_outreach').insert({ contact_id: c.id, step: c.seq_step ?? 0, subject: '-', body: '-', status: 'failed', error: String(e).slice(0, 300) })
+      errors.push(clean(e).slice(0, 160))
+      await db.from('bde_outreach').insert({ contact_id: c.id, step: c.seq_step ?? 0, subject: '-', body: '-', status: 'failed', error: clean(e).slice(0, 300) })
       if (/auth|login|credential/i.test(String(e))) break
     }
     await new Promise((r) => setTimeout(r, 2500 + Math.random() * 3000))
@@ -336,7 +338,7 @@ async function morning(force = false) {
   const cfg = await settings('autopilot'); const alerts = await settings('alerts')
   if (!cfg.enabled && !force) return { skipped: 'autopilot is off' }
   let replies: any = { items: [] }; let replyError = ''
-  try { replies = await readReplies() } catch (e) { replyError = String(e).slice(0, 200) }
+  try { replies = await readReplies() } catch (e) { replyError = clean(e).slice(0, 200) }
   const clicks = await matchClicks()
   const since = new Date(Date.now() - 864e5).toISOString()
   const [{ count: sent }, { count: found }, { count: total }, { count: inSeq }] = await Promise.all([
@@ -430,7 +432,7 @@ async function channelsDaily(force = false) {
   const cfg = await settings('autopilot')
   if (!cfg.enabled && !force) return { skipped: 'autopilot is off' }
   let rfq: unknown = null; let li = 0
-  try { rfq = await scanBuyingRequests() } catch (e) { rfq = { error: String(e).slice(0, 200) } }
+  try { rfq = await scanBuyingRequests() } catch (e) { rfq = { error: clean(e).slice(0, 200) } }
   try { li = await linkedinFollowUps(5) } catch { /* next day */ }
   return { rfq, linkedin: li }
 }
@@ -445,7 +447,7 @@ async function researchDaily(force = false) {
   const targets = await plan(2)
   const results: any[] = []
   for (const t of targets) {
-    try { const got = await research(t, Math.ceil(need / targets.length), true); results.push({ ...t, found: got.length, companies: got.map((g: any) => g.company) }) } catch (e) { results.push({ ...t, error: String(e).slice(0, 200) }) }
+    try { const got = await research(t, Math.ceil(need / targets.length), true); results.push({ ...t, found: got.length, companies: got.map((g: any) => g.company) }) } catch (e) { results.push({ ...t, error: clean(e).slice(0, 200) }) }
   }
   await log('research', { results })
   return { results }
@@ -499,6 +501,6 @@ Deno.serve(async (req) => {
     } else return new Response('Not found', { status: 404, headers: cors })
     return Response.json(out, { headers: cors })
   } catch (e) {
-    return Response.json({ error: String(e).slice(0, 300) }, { status: 500, headers: cors })
+    return Response.json({ error: clean(e).slice(0, 300) }, { status: 500, headers: cors })
   }
 })
