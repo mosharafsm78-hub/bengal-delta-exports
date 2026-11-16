@@ -373,13 +373,13 @@ export function WhoDoesWhat({ compact = false }: { compact?: boolean }) {
   return (
     <div className={cn('grid gap-4', !compact && 'md:grid-cols-2')}>
       <div className={cn(box, 'border-brand/30 bg-brand-soft/60')}>
-        <p className="m-0 flex items-center gap-2 text-[15px] font-bold text-brand"><Handshake className="size-5" aria-hidden="true" /> We handle (included in your price)</p>
+        <p className="m-0 flex items-center gap-2 text-[15px] font-bold text-brand"><Handshake className="size-5" aria-hidden="true" /> We handle everything (included in your price)</p>
         <ul className="m-0 mt-3 grid list-none gap-2 p-0 text-[14.5px]">
           {us.map(([t]) => <li key={t} className="flex gap-2"><Check className="mt-0.5 size-4 flex-none text-brand" aria-hidden="true" />{t}</li>)}
         </ul>
       </div>
       <div className={cn(box, 'border-border bg-card')}>
-        <p className="m-0 flex items-center gap-2 text-[15px] font-bold"><User className="size-5 text-muted-foreground" aria-hidden="true" /> Your side</p>
+        <p className="m-0 flex items-center gap-2 text-[15px] font-bold"><User className="size-5 text-muted-foreground" aria-hidden="true" /> All you do</p>
         <ul className="m-0 mt-3 grid list-none gap-2 p-0 text-[14.5px] text-muted-foreground">
           {you.map(([t, w]) => <li key={t} className="flex gap-2"><span className="mt-2 size-1.5 flex-none rounded-full bg-muted-foreground" aria-hidden="true" />{t}{w === 'help' && <span className="sr-only"> (optional)</span>}</li>)}
         </ul>

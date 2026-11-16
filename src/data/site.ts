@@ -130,14 +130,16 @@ export const INCOTERMS = [
 
 /** Who does what on every order (CIF / CIP, our standard terms). */
 export const WHO_DOES: [string, 'us' | 'you' | 'help'][] = [
-  ['Making, quality checks and export packing', 'us'],
+  ['Finding and checking the right factory for you', 'us'],
+  ['Production follow-up and inspection before shipping', 'us'],
+  ['Export packing', 'us'],
   ['Bangladesh export customs and all export documents', 'us'],
   ['Certificate of origin (for 0% duty), health and phytosanitary certificates', 'us'],
   ['Sea or air freight to your port', 'us'],
   ['Cargo insurance, 110% of invoice value', 'us'],
+  ['One contact person who updates you from order to arrival', 'us'],
   ['Opening the Letter of Credit at your bank', 'you'],
-  ['Import customs clearance in your country (your broker or forwarder)', 'you'],
-  ['Import duty and VAT, if any (0% in many markets)', 'you'],
+  ['Collecting the goods at your port: your broker clears them with the documents we send (import duty is 0% in many markets)', 'you'],
   ['Delivery from your port to your warehouse (we can recommend a forwarder)', 'help'],
 ]
 
@@ -145,7 +147,7 @@ export const ADVISORY = 'Gulf air and sea routes through the Strait of Hormuz re
 
 export const FAQ: [string, string][] = [
   ['What is your minimum order?', 'It depends on the product: garments 300–1,000 pieces per style, footwear 300–600 pairs per design, fresh produce from 300–500 kg by air or one reefer by sea. Each product page shows its minimum. You can mix several products in one container.'],
-  ['What does the price include?', 'Prices on product pages are the product price: made, packed and cleared for export in Bangladesh. Your firm offer is normally CIF, which adds sea freight and cargo insurance to your port (CIP by air). So the offer you accept is the full cost to your port; only your own import clearance and any import duty are on your side.'],
+  ['What does the price include?', 'One price covers everything up to your port: the goods, factory checks, inspection before shipping, export packing and customs, freight and insurance (CIF by sea, CIP by air). Prices on product pages are indicative product prices; your firm offer adds the shipping and insurance for your exact port. All you do is open the LC and collect the goods at your port.'],
   ['Are the prices on the site final?', 'No. They are indicative product prices, updated November 2026. Your proforma invoice confirms the exact delivered-to-port price for your quantity, specifications, route and delivery date.'],
   ['Who handles customs clearance?', 'We handle everything on the Bangladesh side: export customs, certificate of origin, health or phytosanitary certificates, bill of lading and insurance. Import customs in your country is done by your customs broker or freight forwarder, as with any import. We send all documents in advance so clearance is quick, and duty is 0% in the EU, UK, Canada, Australia and China for most products. If you have no broker, we recommend a freight forwarder who can clear the goods and deliver to your door.'],
   ['How do I pay?', 'Every order is paid by a 100% irrevocable Letter of Credit (LC) at sight, issued by your bank under UCP 600. Your bank pays only against shipping documents that match the LC, so your money is protected until the goods are shipped as agreed.'],

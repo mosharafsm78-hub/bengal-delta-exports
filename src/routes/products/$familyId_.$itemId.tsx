@@ -213,13 +213,13 @@ function ItemBody() {
           </div>
 
           <div className="mt-3 rounded-xl border border-border bg-card p-4 text-[14px]">
-            <p className="m-0 font-semibold">Your offer includes delivery to your port</p>
+            <p className="m-0 font-semibold">We handle everything, up to your port</p>
             <ul className="m-0 mt-2 grid list-none gap-1.5 p-0 sm:grid-cols-2">
-              {['Product and export packing', 'Bangladesh export customs and documents', 'Sea or air freight to your port', 'Cargo insurance (110% of invoice)'].map((x) => (
+              {['We choose and check the factory', 'We inspect your goods before they ship', 'Export packing, customs and all documents', 'Freight to your port, fully insured', 'One contact who updates you at every step', 'One price: goods + shipping + insurance'].map((x) => (
                 <li key={x} className="flex gap-2"><CheckCircle2 className="mt-0.5 size-4 flex-none text-brand" aria-hidden="true" />{x}</li>
               ))}
             </ul>
-            <p className="m-0 mt-2 text-[13px] text-muted-foreground">Your side: import customs in your country (0% duty in the EU, UK, Canada, Australia and China). <Link to="/how-we-work" hash="who" className="font-semibold text-brand">Who does what</Link></p>
+            <p className="m-0 mt-2 text-[13px] text-muted-foreground">All you do: open the LC at your bank and collect the goods at your port. We send every document early, and import duty is 0% in the EU, UK, Canada, Australia and China. <Link to="/how-we-work" hash="who" className="font-semibold text-brand">Who does what</Link></p>
           </div>
         </div>
       </section>
