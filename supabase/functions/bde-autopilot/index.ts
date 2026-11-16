@@ -19,11 +19,11 @@ const db = createClient(URL_, SERVICE, { auth: { persistSession: false } })
 const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type', 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS' }
 
 const SMTP = {
-  host: Deno.env.get('OUTREACH_SMTP_HOST') ?? 'smtp.hostinger.com',
+  host: Deno.env.get('OUTREACH_SMTP_HOST') ?? 'mail.privateemail.com',
   port: Number(Deno.env.get('OUTREACH_SMTP_PORT') ?? 465),
   user: Deno.env.get('OUTREACH_EMAIL') ?? '',
   pass: Deno.env.get('OUTREACH_PASSWORD') ?? '',
-  imapHost: Deno.env.get('OUTREACH_IMAP_HOST') ?? 'imap.hostinger.com',
+  imapHost: Deno.env.get('OUTREACH_IMAP_HOST') ?? 'mail.privateemail.com',
   imapPort: Number(Deno.env.get('OUTREACH_IMAP_PORT') ?? 993),
 }
 const mailboxReady = () => !!(SMTP.user && SMTP.pass)

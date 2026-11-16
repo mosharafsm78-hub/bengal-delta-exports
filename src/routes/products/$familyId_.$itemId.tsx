@@ -137,11 +137,12 @@ function ItemBody() {
           )}
 
           <div className="mt-6 rounded-xl border border-border bg-card p-5 shadow-sm sm:p-6">
+            <div className="mb-1 text-[12.5px] font-semibold tracking-wide text-muted-foreground uppercase">Indicative price</div>
             <div className="flex flex-wrap items-baseline gap-x-2">
               <span className="num font-display text-[42px] leading-none font-semibold">{money(mid)}</span>
               <span className="text-muted-foreground">per {unitName(unit, 1)}</span>
             </div>
-            <p className="mt-1.5 mb-0 text-[13px] text-muted-foreground">Product price, packed and export-cleared. Your firm offer adds freight and insurance to your port.</p>
+            <p className="mt-1.5 mb-0 text-[13px] text-muted-foreground">A guide for planning, packed and export-cleared. Your free, no-obligation offer confirms the exact price delivered to your port.</p>
 
             <label htmlFor="qty" className="mt-5 mb-1.5 block font-semibold">How many {unitName(unit)}?</label>
             <div className="flex flex-wrap gap-2">
@@ -154,9 +155,12 @@ function ItemBody() {
             </div>
             {quote.belowMoq && <p className="mt-2 mb-0 text-[13px] font-semibold text-warn">Usual minimum is {moq.toLocaleString('en-US')} {unitName(unit)}. We can still quote a trial order.</p>}
 
-            <div className="cat-soft mt-5 flex items-center justify-between gap-3 rounded-lg px-4 py-3.5">
-              <span className="font-medium">Estimated total</span>
-              <span className="num font-display text-[28px] leading-none font-semibold">{q > 0 ? usd(mid * q) : '—'}</span>
+            <div className="cat-soft mt-5 rounded-lg px-4 py-3.5">
+              <div className="flex items-center justify-between gap-3">
+                <span className="font-medium">Approximate order value</span>
+                <span className="num font-display text-[24px] leading-none font-semibold">{q > 0 ? `≈ ${usd(mid * q)}` : '—'}</span>
+              </div>
+              <p className="mt-1.5 mb-0 text-[12.5px] text-muted-foreground">Nothing to pay now. This is only an estimate to help you plan. You pay later, by LC at your own bank, and only if you accept our firm offer.</p>
             </div>
 
             {optGroups.length > 0 && (
@@ -186,7 +190,7 @@ function ItemBody() {
             )}
 
             <div className="mt-5 grid gap-2.5">
-              <Link to="/quote" onClick={() => { if (!inBasket && !added) add() }} className="btn btn-primary py-3.5 text-base">Get my firm price <ArrowRight className="size-4" aria-hidden="true" /></Link>
+              <Link to="/quote" onClick={() => { if (!inBasket && !added) add() }} className="btn btn-primary py-3.5 text-base">Get my free offer <ArrowRight className="size-4" aria-hidden="true" /></Link>
               <button type="button" onClick={add} className="btn btn-outline">{added || inBasket ? <><CheckCircle2 className="size-4" aria-hidden="true" /> Added to your list</> : 'Add to list and keep shopping'}</button>
             </div>
             {(added || inBasket) && <p className="mt-2 mb-0 text-center text-[13.5px]"><Link to="/quote" className="font-semibold text-brand">View your list ({items.length}) →</Link></p>}
@@ -362,10 +366,10 @@ function ItemBody() {
       {/* Mobile sticky bar */}
       <div className="fixed inset-x-0 bottom-0 z-30 flex items-center gap-3 border-t border-border bg-card/95 px-4 py-3 backdrop-blur lg:hidden print:hidden">
         <div className="min-w-0 flex-1">
-          <div className="num font-semibold">{money(mid)} / {unitName(unit, 1)}</div>
-          <div className="num truncate text-[13px] text-muted-foreground">{q > 0 ? `${q.toLocaleString('en-US')} ${unitName(unit, q)} ≈ ${usd(mid * q)}` : s.n}</div>
+          <div className="num font-semibold">from {money(mid)} / {unitName(unit, 1)} <span className="text-[12px] font-normal text-muted-foreground">indicative</span></div>
+          <div className="truncate text-[12.5px] text-muted-foreground">Free offer · nothing to pay now</div>
         </div>
-        <Link to="/quote" onClick={() => { if (!inBasket && !added) add() }} className="btn btn-primary px-4 py-2.5 text-sm">Get firm price</Link>
+        <Link to="/quote" onClick={() => { if (!inBasket && !added) add() }} className="btn btn-primary px-4 py-2.5 text-sm">Get free offer</Link>
       </div>
     </div>
   )

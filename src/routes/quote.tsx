@@ -171,12 +171,13 @@ function QuotePage() {
                     ))}
                   </select>
                 </div>
-                {total > 0 && (
+                {total > 0 && (<>
                   <div className="mt-4 flex items-baseline justify-between gap-2 rounded-xl bg-brand-soft px-4 py-3">
-                    <span className="font-medium">Estimated total</span>
-                    <span className="num font-display text-2xl font-semibold">{usd(total)} <span className="font-sans text-sm font-normal text-muted-foreground">products</span></span>
+                    <span className="font-medium">Approximate value</span>
+                    <span className="num font-display text-2xl font-semibold">≈ {usd(total)} <span className="font-sans text-sm font-normal text-muted-foreground">products</span></span>
                   </div>
-                )}
+                  <p className="mt-1.5 mb-0 text-[12.5px] text-muted-foreground">Sending this request is free and you are not committing to anything. We reply with a firm offer; you pay only if you accept it, by LC at your bank.</p>
+                </>)}
               </>
             ) : (
               <>
