@@ -254,8 +254,15 @@ async function sendOne(c: any, step: number, cfg: Record<string, any>, address: 
   const link = `${SITE}products/${fam ? fam + '/' : ''}?utm_source=outreach&utm_medium=email&utm_campaign=c${c.id}`
   const { subject, body } = await writeEmail(c, step, link)
   const unsub = `${FN}/u?c=${c.id}&h=${await sign(`u|${c.id}`)}`
+  // Tracking: a click goes through our redirect (counted, then on to the page); an invisible pixel counts opens.
+  const th = await sign(`t|${c.id}|${step}`)
+  const tracked = `${FN}/r?c=${c.id}&s=${step}&h=${th}&u=${encodeURIComponent(link)}`
+  const pixel = `${FN}/o?c=${c.id}&s=${step}&h=${th}`
   const signature = `\n\n${cfg.sender_name || 'BengalExport sales team'}\nBengalExport, Bangladesh\nWhatsApp +880 1805-070650\nbengalexport.online\n\n${address ? address + '\n' : ''}If this is not relevant, reply "no" or unsubscribe here: ${unsub}`
-  const info = await mailer().sendMail({ from: { name: cfg.sender_name || 'BengalExport', address: SMTP.user }, to: c.email, subject, text: body + signature, headers: { 'List-Unsubscribe': `<${unsub}>, <mailto:${SMTP.user}?subject=unsubscribe>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' } })
+  const esc = (t: string) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  const htmlBody = esc(body + signature).split(esc(link)).join(`<a href="${tracked}" style="color:#0f6b5c">${esc(link.split('?')[0])}</a>`).replace(esc(unsub), `<a href="${unsub}" style="color:#888">unsubscribe</a>`).replace(/\n/g, '<br>')
+  const html = `<div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.55;color:#1f2937;max-width:600px">${htmlBody}</div><img src="${pixel}" width="1" height="1" alt="" style="display:block;border:0;width:1px;height:1px">`
+  const info = await mailer().sendMail({ from: { name: cfg.sender_name || 'BengalExport', address: SMTP.user }, to: c.email, subject, text: body + signature, html, headers: { 'List-Unsubscribe': `<${unsub}>, <mailto:${SMTP.user}?subject=unsubscribe>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' } })
   const now = new Date()
   const gap = step === 0 ? 4 : 6
   await db.from('bde_outreach').insert({ contact_id: c.id, step, subject, body, status: 'sent', message_id: info.messageId })
@@ -531,6 +538,15 @@ Deno.serve(async (req) => {
   const url = new URL(req.url)
   const route = url.pathname.split('/').pop()
   try {
+    if (route === 'o' || route === 'r') {
+      const c = Number(url.searchParams.get('c')); const st = Number(url.searchParams.get('s'))
+      const ok = c && Number.isFinite(st) && (await sign(`t|${c}|${st}`)) === url.searchParams.get('h')
+      if (ok) await db.rpc('bde_track_outreach', { p_contact: c, p_step: st, p_kind: route === 'o' ? 'open' : 'click' })
+      if (route === 'o') return new Response(Uint8Array.from(atob('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'), (ch) => ch.charCodeAt(0)), { headers: { 'content-type': 'image/gif', 'cache-control': 'no-store, max-age=0' } })
+      let to = url.searchParams.get('u') ?? SITE
+      if (!to.startsWith(SITE)) to = SITE
+      return new Response(null, { status: 302, headers: { location: to } })
+    }
     if (route === 'u') {
       const id = Number(url.searchParams.get('c')); const ok = id && (await sign(`u|${id}`)) === url.searchParams.get('h')
       if (!ok) return page('Link not valid', '<p>This link is not valid.</p>')

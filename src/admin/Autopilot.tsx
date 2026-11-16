@@ -21,13 +21,14 @@ export function Autopilot({ owner }: { owner: boolean }) {
   const status = useAsync(() => ap<any>('status').catch((e) => ({ error: String(e.message) })), [])
   const cfg = useAsync(async () => (await sb().from('bde_settings').select('value').eq('key', 'autopilot').maybeSingle()).data?.value ?? {}, [])
   const data = useAsync(async () => {
-    const [pros, out, logs, tasks] = await Promise.all([
+    const [pros, out, web, logs, tasks] = await Promise.all([
       sb().from('bde_contacts').select('id, email, company, country, website, status, score, seq_step, next_touch_at, last_touch_at, replied_at, last_click_at, tags, research, created_at').contains('tags', ['prospect']).order('created_at', { ascending: false }).limit(1000),
-      sb().from('bde_outreach').select('id, created_at, contact_id, step, subject, status, error').order('created_at', { ascending: false }).limit(2000),
+      sb().from('bde_outreach').select('id, created_at, contact_id, step, subject, status, error, open_count, first_open_at, last_open_at, click_count, first_click_at').order('created_at', { ascending: false }).limit(5000),
+      sb().from('bde_web_events').select('visitor_id, utm_campaign, kind, path, product, created_at').eq('utm_source', 'outreach').order('created_at', { ascending: false }).limit(5000),
       sb().from('bde_autopilot_log').select('*').order('created_at', { ascending: false }).limit(30),
       sb().from('bde_tasks').select('*').order('created_at', { ascending: false }).limit(300),
     ])
-    return { pros: pros.data ?? [], out: out.data ?? [], logs: logs.data ?? [], tasks: tasks.data ?? [] }
+    return { pros: pros.data ?? [], out: out.data ?? [], web: web.data ?? [], logs: logs.data ?? [], tasks: tasks.data ?? [] }
   }, [])
   const [busy, setBusy] = useState('')
   const [err, setErr] = useState('')
@@ -46,7 +47,7 @@ export function Autopilot({ owner }: { owner: boolean }) {
   if (status.loading || cfg.loading || data.loading) return <Loading />
   const s = status.data ?? {}
   const c = (cfg.data ?? {}) as Record<string, any>
-  const { pros, out, logs, tasks } = data.data!
+  const { pros, out, web, logs, tasks } = data.data!
   const sent = out.filter((o) => o.status === 'sent')
   const week = Date.now() - 7 * 864e5
   const replied = pros.filter((p) => p.replied_at)
@@ -90,6 +91,8 @@ export function Autopilot({ owner }: { owner: boolean }) {
         <Kpi label="Interested buyers" value={positive.length} sub="sent to Quote requests" tone={positive.length ? 'good' : undefined} />
         <Kpi label="Visited the website" value={clicked.length} sub={pct(clicked.length, contacted.length)} />
       </div>
+
+      <Funnel pros={pros} out={out} web={web} />
 
       <div className="grid gap-5 lg:grid-cols-3">
         <Card title={<span className="flex items-center gap-2"><Target className="size-4 text-brand" />Today's focus</span>} className="lg:col-span-2">
@@ -154,7 +157,7 @@ export function Autopilot({ owner }: { owner: boolean }) {
                       <td className="pr-3 first-letter:uppercase">{p.research?.label ?? '—'}</td>
                       <td className="pr-3">{p.seq_step === 0 ? 'Waiting' : `Email ${p.seq_step} of 3`}</td>
                       <td className="pr-3">{p.last_touch_at ? ago(p.last_touch_at) : '—'}</td>
-                      <td>{p.status !== 'subscribed' ? <Badge tone="bad">{p.status}</Badge> : reply ? <Badge tone={REPLY_TONE[reply] ?? 'neutral'}>{reply.replace('_', ' ')}</Badge> : p.last_click_at ? <Badge tone="good">Visited site</Badge> : p.seq_step >= 3 ? <Badge>Finished</Badge> : <Badge tone="info">Active</Badge>}</td>
+                      <td>{p.status !== 'subscribed' ? <Badge tone="bad">{p.status}</Badge> : reply ? <Badge tone={REPLY_TONE[reply] ?? 'neutral'}>{reply.replace('_', ' ')}</Badge> : p.last_click_at ? <Badge tone="good">Visited site</Badge> : out.some((o) => o.contact_id === p.id && o.open_count > 0) ? <Badge tone="info">Opened</Badge> : p.seq_step >= 3 ? <Badge>Finished</Badge> : <Badge tone="info">Active</Badge>}</td>
                     </tr>
                   )
                 })}
@@ -196,7 +199,7 @@ function ProspectDetail({ p, emails, onChanged }: { p: any; emails: any[]; onCha
       {p.research && <p className="m-0 rounded-lg bg-muted p-3"><b className="capitalize">{p.research.type}</b>: {p.research.why}</p>}
       <div>
         <h3 className="m-0 mb-2 text-[14px]">Emails</h3>
-        {emails.length ? emails.slice().reverse().map((e) => <div key={e.id} className="mb-2 rounded-lg border border-border p-3"><div className="flex justify-between gap-2 text-[12.5px] text-muted-foreground"><span>Email {e.step + 1} · {fmtTime(e.created_at)}</span>{e.status !== 'sent' && <Badge tone="bad">{e.status}</Badge>}</div><b>{e.subject}</b>{e.error && <p className="m-0 text-[12.5px] text-[#991b1b]">{e.error}</p>}</div>) : <p className="m-0 text-muted-foreground">Not emailed yet.</p>}
+        {emails.length ? emails.slice().reverse().map((e) => <div key={e.id} className="mb-2 rounded-lg border border-border p-3"><div className="flex justify-between gap-2 text-[12.5px] text-muted-foreground"><span>Email {e.step + 1} · {fmtTime(e.created_at)}</span>{e.status !== 'sent' && <Badge tone="bad">{e.status}</Badge>}</div><b>{e.subject}</b>{e.status === 'sent' && <p className="m-0 mt-1 text-[12.5px] text-muted-foreground">{e.open_count ? `Opened ${e.open_count}× (first ${ago(e.first_open_at)})` : 'Not opened yet'} · {e.click_count ? `Clicked ${e.click_count}× (first ${ago(e.first_click_at)})` : 'No click yet'}</p>}{e.error && <p className="m-0 text-[12.5px] text-[#991b1b]">{e.error}</p>}</div>) : <p className="m-0 text-muted-foreground">Not emailed yet.</p>}
       </div>
       {p.seq_step < 3 && !p.replied_at && p.status === 'subscribed' && <button type="button" onClick={stop} className={cn(btn, 'btn-outline justify-self-start')}>Stop emailing this company</button>}
     </div>
@@ -326,3 +329,73 @@ function Engines({ running, perHour }: { running: boolean; perHour: number }) {
     </div>
   )
 }
+
+function Funnel({ pros, out, web }: { pros: any[]; out: any[]; web: any[] }) {
+  const [range, setRange] = useState<'1' | '7' | 'all'>('7')
+  const since = range === 'all' ? 0 : Date.now() - Number(range) * 864e5
+  const sent = out.filter((o) => o.status === 'sent' && new Date(o.created_at).getTime() >= since)
+  const ids = new Set(sent.map((o) => o.contact_id))
+  const opened = new Set(sent.filter((o) => o.open_count > 0).map((o) => o.contact_id))
+  const clicked = new Set(sent.filter((o) => o.click_count > 0).map((o) => o.contact_id))
+  const cid = (e: any) => Number(String(e.utm_campaign ?? '').replace(/^c/, ''))
+  const visits = web.filter((e) => ids.has(cid(e)))
+  const visited = new Set(visits.map(cid))
+  const pages = visits.filter((e) => e.kind === 'page_view' || e.kind === 'product_view').length
+  const quoted = new Set(visits.filter((e) => e.kind === 'quote_submitted').map(cid))
+  const mine = pros.filter((p) => ids.has(p.id))
+  const replied = mine.filter((p) => p.replied_at)
+  const hot = mine.filter((p) => (p.tags ?? []).some((t: string) => t === 'reply:interested' || t === 'reply:question'))
+  const buyers = ids.size
+  const steps: [string, number, string][] = [
+    ['Buyers emailed', buyers, `${sent.length} emails`],
+    ['Opened', opened.size, pct(opened.size, buyers)],
+    ['Clicked the link', clicked.size, pct(clicked.size, buyers)],
+    ['Browsed the site', visited.size, `${pages} pages seen`],
+    ['Sent a quote request', quoted.size, pct(quoted.size, buyers)],
+    ['Replied', replied.length, pct(replied.length, buyers)],
+    ['Interested', hot.length, pct(hot.length, buyers)],
+  ]
+  const max = Math.max(1, buyers)
+  type Row = { k: string; n: number; o: number; c: number; r: number }
+  const group = (key: (p: any) => string) => {
+    const m: Record<string, Row> = {}
+    for (const p of mine) {
+      const k = key(p) || '—'; m[k] ??= { k, n: 0, o: 0, c: 0, r: 0 }
+      m[k].n++; if (opened.has(p.id)) m[k].o++; if (clicked.has(p.id) || visited.has(p.id)) m[k].c++; if (p.replied_at) m[k].r++
+    }
+    return Object.values(m).sort((a, b) => b.n - a.n).slice(0, 8)
+  }
+  const Table = ({ title, rows }: { title: string; rows: Row[] }) => (
+    <div>
+      <h3 className="m-0 mb-1.5 text-[13px] font-semibold">{title}</h3>
+      {rows.length ? (
+        <table className="w-full text-left text-[13px]">
+          <thead className="text-[11.5px] text-muted-foreground uppercase"><tr><th className="py-1 pr-2" /><th className="pr-2 text-right">Sent</th><th className="pr-2 text-right">Opened</th><th className="pr-2 text-right">Clicked</th><th className="text-right">Replied</th></tr></thead>
+          <tbody>{rows.map((r) => <tr key={r.k} className="border-t border-border"><td className="py-1 pr-2 first-letter:uppercase">{r.k}</td><td className="num pr-2 text-right">{r.n}</td><td className="num pr-2 text-right">{pct(r.o, r.n)}</td><td className="num pr-2 text-right">{pct(r.c, r.n)}</td><td className="num text-right">{pct(r.r, r.n)}</td></tr>)}</tbody>
+        </table>
+      ) : <p className="m-0 text-[13px] text-muted-foreground">No emails in this period.</p>}
+    </div>
+  )
+  return (
+    <Card title={<span className="flex items-center gap-2"><MousePointerClick className="size-4 text-brand" />Email tracking: what happens after we send</span>} action={
+      <div className="flex gap-1 text-[12.5px]">{([['1', 'Today'], ['7', '7 days'], ['all', 'All time']] as const).map(([v, l]) => <button key={v} type="button" onClick={() => setRange(v)} className={cn('rounded-md px-2 py-1', range === v ? 'bg-brand text-white' : 'bg-muted')}>{l}</button>)}</div>
+    }>
+      <ol className="m-0 grid list-none gap-1.5 p-0">
+        {steps.map(([label, n, sub]) => (
+          <li key={label} className="grid grid-cols-[150px_1fr_110px] items-center gap-3 text-[13.5px]">
+            <span>{label}</span>
+            <span className="h-6 overflow-hidden rounded bg-muted"><span className="block h-full rounded bg-brand/80" style={{ width: `${Math.max(n ? 2 : 0, (n / max) * 100)}%` }} /></span>
+            <span><b className="num">{n}</b> <span className="text-[12px] text-muted-foreground">{sub}</span></span>
+          </li>
+        ))}
+      </ol>
+      <div className="mt-5 grid gap-5 md:grid-cols-3">
+        <Table title="By product" rows={group((p) => p.research?.label)} />
+        <Table title="By country" rows={group((p) => p.country)} />
+        <Table title="By buyer type" rows={group((p) => SEGMENT_LABEL[p.research?.segment] ?? p.research?.segment)} />
+      </div>
+      <p className="mt-4 mb-0 text-[12px] text-muted-foreground">Opens are counted when the buyer's email app loads images; some apps (Apple Mail) load them automatically and some block them, so treat opens as a guide. Clicks, site visits, quote requests and replies are exact. Tracking started 17 Nov 2026; earlier emails show no opens.</p>
+    </Card>
+  )
+}
+const SEGMENT_LABEL: Record<string, string> = { bd_importers: 'Already buy from Bangladesh', wholesalers: 'Importers & wholesalers', brands: 'Brands & private label', retail: 'Retail chains', online: 'Online sellers', specialist: 'Specialist buyers' }
