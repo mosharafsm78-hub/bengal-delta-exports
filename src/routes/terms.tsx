@@ -10,7 +10,7 @@ export const Route = createFileRoute('/terms')({
 
 const SECTIONS: [string, string[]][] = [
   ['Prices and information on this website', [
-    'All prices are indicative FOB prices in US dollars, updated November 2026. They are not offers. Prices depend on quantity, specification, season and the date of order.',
+    'All prices on the site are indicative product prices (packed and cleared for export in Bangladesh) in US dollars, updated November 2026. They are not offers. Prices depend on quantity, specification, season and the date of order.',
     'Duty, shipping and route information is general guidance. Your customs broker confirms the duty for your HS code.',
   ]],
   ['How a contract is made', [

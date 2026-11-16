@@ -9,11 +9,11 @@
   },
   "/products": {
     "title": "Products — BengalExport",
-    "description": "Browse 26 product families and 170+ products exported from Bangladesh, with indicative FOB prices, minimum orders and lead times."
+    "description": "Browse 26 product families and 170+ products exported from Bangladesh, with indicative prices, minimum orders and lead times."
   },
   "/prices": {
-    "title": "Indicative FOB price list — BengalExport",
-    "description": "Indicative FOB prices for every product we export from Bangladesh, with units, minimum orders and lead times."
+    "title": "Price list — BengalExport",
+    "description": "Indicative product prices for every product we export from Bangladesh, with units, minimum orders and lead times."
   },
   "/duty-free-markets": {
     "title": "Duty-free markets for Bangladeshi goods — BengalExport",

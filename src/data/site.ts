@@ -19,13 +19,13 @@ export const SITE = {
 /** The buyer's journey from first visit to goods in their warehouse. [title, what happens, typical time, who acts] */
 export const STEPS: [string, string, string][] = [
   ['Request a proforma invoice', 'Add products and quantities to your quote, or describe any requirement, and send one request.', 'Day 0'],
-  ['Receive the proforma invoice', 'Prices, specifications, packing, Incoterm, latest shipment date and the LC terms we need, in one document.', 'Within 24 h'],
+  ['Receive the proforma invoice', 'Your full price to your port (product, freight and insurance), specifications, packing, shipment date and the LC terms, in one document.', 'Within 24 h'],
   ['Get samples in 24 hours', 'Pay the sample invoice and ready-style samples leave by express courier within 24 hours. Custom samples take 5–10 days. Sample cost is credited on your first order.', '24 h after payment'],
   ['Open a 100% LC at sight', 'Your bank issues an irrevocable Letter of Credit at sight for the full proforma value. We check it and confirm acceptance.', '3–7 days'],
   ['Production or harvest', 'Starts the day the LC is accepted. You get progress photos and updates at every stage.', 'Per product'],
   ['Inspection and certificates', 'Our final inspection or your third-party inspector, plus the certificates your market requires.', '1–3 days'],
   ['Shipment and documents', 'We ship before the LC\'s latest shipment date and present the shipping documents through our bank.', '1–3 days'],
-  ['Bank payment and delivery', 'Your bank pays against compliant documents and releases them to you to clear the goods at your port.', '5–10 banking days'],
+  ['Bank payment and delivery', 'Your bank pays against compliant documents and releases them to you. Your customs broker clears the goods at your port.', '5–10 banking days'],
 ]
 
 export const PAYMENT_HEADLINE = '100% irrevocable Letter of Credit (LC) at sight'
@@ -45,7 +45,7 @@ export const LC_TERMS: [string, string][] = [
   ['Beneficiary', 'Our company name and address exactly as on the proforma invoice'],
   ['Advising bank', 'Our bank in Bangladesh, with the SWIFT code shown on the proforma invoice'],
   ['Amount', '100% of the proforma value (±5% tolerance for fresh produce and bulk goods)'],
-  ['Incoterm and port', 'As on the proforma: FOB Chattogram / Dhaka, CFR or CIF to your port'],
+  ['Incoterm and port', 'As on the proforma, normally CIF [your port], Incoterms 2020'],
   ['Latest shipment date', 'Order date plus the production lead time on the proforma'],
   ['Expiry', '21 days after the latest shipment date, in Bangladesh'],
   ['Partial shipment / transshipment', 'Allowed'],
@@ -121,17 +121,33 @@ export const TRANSIT: [string, string, string, Status, string][] = [
 ]
 
 export const INCOTERMS = [
-  ['FOB', 'We deliver loaded on board at Chattogram or Dhaka. You book the freight. Our default price basis.'],
-  ['CFR / CNF', 'We pay freight to your port. You insure and clear customs.'],
-  ['CIF', 'Freight and marine insurance to your port included.'],
-  ['DAP / DDP', 'Delivered to your door, on request for repeat buyers in the EU, UK and US.'],
+  ['CIF (our standard, sea)', 'Product, export packing, Bangladesh export customs, sea freight and cargo insurance (110% of invoice value) to your port. You clear import customs.'],
+  ['CIP (our standard, air)', 'The same as CIF for air cargo: product, export customs, air freight and all-risks insurance to your airport.'],
+  ['CFR', 'Like CIF but without insurance, if you insure the cargo yourself.'],
+  ['FOB', 'Only if you have your own forwarder: we deliver cleared and loaded on board at Chattogram, and you book the freight.'],
+  ['DAP (door delivery)', 'On request, through a freight forwarder we recommend: delivery to your warehouse. Import duty and VAT, if any, stay with you as importer.'],
+]
+
+/** Who does what on every order (CIF / CIP, our standard terms). */
+export const WHO_DOES: [string, 'us' | 'you' | 'help'][] = [
+  ['Making, quality checks and export packing', 'us'],
+  ['Bangladesh export customs and all export documents', 'us'],
+  ['Certificate of origin (for 0% duty), health and phytosanitary certificates', 'us'],
+  ['Sea or air freight to your port', 'us'],
+  ['Cargo insurance, 110% of invoice value', 'us'],
+  ['Opening the Letter of Credit at your bank', 'you'],
+  ['Import customs clearance in your country (your broker or forwarder)', 'you'],
+  ['Import duty and VAT, if any (0% in many markets)', 'you'],
+  ['Delivery from your port to your warehouse (we can recommend a forwarder)', 'help'],
 ]
 
 export const ADVISORY = 'Gulf air and sea routes through the Strait of Hormuz remain disrupted (Nov 2026). Europe, UK, USA, East Asia, Malaysia, Singapore and Saudi Arabia ship normally via alternative routings.'
 
 export const FAQ: [string, string][] = [
   ['What is your minimum order?', 'It depends on the product: garments 300–1,000 pieces per style, footwear 300–600 pairs per design, fresh produce from 300–500 kg by air or one reefer by sea. Each product page shows its minimum. You can mix several products in one container.'],
-  ['Are the prices on the site final?', 'No. They are indicative FOB ranges, updated November 2026. Your proforma invoice confirms the exact price for your quantity, specifications and delivery date.'],
+  ['What does the price include?', 'Prices on product pages are the product price: made, packed and cleared for export in Bangladesh. Your firm offer is normally CIF, which adds sea freight and cargo insurance to your port (CIP by air). So the offer you accept is the full cost to your port; only your own import clearance and any import duty are on your side.'],
+  ['Are the prices on the site final?', 'No. They are indicative product prices, updated November 2026. Your proforma invoice confirms the exact delivered-to-port price for your quantity, specifications, route and delivery date.'],
+  ['Who handles customs clearance?', 'We handle everything on the Bangladesh side: export customs, certificate of origin, health or phytosanitary certificates, bill of lading and insurance. Import customs in your country is done by your customs broker or freight forwarder, as with any import. We send all documents in advance so clearance is quick, and duty is 0% in the EU, UK, Canada, Australia and China for most products. If you have no broker, we recommend a freight forwarder who can clear the goods and deliver to your door.'],
   ['How do I pay?', 'Every order is paid by a 100% irrevocable Letter of Credit (LC) at sight, issued by your bank under UCP 600. Your bank pays only against shipping documents that match the LC, so your money is protected until the goods are shipped as agreed.'],
   ['How do I open an LC?', 'Accept our proforma invoice, then give it to your bank and ask for an irrevocable LC at sight for the full amount. Our How to order page lists exactly what the LC should say. Most banks issue it in 2–5 working days.'],
   ['Can I pay by bank transfer (T/T) instead?', 'For orders we work only on 100% LC at sight, because it protects both sides. Sample invoices are paid separately.'],

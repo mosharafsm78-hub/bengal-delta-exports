@@ -49,7 +49,7 @@ function Products() {
       <PageHead
         eyebrow="Catalogue"
         title={current ? current.name : 'Everything we export'}
-        lead={current ? current.blurb : `${FAMILIES.length} product families, ${total} individual products. Indicative FOB prices, updated November 2026. Open any product for its details, quantity calculator and order total.`}
+        lead={current ? current.blurb : `${FAMILIES.length} product families, ${total} individual products. Indicative product prices, updated November 2026; your offer includes freight and insurance to your port. Open any product for its details, quantity calculator and order total.`}
       />
 
       <div className="sticky top-16 z-20 -mx-4 mb-10 border-b border-border bg-background/95 px-4 py-3 backdrop-blur">
@@ -141,7 +141,7 @@ function Products() {
                           </div>
                           <p className="mt-1.5 mb-0 text-[14.5px] text-muted-foreground">{f.tag}</p>
                           <div className="mt-auto flex items-baseline justify-between gap-3 border-t border-border pt-3">
-                            <span className="num font-semibold">${lo.toFixed(2)}–{hi.toFixed(2)} <span className="text-[13px] font-normal text-muted-foreground">/ {unit} FOB</span></span>
+                            <span className="num font-semibold">${lo.toFixed(2)}–{hi.toFixed(2)} <span className="text-[13px] font-normal text-muted-foreground">/ {unit}</span></span>
                             <span className="text-right text-[13px] text-muted-foreground">MOQ {f.moq.split('(')[0].trim()}</span>
                           </div>
                         </div>

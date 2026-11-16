@@ -33,7 +33,7 @@ export const FAMILIES: Family[] = [
   {
     id: 'tshirts', cat: 'garments', name: 'T-shirts', hs: '6109.10 (cotton) · 6109.90 (other fibres)',
     tag: "Bangladesh's biggest export item. Every neck, sleeve, fit, fabric and print.",
-    intro: 'T-shirts are cut and sewn from knitted fabric, mostly single jersey. You choose the style, the fabric, the yarn quality, the weight in GSM (grams per square metre), the colour method and the decoration. The price builder shows how each choice moves the FOB price.',
+    intro: 'T-shirts are cut and sewn from knitted fabric, mostly single jersey. You choose the style, the fabric, the yarn quality, the weight in GSM (grams per square metre), the colour method and the decoration. The price builder shows how each choice moves the price.',
     photo: 'tshirt-crew', moq: '500 pcs per style per colour (300 pcs from stock fabric)', lead: LEAD_KNIT,
     styles: [
       { n: 'Crew-neck basic tee', d: "Round rib neck, short sleeve, regular fit. The world's best-selling garment.", p: [1.65, 3.5], photo: 'tshirt-crew', b: 'M' },
@@ -439,7 +439,7 @@ export const FAMILIES: Family[] = [
   {
     id: 'vegetables', cat: 'produce', name: 'Fresh vegetables', hs: 'Chapter 07 (by item)',
     tag: 'More than 20 Bangladeshi vegetables for supermarkets, wholesalers and South Asian grocers.',
-    intro: 'Bangladesh has exported 70+ vegetable varieties to 53 countries. Every lot is sorted, graded, residue-tested and shipped with a phytosanitary certificate. Prices are FOB per kg, packed; air or sea freight is quoted per shipment.',
+    intro: 'Bangladesh has exported 70+ vegetable varieties to 53 countries. Every lot is sorted, graded, residue-tested and shipped with a phytosanitary certificate. Prices are per kg, packed; your offer adds air or sea freight and insurance to your port.',
     photo: 'potato', moq: '300–500 kg by air · one reefer container by sea', lead: LEAD_PRODUCE,
     styles: [
       { n: 'Potato (alu)', d: 'Diamant, Granola, Cardinal, Asterix. 25/50 kg mesh bags. Sea reefer.', p: [0.25, 0.4], u: 'kg', photo: 'potato', season: 'Jan–Sep', cal: [1, 1, 1, 1, 0.5, 0.5, 0.5, 0.5, 0.5, 0, 0, 0.5], peak: [1, 2, 3] },

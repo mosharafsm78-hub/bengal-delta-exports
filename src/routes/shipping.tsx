@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { pageHead } from '@/lib/head'
 import { ADVISORY, INCOTERMS, SHIP_MODES, TRANSIT } from '@/data/site'
-import { DataTable, PageHead, Pill } from '@/components/site-shell'
+import { DataTable, PageHead, Pill, WhoDoesWhat } from '@/components/site-shell'
 
 export const Route = createFileRoute('/shipping')({
   head: () => pageHead('/shipping'),
@@ -23,9 +23,11 @@ function Shipping() {
       <h2 className="mb-4 text-[clamp(1.6rem,3vw,2.1rem)]">Typical sea transit from Chattogram</h2>
       <DataTable cols={['Destination', 'Example port', 'Transit (days)', 'Route status']} rows={TRANSIT.map((r) => [r[0], r[1], <span className="num">{r[2]}</span>, <Pill tone={tone[r[3]]}>{r[4]}</Pill>])} />
       <p className="mb-12 text-sm text-muted-foreground">Typical port-to-port ranges via transshipment hubs; they vary by carrier and season. Air freight takes 1–4 days.</p>
-      <h2 className="mb-4 text-[clamp(1.6rem,3vw,2.1rem)]">Incoterms we offer</h2>
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        {INCOTERMS.map(([t, d]) => <div key={t} className="rounded-lg border border-border bg-card p-6"><b className="font-display text-2xl">{t}</b><p className="mt-2 mb-0 text-[15px] text-muted-foreground">{d}</p></div>)}
+      <h2 className="mb-4 text-[clamp(1.6rem,3vw,2.1rem)]">Who handles what, including customs</h2>
+      <WhoDoesWhat />
+      <h2 className="mt-12 mb-4 text-[clamp(1.6rem,3vw,2.1rem)]">Delivery terms we offer</h2>
+      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {INCOTERMS.map(([t, d]) => <div key={t} className="rounded-lg border border-border bg-card p-6"><b className="font-display text-lg">{t}</b><p className="mt-2 mb-0 text-[15px] text-muted-foreground">{d}</p></div>)}
       </div>
     </div>
   )

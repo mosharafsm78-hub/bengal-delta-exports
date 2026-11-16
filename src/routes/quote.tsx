@@ -40,7 +40,7 @@ function QuotePage() {
   const [pick, setPick] = useState('')
   const [certs, setCerts] = useState<string[]>([])
   const [wantSamples, setWantSamples] = useState(false)
-  const [form, setForm] = useState({ quantity: '', unit: 'pieces', requirement: '', country: '', port: '', incoterm: 'FOB Bangladesh', neededBy: '', company: '', buyerType: 'Importer / distributor', name: '', email: '', phone: '', website: '', notes: '', hp: '' })
+  const [form, setForm] = useState({ quantity: '', unit: 'pieces', requirement: '', country: '', port: '', incoterm: 'CIF to my port (recommended)', neededBy: '', company: '', buyerType: 'Importer / distributor', name: '', email: '', phone: '', website: '', notes: '', hp: '' })
   // Apply ?tab / ?msg / ?samples after hydration (the static page is built without them).
   useEffect(() => {
     if (search.tab === 'requirement') setKind('requirement')
@@ -95,7 +95,7 @@ function QuotePage() {
       quantity: qty, country: form.country, port: form.port || undefined, incoterm: form.incoterm,
       neededBy: form.neededBy || undefined, certificates: certs, company: form.company.trim() || '-', buyerType: form.buyerType,
       name: form.name.trim(), email: form.email.trim(), phone: form.phone || undefined, website: form.website || undefined,
-      notes: [wantSamples ? 'SAMPLES REQUESTED FIRST' : '', total > 0 ? `Estimated value ≈ ${usd(total)} FOB` : '', form.notes].filter(Boolean).join(' · ') || undefined,
+      notes: [wantSamples ? 'SAMPLES REQUESTED FIRST' : '', total > 0 ? `Estimated product value ≈ ${usd(total)}` : '', form.notes].filter(Boolean).join(' · ') || undefined,
       sourcePage: typeof window !== 'undefined' ? window.location.pathname : undefined, consent: true,
     }
     setBusy(true)
@@ -174,7 +174,7 @@ function QuotePage() {
                 {total > 0 && (
                   <div className="mt-4 flex items-baseline justify-between gap-2 rounded-xl bg-brand-soft px-4 py-3">
                     <span className="font-medium">Estimated total</span>
-                    <span className="num font-display text-2xl font-semibold">{usd(total)} <span className="font-sans text-sm font-normal text-muted-foreground">FOB</span></span>
+                    <span className="num font-display text-2xl font-semibold">{usd(total)} <span className="font-sans text-sm font-normal text-muted-foreground">products</span></span>
                   </div>
                 )}
               </>
@@ -206,7 +206,7 @@ function QuotePage() {
                 <div><label htmlFor="qty" className={label}>Total quantity</label><input id="qty" className="field" value={form.quantity} onChange={set('quantity')} placeholder="e.g. 5000" /></div>
                 <div><label htmlFor="unit" className={label}>Unit</label><select id="unit" className="field" value={form.unit} onChange={set('unit')}>{['pieces', 'pairs', 'sets', 'kg', 'metric tons', 'cartons', '20 ft containers', '40 ft containers'].map((u) => <option key={u}>{u}</option>)}</select></div>
                 <div><label htmlFor="port" className={label}>Destination port or city</label><input id="port" className="field" value={form.port} onChange={set('port')} placeholder="e.g. Hamburg" /></div>
-                <div><label htmlFor="inc" className={label}>Price basis</label><select id="inc" className="field" value={form.incoterm} onChange={set('incoterm')}>{['FOB Bangladesh', 'CFR / CNF', 'CIF', 'Not sure, advise me'].map((u) => <option key={u}>{u}</option>)}</select></div>
+                <div><label htmlFor="inc" className={label}>Price basis</label><select id="inc" className="field" value={form.incoterm} onChange={set('incoterm')}>{['CIF to my port (recommended)', 'CIP by air', 'Door delivery (DAP)', 'CFR (I insure)', 'FOB (my own forwarder)', 'Not sure, advise me'].map((u) => <option key={u}>{u}</option>)}</select></div>
                 <div><label htmlFor="when" className={label}>Needed by</label><input id="when" type="month" className="field" value={form.neededBy} onChange={set('neededBy')} /></div>
                 <div><label htmlFor="btype" className={label}>You are a</label><select id="btype" className="field" value={form.buyerType} onChange={set('buyerType')}>{['Importer / distributor', 'Wholesaler', 'Retailer / supermarket', 'Brand', 'Restaurant / food service', 'Sourcing agent', 'Other'].map((u) => <option key={u}>{u}</option>)}</select></div>
                 <fieldset className="m-0 border-0 p-0 sm:col-span-2">

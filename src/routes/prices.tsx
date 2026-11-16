@@ -17,7 +17,7 @@ function Prices() {
   const rows = fams.flatMap((f) => f.styles.filter((s) => !q || `${s.n} ${f.name}`.toLowerCase().includes(q.toLowerCase())).map((s) => ({ f, s })))
   return (
     <div className="mx-auto max-w-7xl px-4 pt-12">
-      <PageHead eyebrow="Price list · November 2026" title="Indicative FOB price list" lead="FOB means packed, cleared for export and loaded at Chattogram port (sea) or Dhaka airport (air). Freight and insurance are quoted per shipment. “Market-checked” prices are compared with published Bangladeshi supplier listings; “Indicative” prices are our costings. Both are confirmed on your proforma invoice." />
+      <PageHead eyebrow="Price list · November 2026" title="Price list" lead="Prices are for the product, packed and cleared for export in Bangladesh. Your firm offer adds sea or air freight and cargo insurance to your port (CIF / CIP), so you see the full cost to your port before you open the LC. “Market-checked” prices are compared with published Bangladeshi supplier listings; “Indicative” prices are our costings. Both are confirmed on your proforma invoice." />
       <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-center">
         <input aria-label="Filter price list" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Filter by product…" className="field lg:w-72" />
         <div className="flex flex-wrap gap-2">
@@ -30,7 +30,7 @@ function Prices() {
         <table className="w-full border-collapse text-[15px]">
           <thead>
             <tr className="text-left">
-              {['Product', 'Family', 'FOB price (USD)', 'Unit', 'Minimum order', 'Lead time / season', 'Basis'].map((h) => <th key={h} className="border-b border-border bg-muted px-4 py-2.5 text-[13px] font-semibold tracking-wide whitespace-nowrap text-muted-foreground uppercase">{h}</th>)}
+              {['Product', 'Family', 'Product price (USD)', 'Unit', 'Minimum order', 'Lead time / season', 'Basis'].map((h) => <th key={h} className="border-b border-border bg-muted px-4 py-2.5 text-[13px] font-semibold tracking-wide whitespace-nowrap text-muted-foreground uppercase">{h}</th>)}
             </tr>
           </thead>
           <tbody>
@@ -52,7 +52,7 @@ function Prices() {
         </table>
       </div>
       <div className="mt-8 grid gap-5 md:grid-cols-3">
-        {[['Quantity', 'A full container is cheaper per unit than a part load or air freight. Garment prices fall noticeably above 3,000 pieces per style.'], ['Specification', 'Fabric weight, yarn, print, wash, labels, packing and certificates all change the FOB price. Each product page has a calculator.'], ['Season', 'Fresh produce is cheapest in its peak months; farm prices can swing several-fold within weeks.']].map(([t, d]) => (
+        {[['Quantity', 'A full container is cheaper per unit than a part load or air freight. Garment prices fall noticeably above 3,000 pieces per style.'], ['Specification', 'Fabric weight, yarn, print, wash, labels, packing and certificates all change the price. Each product page has a calculator.'], ['Season', 'Fresh produce is cheapest in its peak months; farm prices can swing several-fold within weeks.']].map(([t, d]) => (
           <div key={t} className="rounded-lg border border-border bg-card p-6"><h2 className="mt-0 mb-1 font-sans text-base font-semibold tracking-normal">What moves the price: {t.toLowerCase()}</h2><p className="m-0 text-[15px] text-muted-foreground">{d}</p></div>
         ))}
       </div>

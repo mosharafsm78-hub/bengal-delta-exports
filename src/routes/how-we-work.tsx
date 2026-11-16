@@ -2,7 +2,7 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { CheckCircle2, Landmark, ShieldCheck, FileText, Printer } from 'lucide-react'
 import { pageHead } from '@/lib/head'
 import { DOCUMENTS, LC_DOCS, LC_TERMS, PAYMENT_HEADLINE, PAYMENT_TERMS, STEPS } from '@/data/site'
-import { DataTable, PageHead } from '@/components/site-shell'
+import { DataTable, PageHead, WhoDoesWhat } from '@/components/site-shell'
 
 export const Route = createFileRoute('/how-we-work')({
   head: () => pageHead('/how-we-work'),
@@ -52,6 +52,12 @@ function HowWeWork() {
           </ul>
         </div>
       </div>
+
+      <section id="who" className="mt-14 scroll-mt-28">
+        <h2 className="mb-2 text-[clamp(1.6rem,3vw,2.1rem)]">Who does what, including customs</h2>
+        <p className="mt-0 mb-5 max-w-3xl text-muted-foreground">Our standard terms are CIF (sea) or CIP (air): your price covers the goods, export customs, freight and insurance all the way to your port. You only clear import customs in your country, through your own customs broker or a forwarder we recommend.</p>
+        <WhoDoesWhat />
+      </section>
 
       <section id="lc" className="mt-14 scroll-mt-28">
         <div className="mb-5 flex flex-wrap items-end justify-between gap-3">

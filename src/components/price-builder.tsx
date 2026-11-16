@@ -57,7 +57,7 @@ export function PriceBuilder({ family, styleIndex, onStyleChange }: { family: Fa
       </div>
       <div className="flex flex-col gap-4 rounded-lg bg-brand-soft p-5">
         <div>
-          <div className="text-[13px] text-muted-foreground">{style.n} · unit price FOB</div>
+          <div className="text-[13px] text-muted-foreground">{style.n} · product price per unit</div>
           <div className="num font-display text-4xl font-semibold text-brand">{money(quote.lo)}–{quote.hi.toFixed(2)}</div>
           <div className="text-[13px] text-muted-foreground">per {unitName(unit, 1)}{quote.tierLabel ? ` · volume band ${quote.tierLabel}` : ''}</div>
         </div>

@@ -58,13 +58,13 @@ function Duty() {
           <div className="grid gap-4 sm:grid-cols-2">
             <div><label htmlFor="c-m" className={label}>Your market</label><select id="c-m" className="field" value={m} onChange={(e) => choose(Number(e.target.value))}>{DUTY_PRESETS.map((d, i) => <option key={d[0]} value={i}>{d[0]}</option>)}</select></div>
             <div><label htmlFor="c-k" className={label}>Product type</label><select id="c-k" className="field" value={kind} onChange={(e) => { const k = e.target.value as 'goods' | 'produce'; setKind(k); choose(m, k) }}><option value="goods">Garments, footwear, jute, textiles, food</option><option value="produce">Fresh vegetables or fruit</option></select></div>
-            <div><label htmlFor="c-f" className={label}>FOB price per unit (USD)</label><input id="c-f" inputMode="decimal" className="field" value={fob} onChange={(e) => setFob(e.target.value)} /></div>
+            <div><label htmlFor="c-f" className={label}>Product price per unit (USD)</label><input id="c-f" inputMode="decimal" className="field" value={fob} onChange={(e) => setFob(e.target.value)} /></div>
             <div><label htmlFor="c-q" className={label}>Units</label><input id="c-q" inputMode="numeric" className="field" value={qty} onChange={(e) => setQty(e.target.value)} /></div>
             <div><label htmlFor="c-fr" className={label}>Freight + insurance, total (USD)</label><input id="c-fr" inputMode="decimal" className="field" value={freight} onChange={(e) => setFreight(e.target.value)} /></div>
             <div><label htmlFor="c-d" className={label}>Import duty %</label><input id="c-d" inputMode="decimal" className="field" value={duty} placeholder={preset === null ? 'Enter your rate' : ''} onChange={(e) => setDuty(e.target.value)} /></div>
           </div>
           <dl className="num mt-6 grid grid-cols-[1fr_auto] gap-x-4 gap-y-1.5 text-[15px]">
-            <dt>Goods (FOB)</dt><dd className="m-0 text-right font-semibold">{usd(goods)}</dd>
+            <dt>Goods</dt><dd className="m-0 text-right font-semibold">{usd(goods)}</dd>
             <dt>Freight + insurance</dt><dd className="m-0 text-right font-semibold">{usd(n(freight))}</dd>
             <dt>CIF value</dt><dd className="m-0 text-right font-semibold">{usd(cif)}</dd>
             <dt>Import duty ({n(duty)}%)</dt><dd className="m-0 text-right font-semibold">{usd(dutyAmt)}</dd>
@@ -80,7 +80,7 @@ function Duty() {
             <li><b>VAT zero-rated</b> on exports, so no Bangladeshi VAT sits inside your price.</li>
             <li><b>Duty-free inputs</b> through bonded warehouses and duty drawback for export factories.</li>
             <li><b>Government export incentives</b> for 43 sectors in FY2026-27, highest for diversified jute, agro-processed food, potato, leather goods and light engineering.</li>
-            <li>Our only export-side tax is a 1% source tax on proceeds, already inside the quoted FOB.</li>
+            <li>Our only export-side tax is a 1% source tax on proceeds, already inside our price.</li>
           </ul>
           <Link to="/quote" className="btn btn-primary mt-4">Get a duty-free quote</Link>
         </div>

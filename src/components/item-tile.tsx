@@ -29,7 +29,7 @@ export function ItemTile({ f, s, className }: { f: Family; s: Style; className?:
         <span className="text-[15px] leading-snug font-semibold group-hover:text-brand">{s.n}</span>
         <span className="cat-text mt-0.5 text-xs font-semibold">{f.name}</span>
         <span className="num mt-auto pt-2 text-sm font-semibold">
-          ${s.p[0].toFixed(2)}–{s.p[1].toFixed(2)} <span className="font-normal text-muted-foreground">/ {unit} FOB</span>
+          ${s.p[0].toFixed(2)}–{s.p[1].toFixed(2)} <span className="font-normal text-muted-foreground">/ {unit}</span>
         </span>
       </div>
     </Link>

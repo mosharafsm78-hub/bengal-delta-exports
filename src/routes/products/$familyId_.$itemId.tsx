@@ -7,7 +7,7 @@ import { PHOTOS, photoAbs } from '@/data/photos'
 import { pageHead } from '@/lib/head'
 import { Photo } from '@/components/photo'
 import { ItemTile, inSeason } from '@/components/item-tile'
-import { DataTable, Pill, TrustRow } from '@/components/site-shell'
+import { DataTable, Pill, TrustRow, WhoDoesWhat } from '@/components/site-shell'
 import { basket, useBasket } from '@/lib/quote-basket'
 import { defaultPicks, priceFor, tierMin, unitName } from '@/lib/pricing'
 import { money, slug, usd } from '@/lib/slug'
@@ -26,7 +26,7 @@ export const Route = createFileRoute('/products/$familyId_/$itemId')({
     loaderData
       ? pageHead(`/products/${loaderData.f.id}/${slug(loaderData.s.n)}`, {
           title: `${loaderData.s.n} — ${loaderData.f.name} from Bangladesh, price & specs | ${SITE.name}`,
-          description: `${loaderData.s.d} Indicative FOB ${money(loaderData.s.p[0])}–${loaderData.s.p[1].toFixed(2)} per ${loaderData.s.u ?? 'pc'}. Minimum order ${loaderData.f.moq}. Firm offer in 24 hours, payment by LC.`,
+          description: `${loaderData.s.d} Indicative price ${money(loaderData.s.p[0])}–${loaderData.s.p[1].toFixed(2)} per ${loaderData.s.u ?? 'pc'}. Minimum order ${loaderData.f.moq}. Firm offer in 24 hours, payment by LC.`,
           image: photoAbs(loaderData.s.photo),
         })
       : pageHead('/products'),
@@ -141,7 +141,7 @@ function ItemBody() {
               <span className="num font-display text-[42px] leading-none font-semibold">{money(mid)}</span>
               <span className="text-muted-foreground">per {unitName(unit, 1)}</span>
             </div>
-            <p className="mt-1.5 mb-0 text-[13px] text-muted-foreground">Estimated price, FOB Bangladesh. Your offer confirms the exact price.</p>
+            <p className="mt-1.5 mb-0 text-[13px] text-muted-foreground">Product price, packed and export-cleared. Your firm offer adds freight and insurance to your port.</p>
 
             <label htmlFor="qty" className="mt-5 mb-1.5 block font-semibold">How many {unitName(unit)}?</label>
             <div className="flex flex-wrap gap-2">
@@ -210,6 +210,16 @@ function ItemBody() {
           <div className="mt-4 flex items-start gap-3 rounded-xl bg-brand-soft p-4 text-[14px]">
             <Landmark className="mt-0.5 size-5 flex-none text-brand" aria-hidden="true" />
             <span><b>Safe payment:</b> {PAYMENT_HEADLINE} through your own bank. Your money is released only after the goods ship. <Link to="/how-we-work" className="font-semibold text-brand">How it works</Link></span>
+          </div>
+
+          <div className="mt-3 rounded-xl border border-border bg-card p-4 text-[14px]">
+            <p className="m-0 font-semibold">Your offer includes delivery to your port</p>
+            <ul className="m-0 mt-2 grid list-none gap-1.5 p-0 sm:grid-cols-2">
+              {['Product and export packing', 'Bangladesh export customs and documents', 'Sea or air freight to your port', 'Cargo insurance (110% of invoice)'].map((x) => (
+                <li key={x} className="flex gap-2"><CheckCircle2 className="mt-0.5 size-4 flex-none text-brand" aria-hidden="true" />{x}</li>
+              ))}
+            </ul>
+            <p className="m-0 mt-2 text-[13px] text-muted-foreground">Your side: import customs in your country (0% duty in the EU, UK, Canada, Australia and China). <Link to="/how-we-work" hash="who" className="font-semibold text-brand">Who does what</Link></p>
           </div>
         </div>
       </section>
@@ -281,12 +291,16 @@ function ItemBody() {
           <div className="grid gap-6 lg:grid-cols-2">
             <div>
               <h3 className="mt-0 mb-3 text-lg">Packing</h3>
-              <DataTable cols={['Item', 'Detail']} rows={[...f.packing, ['Ships from', shipsFrom(f.cat)], ['Price basis', 'FOB by default; CFR and CIF on request']]} />
+              <DataTable cols={['Item', 'Detail']} rows={[...f.packing, ['Ships from', shipsFrom(f.cat)], ['Price basis', 'CIF to your port (sea) or CIP (air) by default; CFR, FOB or door delivery on request']]} />
             </div>
             <div>
               <h3 className="mt-0 mb-3 text-lg">Days at sea from Chattogram</h3>
               <DataTable cols={['Destination', 'Days', 'Route']} rows={TRANSIT.map((t) => [t[0], <span className="num">{t[2]}</span>, <Pill tone={t[3] === 'ok' ? 'ok' : t[3] === 'watch' ? 'warn' : 'danger'}>{t[4]}</Pill>])} />
               <p className="mt-2 text-[13px] text-muted-foreground">Air freight from Dhaka takes 1–4 days.</p>
+            </div>
+            <div className="lg:col-span-2">
+              <h3 className="mt-2 mb-3 text-lg">Who handles what, including customs</h3>
+              <WhoDoesWhat />
             </div>
           </div>
         )}

@@ -22,7 +22,7 @@ export const Route = createFileRoute('/products/$familyId')({
     loaderData
       ? pageHead(`/products/${loaderData.family.id}`, {
           title: `${loaderData.family.name} from Bangladesh — prices, types, specs | BengalExport`,
-          description: `${loaderData.family.tag} ${loaderData.family.styles.length} types with indicative FOB prices, minimum order ${loaderData.family.moq}, lead times and shipping.`,
+          description: `${loaderData.family.tag} ${loaderData.family.styles.length} types with indicative prices, minimum order ${loaderData.family.moq}, lead times and shipping.`,
           image: photoAbs(loaderData.family.photo),
         })
       : pageHead('/products'),
@@ -67,7 +67,7 @@ function FamilyBody() {
               <p className="mt-3 text-lg font-medium text-jute">{f.tag}</p>
               <p className="mt-3 max-w-[65ch] text-muted-foreground">{f.intro}</p>
               <dl className="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border text-sm">
-                {[['Indicative FOB', <span className="num font-display text-xl font-semibold">{money(lo)}–{hi.toFixed(2)} <span className="font-sans text-sm font-normal">/ {unit}</span></span>], [isProduce ? 'Order to dispatch' : 'Lead time', <span className="num font-display text-xl font-semibold">{leadMin}–{leadMax} days</span>], ['Minimum order', <span className="font-semibold">{f.moq}</span>], ['HS code', <span className="font-semibold">{f.hs}</span>]].map(([k, v]) => (
+                {[['Product price', <span className="num font-display text-xl font-semibold">{money(lo)}–{hi.toFixed(2)} <span className="font-sans text-sm font-normal">/ {unit}</span></span>], [isProduce ? 'Order to dispatch' : 'Lead time', <span className="num font-display text-xl font-semibold">{leadMin}–{leadMax} days</span>], ['Minimum order', <span className="font-semibold">{f.moq}</span>], ['HS code', <span className="font-semibold">{f.hs}</span>]].map(([k, v]) => (
                   <div key={k as string} className="bg-paper p-3"><dt className="text-muted-foreground">{k}</dt><dd className="m-0">{v}</dd></div>
                 ))}
               </dl>
@@ -110,7 +110,7 @@ function FamilyBody() {
                       <Link to="/products/$familyId/$itemId" params={{ familyId: f.id, itemId: id }} className="text-foreground no-underline group-hover:text-brand">{s.n}</Link>
                     </h3>
                     <p className="m-0 text-[14.5px] text-muted-foreground">{s.d}</p>
-                    <div className="num text-xl font-semibold">{money(s.p[0])}–{s.p[1].toFixed(2)} <span className="text-sm font-normal text-muted-foreground">/ {s.u ?? 'pc'} FOB</span></div>
+                    <div className="num text-xl font-semibold">{money(s.p[0])}–{s.p[1].toFixed(2)} <span className="text-sm font-normal text-muted-foreground">/ {s.u ?? 'pc'}</span></div>
                     <div className="flex flex-wrap gap-1.5">
                       {s.b === 'M' ? <Pill>Market-checked price</Pill> : <Pill tone="jute">Indicative price</Pill>}
                       {s.season && <Pill tone="ok">Season: {s.season}</Pill>}
@@ -156,7 +156,7 @@ function FamilyBody() {
             </div>
             <div className="rounded-lg border border-border bg-card p-5 text-[15px]">
               <p className="mt-0"><b>Ships from:</b> {isProduce ? 'Dhaka air cargo (most fresh produce); Chattogram port by reefer for potato, cabbage and other hardy crops.' : f.cat === 'food' ? 'Chattogram port by container or reefer.' : 'Chattogram port by sea container; Dhaka by air for urgent orders.'}</p>
-              <p><b>Price basis:</b> FOB by default. CFR and CIF quoted per shipment.</p>
+              <p><b>Price basis:</b> product prices shown; your offer is CIF to your port (sea) or CIP (air), with freight and insurance included.</p>
               <p><b>Transit:</b> 7–12 days to Malaysia and Singapore, 32–42 days to Europe and the UK, 28–45 days to the USA by sea; 1–4 days by air.</p>
               <Link to="/shipping" className="inline-flex items-center gap-1 font-semibold text-brand no-underline">All routes and transit times <ArrowRight className="size-4" aria-hidden="true" /></Link>
             </div>
