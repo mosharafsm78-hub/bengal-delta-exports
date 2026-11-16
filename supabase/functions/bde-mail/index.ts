@@ -152,7 +152,12 @@ async function runCampaign(campaignId: number, testEmail?: string) {
   return Response.json({ ok: true, sent, failed, remaining: left ?? 0, dailyRoomLeft: Math.max(0, room - sent) }, { headers: cors })
 }
 
-const cronOk = (req: Request) => { const t = Deno.env.get('BDE_CRON_TOKEN'); return !!t && req.headers.get('x-bde-cron') === t }
+let cronTok: string | null = Deno.env.get('BDE_CRON_TOKEN') ?? null
+const cronOk = async (req: Request) => {
+  if (!cronTok) { const { data } = await db.from('bde_secrets').select('value').eq('key', 'cron_token').maybeSingle(); cronTok = data?.value ?? null }
+  const h = req.headers.get('x-bde-cron') ?? ''
+  return !!cronTok && cronTok.length >= 20 && h === cronTok
+}
 
 async function settingsOf(key: string) { return ((await db.from('bde_settings').select('value').eq('key', key).maybeSingle()).data?.value ?? {}) as Record<string, any> }
 
@@ -215,8 +220,8 @@ Deno.serve(async (req) => {
       return page('Unsubscribe from BengalExport emails?', `<form method="post"><button style="background:#0f6b5c;color:#fff;border:0;border-radius:8px;padding:12px 20px;font-size:16px;cursor:pointer">Yes, unsubscribe me</button></form>`)
     }
     if (route === 'send' && req.method === 'POST') return await send(req)
-    if (route === 'tick' && req.method === 'POST') return cronOk(req) ? Response.json(await tick()) : new Response('no', { status: 403 })
-    if (route === 'lead' && req.method === 'POST') { if (!cronOk(req)) return new Response('no', { status: 403 }); const { id } = await req.json(); return Response.json(await leadAlert(Number(id))) }
+    if (route === 'tick' && req.method === 'POST') return (await cronOk(req)) ? Response.json(await tick()) : new Response('no', { status: 403 })
+    if (route === 'lead' && req.method === 'POST') { if (!(await cronOk(req))) return new Response('no', { status: 403 }); const { id } = await req.json(); return Response.json(await leadAlert(Number(id))) }
     return new Response('Not found', { status: 404, headers: cors })
   } catch (e) {
     return Response.json({ error: String(e).slice(0, 300) }, { status: 500, headers: cors })
