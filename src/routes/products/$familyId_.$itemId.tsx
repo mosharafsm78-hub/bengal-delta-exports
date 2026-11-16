@@ -7,7 +7,7 @@ import { PHOTOS, photoAbs } from '@/data/photos'
 import { pageHead } from '@/lib/head'
 import { Photo } from '@/components/photo'
 import { ItemTile, inSeason } from '@/components/item-tile'
-import { DataTable, Pill } from '@/components/site-shell'
+import { DataTable, Pill, TrustRow } from '@/components/site-shell'
 import { basket, useBasket } from '@/lib/quote-basket'
 import { defaultPicks, priceFor, tierMin, unitName } from '@/lib/pricing'
 import { money, slug, usd } from '@/lib/slug'
@@ -122,6 +122,7 @@ function ItemBody() {
             <Info className="mt-0.5 size-4 flex-none" aria-hidden="true" />
             Catalogue sample image: it shows the product type, not your exact lot. Order a paid sample to see the real goods, and before shipping we send photos and video of your order.
           </p>
+          <TrustRow className="mt-4" />
         </div>
 
         {/* Buy box */}

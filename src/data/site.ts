@@ -3,9 +3,9 @@ export const SITE = {
   name: 'BengalExport',
   tagline: 'Sourced in Bangladesh · Shipped worldwide',
   email: 'sales@bengaldeltaexports.com',
-  whatsapp: '', // international digits only, e.g. 88018XXXXXXXX — leave empty to hide WhatsApp buttons
-  whatsappDisplay: '', // e.g. +880 18XX-XXXXXX
-  phone: '', // e.g. +880 18XX-XXXXXX — shown in the footer and About page when filled
+  whatsapp: '8801805070650',
+  whatsappDisplay: '+880 1805-070650',
+  phone: '+880 1805-070650',
   address: 'Jalalabad Co-operative Housing Society, West Khulshi, Chattogram, Bangladesh',
   founder: 'Mosharaf Hossain',
   founderRole: 'Founder and Managing Director',

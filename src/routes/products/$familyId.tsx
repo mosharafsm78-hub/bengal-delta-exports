@@ -4,7 +4,7 @@ import { CheckCircle2, ArrowRight } from 'lucide-react'
 import { FAMILIES, catById } from '@/data/catalog'
 import { pageHead } from '@/lib/head'
 import { Photo } from '@/components/photo'
-import { DataTable, Pill } from '@/components/site-shell'
+import { DataTable, Pill, TrustRow } from '@/components/site-shell'
 import { PriceBuilder } from '@/components/price-builder'
 import { inSeason } from '@/components/item-tile'
 import { basket, useBasket } from '@/lib/quote-basket'
@@ -78,6 +78,7 @@ function FamilyBody() {
               <p className="mt-4 text-sm text-muted-foreground">
                 Import duty: <b className="text-foreground">0%</b> in the EU, UK, Canada, Australia and China{isProduce ? ', and on fresh produce in the Gulf' : ''}. <Link to="/duty-free-markets" className="text-brand">All markets</Link>
               </p>
+              <TrustRow className="mt-5 max-w-xl" />
             </div>
           </div>
         </div>

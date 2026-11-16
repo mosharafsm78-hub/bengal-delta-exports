@@ -1,6 +1,6 @@
 import { Link, useNavigate, useRouterState } from '@tanstack/react-router'
 import { useEffect, useRef, useState } from 'react'
-import { Menu, X, ShoppingBag, ChevronDown, ArrowRight, Search, Mail, MessageCircle } from 'lucide-react'
+import { Menu, X, ShoppingBag, ChevronDown, ArrowRight, Search, Mail, MessageCircle, Landmark, ShieldCheck, FlaskConical, BadgeCheck, MapPin } from 'lucide-react'
 import { CATS, FAMILIES } from '@/data/catalog'
 import { SITE } from '@/data/site'
 import { useBasket } from '@/lib/quote-basket'
@@ -127,6 +127,58 @@ function HeaderSearch({ onDone }: { onDone?: () => void }) {
   )
 }
 
+const TRUST = [
+  [Landmark, '100% LC at sight', '/how-we-work'],
+  [ShieldCheck, 'Inspected before shipment', '/quality'],
+  [FlaskConical, 'Paid samples ship in 24 hours', '/quote'],
+  [BadgeCheck, 'Verified producers only', '/suppliers'],
+] as const
+
+/** Small trust badges used on product pages. */
+export function TrustRow({ className }: { className?: string }) {
+  return (
+    <ul className={cn('m-0 grid list-none grid-cols-2 gap-2 p-0', className)}>
+      {TRUST.map(([Icon, label, to]) => (
+        <li key={label}>
+          <Link to={to} className="flex h-full items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-[13px] font-medium text-foreground no-underline hover:border-brand">
+            <Icon className="size-4 flex-none text-brand" aria-hidden="true" />
+            {label}
+          </Link>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+function TopBar() {
+  return (
+    <div className="print:hidden bg-ink text-[12.5px] text-paper/90">
+      <div className="mx-auto flex h-9 max-w-7xl items-center justify-between gap-4 overflow-hidden px-4">
+        <ul className="m-0 flex list-none items-center gap-5 p-0">
+          {TRUST.map(([Icon, label], i) => (
+            <li key={label} className={cn('flex items-center gap-1.5 whitespace-nowrap', i > 0 && 'hidden sm:flex', i > 1 && 'sm:hidden lg:flex')}>
+              <Icon className="size-3.5 text-jute-soft" aria-hidden="true" />
+              {label}
+            </li>
+          ))}
+        </ul>
+        <span className="flex items-center gap-4 whitespace-nowrap">
+          <span className="hidden items-center gap-1.5 xl:flex">
+            <MapPin className="size-3.5 text-jute-soft" aria-hidden="true" />
+            Chattogram, Bangladesh · Since 2022
+          </span>
+          {SITE.whatsapp && (
+            <a href={`https://wa.me/${SITE.whatsapp}`} target="_blank" rel="noopener noreferrer" className="hidden items-center gap-1.5 font-semibold text-paper no-underline hover:underline md:flex">
+              <MessageCircle className="size-3.5 text-[#25D366]" aria-hidden="true" />
+              WhatsApp {SITE.whatsappDisplay}
+            </a>
+          )}
+        </span>
+      </div>
+    </div>
+  )
+}
+
 export function SiteHeader() {
   const [open, setOpen] = useState(false)
   const items = useBasket()
@@ -134,6 +186,7 @@ export function SiteHeader() {
   return (
     <>
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:rounded focus:bg-card focus:px-3 focus:py-2">Skip to content</a>
+      <TopBar />
       <header className="sticky top-0 z-30 print:hidden border-b border-border bg-card/95 backdrop-blur">
         <div className="relative mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 sm:gap-5">
           <Link to="/" className="flex flex-none items-center gap-2.5 text-foreground no-underline" aria-label={`${SITE.name} home`}>
