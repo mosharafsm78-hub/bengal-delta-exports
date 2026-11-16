@@ -118,7 +118,8 @@ async function runCampaign(campaignId: number, testEmail?: string) {
       const rows0 = (prev ?? []).map((r: { contact_id: number }) => ({ campaign_id: camp.id, contact_id: r.contact_id }))
       for (let i = 0; i < rows0.length; i += 1000) await db.from('bde_sends').upsert(rows0.slice(i, i + 1000), { onConflict: 'campaign_id,contact_id', ignoreDuplicates: true })
     }
-    let q = db.from('bde_contacts').select('id').eq('status', 'subscribed')
+    // Cold prospects from the autopilot never get bulk campaigns until they reply.
+    let q = db.from('bde_contacts').select('id').eq('status', 'subscribed').or('replied_at.not.is.null,tags.not.cs.{prospect}')
     if (a.tags?.length) q = q.overlaps('tags', a.tags)
     if (a.interests?.length) q = q.overlaps('interests', a.interests)
     if (a.countries?.length) q = q.in('country', a.countries)
@@ -179,7 +180,7 @@ async function leadAlert(leadId: number) {
   if (!l) return { skipped: 'no lead' }
   const items = (l.items ?? []).map((i: any) => `<li>${String(i.style).replace(/[<>&]/g, '')}${i.qty ? ` — ${String(i.qty).replace(/[<>&]/g, '')}` : ''}</li>`).join('')
   const done: string[] = []
-  if (auto.auto_reply !== false) {
+  if (auto.auto_reply !== false && l.kind !== 'email_reply') {
     const first = String(l.name ?? '').split(' ')[0].replace(/[<>&]/g, '') || 'there'
     const html = `<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.6;color:#14211d;max-width:560px"><p>Hello ${first},</p><p>Thank you for your request to BengalExport. Your reference is <b>${l.reference}</b>. A member of our sales team will reply within 24 hours with your price delivered to ${String(l.port || l.country).replace(/[<>&]/g, '')}, or with a few questions if we need details.</p>${items ? `<p>Products in your request:</p><ul>${items}</ul>` : ''}<p>Need samples first? Paid samples of ready styles ship within 24 hours. You can also reach us on WhatsApp: +880 1805-070650.</p><p>Kind regards,<br>BengalExport sales team<br>${s.physical_address ?? ''}</p></div>`
     await deliver(s.provider, { from: s.from_email, fromName: s.from_name || 'BengalExport', replyTo: s.reply_to, to: l.email, subject: `We received your request ${l.reference}`, html, unsub: `${FN}/u` })
