@@ -140,7 +140,8 @@ function NotAdmin({ email, onClaimed }: { email: string; onClaimed: () => void }
   const [err, setErr] = useState('')
   async function submit(e: React.FormEvent) {
     e.preventDefault(); setErr('')
-    const { error } = await sb().rpc(mode === 'owner' ? 'bde_claim_owner' : 'bde_accept_invite', { code })
+    let { error } = await sb().rpc(mode === 'owner' ? 'bde_claim_owner' : 'bde_accept_invite', { code })
+    if (error && mode === 'invite') { const o = await sb().rpc('bde_claim_owner', { code }); if (!o.error) error = null }
     if (error) setErr(error.message); else onClaimed()
   }
   return (
