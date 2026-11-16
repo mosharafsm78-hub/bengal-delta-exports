@@ -2,20 +2,19 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { BadgeCheck, Bot, Check, ClipboardList, Clock, Headset, Loader2, LogOut, MessageCircle, Plus, Send, ShieldCheck, Sparkles, User } from 'lucide-react'
 import { CATS } from '@/data/catalog'
-import { MARKETS } from '@/data/markets'
+import { CountrySelect } from '@/components/country-select'
 import { SITE } from '@/data/site'
 import { cn } from '@/lib/utils'
 import { bsb, desk, STAGES, type Agent, type Buyer, type Msg, type Req } from './client'
 
 const field = 'w-full rounded-lg border border-border bg-card px-3 py-2.5 text-[15px] outline-none focus:border-brand'
-const COUNTRIES = [...new Set([...MARKETS.map((m) => m.name), 'United States', 'Saudi Arabia', 'United Arab Emirates', 'Malaysia', 'Singapore', 'South Africa', 'Brazil', 'Mexico', 'India'])].sort()
 const BUYER_TYPES = ['Importer / wholesaler', 'Brand / private label', 'Retailer', 'Online seller', 'Promotional / uniform supplier', 'Hotel / hospitality supplier', 'Buying house / agent', 'Other']
 const VOLUMES = ['Under $10,000 a year', '$10,000 – $50,000', '$50,000 – $250,000', '$250,000 – $1 million', 'Over $1 million']
 
 export const TIERS = [
-  { id: 'registered', name: 'Registered buyer', how: 'Free account', perks: ['Free offers within 24 hours', 'Live tracker for every request', 'AI assistant, answers at any hour'] },
-  { id: 'verified', name: 'Verified buyer', how: 'Company checked (usually instant)', perks: ['Verified buyer badge', 'Your own named sourcing agent', 'Sourcing outside our catalogue in 48 hours', 'Priority queue for offers and samples', 'Price updates for products you buy'] },
-  { id: 'trusted', name: 'Trusted buyer', how: 'After your first LC order', perks: ['Priority factory booking in peak season', 'Inspection photos and reports kept in your account', 'First look at ready stock and factory surplus'] },
+  { id: 'registered', name: 'Registered buyer', how: 'Free', perks: ['Free offers in 24 hours', 'Live order tracker', 'AI answers 24/7'] },
+  { id: 'verified', name: 'Verified buyer', how: 'Company checked', perks: ['Verified buyer badge', 'Your own sourcing agent', 'Priority offers and samples'] },
+  { id: 'trusted', name: 'Trusted buyer', how: 'After first order', perks: ['Priority factory booking', 'Inspection reports in your account', 'First look at surplus stock'] },
 ]
 const tierIndex = (s?: string) => (s === 'trusted' ? 2 : s === 'verified' ? 1 : 0)
 
@@ -47,8 +46,8 @@ function AuthScreens() {
     <div className="mx-auto grid max-w-6xl gap-10 px-4 py-10 lg:grid-cols-[1fr_1.1fr] lg:py-14">
       <div>
         <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-[13px] font-semibold text-brand"><ShieldCheck className="size-4" aria-hidden="true" />Free for buyers, always</span>
-        <h1 className="mt-4 mb-3 text-[clamp(2rem,4vw,2.8rem)] leading-tight">Your buyer desk for Bangladesh</h1>
-        <p className="text-[17px] text-muted-foreground">One free account for all your sourcing: offers, samples, orders and a personal agent who knows your business. No subscription, no fees.</p>
+        <h1 className="mt-4 mb-3 text-[clamp(2rem,4vw,2.8rem)] leading-tight">Your buyer account</h1>
+        <p className="text-[17px] text-muted-foreground">Offers, samples, orders and your own agent. No fees.</p>
         <div className="mt-6 grid gap-3">
           {TIERS.map((t, i) => (
             <div key={t.id} className="rounded-xl border border-border bg-card p-4">
@@ -91,12 +90,13 @@ function SignIn({ onUp, onReset }: { onUp: () => void; onReset: () => void }) {
 function SignUp({ onIn }: { onIn: () => void }) {
   const [f, setF] = useState({ name: '', company: '', email: '', password: '', country: '', website: '', phone: '', buyer_type: '', yearly_volume: '', company_number: '', website_url: '' })
   const [interests, setInterests] = useState<string[]>([])
+  const [other, setOther] = useState<string | null>(null)
   const [err, setErr] = useState(''); const [busy, setBusy] = useState(false)
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setF({ ...f, [k]: e.target.value })
   async function go(e: React.FormEvent) {
     e.preventDefault(); setBusy(true); setErr('')
     try {
-      await desk('signup', { ...f, interests }, false)
+      await desk('signup', { ...f, interests: [...interests, ...(other?.trim() ? [`other: ${other.trim()}`] : [])] }, false)
       const { error } = await bsb().auth.signInWithPassword({ email: f.email.trim(), password: f.password })
       if (error) throw new Error('Account created. Please sign in.')
     } catch (x) { setErr((x as Error).message) }
@@ -113,20 +113,21 @@ function SignUp({ onIn }: { onIn: () => void }) {
       <input className={field} type="email" required placeholder="Business email (your company address)" autoComplete="email" value={f.email} onChange={set('email')} aria-label="Business email" />
       <input className={field} type="password" required minLength={8} placeholder="Choose a password (8+ characters)" autoComplete="new-password" value={f.password} onChange={set('password')} aria-label="Password" />
       <div className="grid gap-3 sm:grid-cols-2">
-        <input className={field} required list="bde-countries" placeholder="Country" value={f.country} onChange={set('country')} aria-label="Country" />
+        <CountrySelect value={f.country} onChange={(v) => setF({ ...f, country: v })} required />
         <input className={field} placeholder="Company website" value={f.website} onChange={set('website')} aria-label="Company website" />
       </div>
-      <datalist id="bde-countries">{COUNTRIES.map((c) => <option key={c} value={c} />)}</datalist>
       <div className="grid gap-3 sm:grid-cols-2">
         <select className={field} value={f.buyer_type} onChange={set('buyer_type')} aria-label="Type of business"><option value="">Type of business</option>{BUYER_TYPES.map((t) => <option key={t}>{t}</option>)}</select>
         <select className={field} value={f.yearly_volume} onChange={set('yearly_volume')} aria-label="Yearly buying"><option value="">Yearly buying (optional)</option>{VOLUMES.map((t) => <option key={t}>{t}</option>)}</select>
       </div>
       <div>
         <p className="mt-1 mb-2 text-[14px] font-semibold">What do you buy?</p>
-        <div className="flex flex-wrap gap-2">{CATS.map((c) => { const on = interests.includes(c.id); return <button type="button" key={c.id} onClick={() => setInterests(on ? interests.filter((x) => x !== c.id) : [...interests, c.id])} className={cn('rounded-full border px-3 py-1.5 text-[13.5px]', on ? 'border-brand bg-brand-soft font-semibold text-brand' : 'border-border bg-card')}>{c.short ?? c.name}</button> })}</div>
+        <div className="flex flex-wrap gap-2">{CATS.map((c) => { const on = interests.includes(c.id); return <button type="button" key={c.id} onClick={() => setInterests(on ? interests.filter((x) => x !== c.id) : [...interests, c.id])} className={cn('rounded-full border px-3 py-1.5 text-[13.5px]', on ? 'border-brand bg-brand-soft font-semibold text-brand' : 'border-border bg-card')}>{c.short ?? c.name}</button> })}
+          <button type="button" onClick={() => setOther(other === null ? '' : null)} className={cn('rounded-full border px-3 py-1.5 text-[13.5px]', other !== null ? 'border-brand bg-brand-soft font-semibold text-brand' : 'border-dashed border-border bg-card')}>+ Other</button></div>
+        {other !== null && <input className={cn(field, 'mt-2')} autoFocus placeholder="What else do you buy? e.g. leather jackets, ceramics" value={other} onChange={(e) => setOther(e.target.value)} aria-label="Other products" />}
       </div>
       <input className="hidden" tabIndex={-1} autoComplete="off" value={f.website_url} onChange={set('website_url')} aria-hidden="true" />
-      <p className="m-0 text-[12.5px] text-muted-foreground">Use your company email and website to get the Verified buyer badge instantly. We never share your details.</p>
+      <p className="m-0 text-[12.5px] text-muted-foreground">Company email + website = instant Verified badge.</p>
       {err && <p className="m-0 text-[13.5px] text-danger">{err}</p>}
       <button disabled={busy} className="btn btn-primary">{busy ? 'Creating your account…' : 'Create free account'}</button>
     </form>
@@ -381,12 +382,11 @@ function AccountTab({ b, reload }: { b: Buyer; reload: () => void }) {
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="grid gap-1 text-[13px] text-muted-foreground">Your name<input className={field} value={f.name} onChange={set('name')} /></label>
           <label className="grid gap-1 text-[13px] text-muted-foreground">Company<input className={field} value={f.company} onChange={set('company')} /></label>
-          <label className="grid gap-1 text-[13px] text-muted-foreground">Country<input className={field} value={f.country} onChange={set('country')} list="bde-countries2" /></label>
+          <label className="grid gap-1 text-[13px] text-muted-foreground">Country<CountrySelect value={f.country} onChange={(v) => setF({ ...f, country: v })} /></label>
           <label className="grid gap-1 text-[13px] text-muted-foreground">Website<input className={field} value={f.website} onChange={set('website')} /></label>
           <label className="grid gap-1 text-[13px] text-muted-foreground">Phone / WhatsApp<input className={field} value={f.phone} onChange={set('phone')} /></label>
           <label className="grid gap-1 text-[13px] text-muted-foreground">Company registration or VAT number<input className={field} value={f.company_number} onChange={set('company_number')} /></label>
         </div>
-        <datalist id="bde-countries2">{COUNTRIES.map((c) => <option key={c} value={c} />)}</datalist>
         <p className="m-0 text-[13px] text-muted-foreground">Signed in as {b.email}</p>
         {msg && <p className="m-0 text-[13.5px]">{msg}</p>}
         <button disabled={busy} className="btn btn-primary justify-self-start">{busy ? 'Saving…' : 'Save'}</button>

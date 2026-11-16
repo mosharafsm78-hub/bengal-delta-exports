@@ -1,6 +1,6 @@
 import { Link, useNavigate, useRouterState } from '@tanstack/react-router'
 import { useEffect, useRef, useState } from 'react'
-import { Menu, X, ShoppingBag, ChevronDown, ArrowRight, Search, Mail, MessageCircle, Landmark, ShieldCheck, FlaskConical, BadgeCheck, MapPin, Check, User, Handshake } from 'lucide-react'
+import { Menu, X, ShoppingBag, ChevronDown, ArrowRight, Search, Mail, MessageCircle, Landmark, ShieldCheck, FlaskConical, BadgeCheck, Check, User, Handshake } from 'lucide-react'
 import { CATS, FAMILIES } from '@/data/catalog'
 import { SITE, WHO_DOES } from '@/data/site'
 import { useBasket } from '@/lib/quote-basket'
@@ -129,10 +129,10 @@ function HeaderSearch({ onDone }: { onDone?: () => void }) {
 }
 
 const TRUST = [
-  [Landmark, '100% LC at sight', '/how-we-work'],
-  [ShieldCheck, 'Inspected before shipment', '/quality'],
-  [FlaskConical, 'Paid samples ship in 24 hours', '/quote'],
-  [BadgeCheck, 'Verified producers only', '/suppliers'],
+  [Landmark, 'Pay by LC after shipping', '/how-we-work'],
+  [ShieldCheck, 'Every order inspected', '/quality'],
+  [FlaskConical, 'Samples in 24 hours', '/quote'],
+  [BadgeCheck, 'Checked factories only', '/suppliers'],
 ] as const
 
 /** Small trust badges used on product pages. */
@@ -164,10 +164,6 @@ function TopBar() {
           ))}
         </ul>
         <span className="flex items-center gap-4 whitespace-nowrap">
-          <span className="hidden items-center gap-1.5 xl:flex">
-            <MapPin className="size-3.5 text-jute-soft" aria-hidden="true" />
-            Bangladesh · Since 2022
-          </span>
           {SITE.whatsapp && (
             <a href={`https://wa.me/${SITE.whatsapp}`} target="_blank" rel="noopener noreferrer" className="hidden items-center gap-1.5 font-semibold text-paper no-underline hover:underline md:flex">
               <WhatsAppIcon className="size-3.5 text-[#25D366]" />

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { BadgeCheck, CheckCircle2, Clock, Globe2, Landmark, Send, Ship } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { MARKETS, dutyLine, marketDuty } from '@/data/markets'
@@ -14,6 +14,14 @@ export function QuickOffer({ cat, family, style, qty, unit, estimate, leadMin, l
   const markets = MARKETS.filter((m) => m.cats.includes(cat))
   const [mid, setMid] = useState(markets[0]?.id ?? '')
   const [other, setOther] = useState('')
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('bde-country')
+      if (!saved) return
+      const hit = markets.find((x) => x.name === saved)
+      if (hit) setMid(hit.id); else { setMid(''); setOther(saved) }
+    } catch { /* private mode */ }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
   const [form, setForm] = useState({ name: '', company: '', email: '' })
   const [state, setState] = useState<'idle' | 'sending' | 'done' | 'error'>('idle')
   const [err, setErr] = useState('')
@@ -55,7 +63,7 @@ export function QuickOffer({ cat, family, style, qty, unit, estimate, leadMin, l
     <div className="mt-5 overflow-hidden rounded-xl border border-border bg-card shadow-sm">
       <div className="border-b border-border bg-muted/40 px-5 py-4">
         <label htmlFor="qo-country" className="flex items-center gap-2 text-[15px] font-semibold"><Globe2 className="size-5 text-brand" aria-hidden="true" />Where should we deliver?</label>
-        <select id="qo-country" value={mid} onChange={(e) => { setMid(e.target.value); track('cta_click', { label: `country:${e.target.value}` }) }} className={cn(field, 'mt-2')}>
+        <select id="qo-country" value={mid} onChange={(e) => { setMid(e.target.value); try { const n = markets.find((x) => x.id === e.target.value)?.name; if (n) localStorage.setItem('bde-country', n) } catch { /* ignore */ } track('cta_click', { label: `country:${e.target.value}` }) }} className={cn(field, 'mt-2')}>
           {markets.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}
           <option value="">Another country</option>
         </select>

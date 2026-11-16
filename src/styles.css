@@ -138,3 +138,8 @@ body {
 
 /* Let grid children shrink so wide tables scroll inside their box instead of widening the page on phones */
 .grid > * { min-width: 0; }
+
+/* Hero route lines */
+@keyframes hb-flow { to { stroke-dashoffset: -120; } }
+.hb-dash { animation: hb-flow 6s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .hb-dash { animation: none; } }
