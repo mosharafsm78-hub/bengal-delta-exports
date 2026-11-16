@@ -80,7 +80,7 @@ export const DUTY: { market: string; short: string; duty: string; zero: boolean;
   { market: 'United Kingdom', short: 'United Kingdom', duty: '0% on all goods except arms', zero: true, scheme: 'DCTS Comprehensive Preferences. After 2029 Bangladesh moves to Enhanced Preferences, still duty-free on about 98% of lines, with relaxed apparel origin rules.', proof: 'Statement on origin', status: 'ok', statusText: 'Normal' },
   { market: 'Canada', short: 'Canada', duty: '0% on 98.6% of lines (not dairy, eggs, poultry)', zero: true, scheme: "LDC Tariff now; Canada's developing-country scheme keeps duty-free access until 2034.", proof: 'Certificate / statement of origin', status: 'ok', statusText: 'Normal' },
   { market: 'Australia', short: 'Australia', duty: '0% on 100% of lines', zero: true, scheme: 'LDC preference, extended to at least 2034.', proof: 'Origin declaration', status: 'ok', statusText: 'Normal' },
-  { market: 'China', short: 'China', duty: '0% on 100% of lines (quota goods within quota)', zero: true, scheme: "China's zero-tariff treatment for LDCs, in force since 1 Dec 2024. About 9 days by sea from Chattogram.", proof: 'Certificate of origin', status: 'ok', statusText: 'Normal' },
+  { market: 'China', short: 'China', duty: '0% on 100% of lines (quota goods within quota)', zero: true, scheme: "China's zero-tariff treatment for LDCs, in force since 1 Dec 2024. About 9 days by sea from Bangladesh.", proof: 'Certificate of origin', status: 'ok', statusText: 'Normal' },
   { market: 'Japan', short: 'Japan', duty: '0% on most goods', zero: true, scheme: "LDC preference today. The Bangladesh–Japan EPA signed on 6 Feb 2026 makes 7,379 products (about 97% of Bangladesh's exports, including garments) duty-free permanently once Japan ratifies it.", proof: 'Certificate of origin', status: 'ok', statusText: 'Normal' },
   { market: 'South Korea', short: 'South Korea', duty: '0% on most products', zero: true, scheme: "Korea's preferential tariff for LDCs covers most products; some farm and fishery lines are excluded, so we confirm your HS code on the proforma.", proof: 'Certificate of origin', status: 'ok', statusText: 'Normal' },
   { market: 'India', short: 'India', duty: '0% on most lines', zero: true, scheme: 'SAFTA. Since May 2025 India allows Bangladeshi garments only through Kolkata and Nhava Sheva seaports, and jute products only through Nhava Sheva; fruit, processed food and some other goods cannot enter by land.', proof: 'SAFTA certificate of origin', status: 'watch', statusText: 'Sea only for many goods' },
@@ -97,8 +97,8 @@ export const DUTY_PRESETS: [string, number | null, number | null][] = [
 ]
 
 export const SHIP_MODES = [
-  ['Sea, 20/40 ft dry container', 'Chattogram', 'Garments, footwear, jute, home textiles, packed food', '7–45 days', 'FCL, or LCL consolidation from 1 CBM'],
-  ['Sea, reefer container', 'Chattogram', 'Potato, cabbage, cauliflower, carrot, mango, frozen food', '7–30 days', 'Temperature set by product, −18 °C to +13 °C'],
+  ['Sea, 20/40 ft dry container', 'Seaport', 'Garments, footwear, jute, home textiles, packed food', '7–45 days', 'FCL, or LCL consolidation from 1 CBM'],
+  ['Sea, reefer container', 'Seaport', 'Potato, cabbage, cauliflower, carrot, mango, frozen food', '7–30 days', 'Temperature set by product, −18 °C to +13 °C'],
   ['Air cargo', 'Dhaka (DAC)', 'Gourds, leafy greens, chilies, betel leaf, fruit, urgent garments', '1–4 days', 'Space booked 3–7 days ahead; rate quoted per kg'],
   ['Land', 'Banglabandha, Benapole', 'Potato and bulk goods', '2–6 days', 'Nepal, Bhutan; India for permitted goods'],
   ['Express courier', 'Dhaka', 'Samples, swatches', '3–6 days', 'Door to door'],
@@ -124,7 +124,7 @@ export const INCOTERMS = [
   ['CIF (our standard, sea)', 'Product, export packing, Bangladesh export customs, sea freight and cargo insurance (110% of invoice value) to your port. You clear import customs.'],
   ['CIP (our standard, air)', 'The same as CIF for air cargo: product, export customs, air freight and all-risks insurance to your airport.'],
   ['CFR', 'Like CIF but without insurance, if you insure the cargo yourself.'],
-  ['FOB', 'Only if you have your own forwarder: we deliver cleared and loaded on board at Chattogram, and you book the freight.'],
+  ['FOB', 'Only if you have your own forwarder: we deliver cleared and loaded on board in Bangladesh, and you book the freight.'],
   ['DAP (door delivery)', 'On request, through a freight forwarder we recommend: delivery to your warehouse. Import duty and VAT, if any, stay with you as importer.'],
 ]
 

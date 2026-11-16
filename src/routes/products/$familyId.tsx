@@ -181,7 +181,7 @@ function FamilyBody() {
               <p className="mt-2 text-xs text-muted-foreground">Container loads are approximate and depend on size ratio, folding and carton size.</p>
             </div>
             <div className="rounded-lg border border-border bg-card p-5 text-[15px]">
-              <p className="mt-0"><b>Ships from:</b> {isProduce ? 'Dhaka air cargo (most fresh produce); Chattogram port by reefer for potato, cabbage and other hardy crops.' : f.cat === 'food' ? 'Chattogram port by container or reefer.' : 'Chattogram port by sea container; Dhaka by air for urgent orders.'}</p>
+              <p className="mt-0"><b>Ships from:</b> {isProduce ? 'Dhaka air cargo (most fresh produce); seaport by reefer for potato, cabbage and other hardy crops.' : f.cat === 'food' ? 'Bangladesh seaport by container or reefer.' : 'Bangladesh seaport by container; Dhaka by air for urgent orders.'}</p>
               <p><b>Price basis:</b> product prices shown; your offer is CIF to your port (sea) or CIP (air), with freight and insurance included.</p>
               <p><b>Transit:</b> 7–12 days to Malaysia and Singapore, 32–42 days to Europe and the UK, 28–45 days to the USA by sea; 1–4 days by air.</p>
               <Link to="/shipping" className="inline-flex items-center gap-1 font-semibold text-brand no-underline">All routes and transit times <ArrowRight className="size-4" aria-hidden="true" /></Link>

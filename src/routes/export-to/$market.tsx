@@ -33,7 +33,7 @@ function MarketPage() {
       <PageHead eyebrow={`For ${k.buyer} importers`} title={`Import from Bangladesh to ${k.name}`} lead={`BengalExport checks the factory, inspects your goods, handles export customs and ships them insured to ${k.ports}. Settlement by ${PAYMENT_HEADLINE}; your broker clears the goods at your port.`} />
       <div className="mb-10 grid gap-4 md:grid-cols-3">
         <Fact title="Import duty" value={<Pill tone={d.zero ? 'ok' : 'warn'}>{d.duty}</Pill>} text={d.scheme} />
-        <Fact title="Sea transit from Chattogram" value={<b>{k.transit}</b>} text={`Main ports: ${k.ports}. Air cargo from Dhaka takes 1–4 days for urgent or fresh goods.`} />
+        <Fact title="Sea transit from Bangladesh" value={<b>{k.transit}</b>} text={`Main ports: ${k.ports}. Air cargo from Dhaka takes 1–4 days for urgent or fresh goods.`} />
         <Fact title="Proof of origin we provide" value={<b>{d.proof}</b>} text="Sent with the shipping documents, so your broker can apply the preferential rate." />
       </div>
       <TrustRow className="mb-12 max-w-3xl" />

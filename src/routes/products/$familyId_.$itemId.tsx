@@ -35,9 +35,9 @@ export const Route = createFileRoute('/products/$familyId_/$itemId')({
 })
 
 function shipsFrom(cat: string) {
-  if (cat === 'produce') return 'By air from Dhaka, or reefer container from Chattogram'
-  if (cat === 'food') return 'Container from Chattogram port'
-  return 'Container from Chattogram port, or air from Dhaka'
+  if (cat === 'produce') return 'By air from Dhaka, or reefer container by sea'
+  if (cat === 'food') return 'Container from Bangladesh by sea'
+  return 'Container by sea, or air from Dhaka'
 }
 
 type Tab = 'details' | 'shipping' | 'duty' | 'quality' | 'order'
@@ -314,7 +314,7 @@ function ItemBody() {
               <DataTable cols={['Item', 'Detail']} rows={[...f.packing, ['Ships from', shipsFrom(f.cat)], ['Price basis', 'CIF to your port (sea) or CIP (air) by default; CFR, FOB or door delivery on request']]} />
             </div>
             <div>
-              <h3 className="mt-0 mb-3 text-lg">Days at sea from Chattogram</h3>
+              <h3 className="mt-0 mb-3 text-lg">Days at sea from Bangladesh</h3>
               <DataTable cols={['Destination', 'Days', 'Route']} rows={TRANSIT.map((t) => [t[0], <span className="num">{t[2]}</span>, <Pill tone={t[3] === 'ok' ? 'ok' : t[3] === 'watch' ? 'warn' : 'danger'}>{t[4]}</Pill>])} />
               <p className="mt-2 text-[13px] text-muted-foreground">Air freight from Dhaka takes 1–4 days.</p>
             </div>

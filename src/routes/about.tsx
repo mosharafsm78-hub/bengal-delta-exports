@@ -37,7 +37,7 @@ function About() {
   ] as [string, string][]).filter(([, v]) => v)
   const details: [string, string][] = ([
     ['Registered in', 'Bangladesh'],
-    ['Export gateways', 'Chattogram Port · Dhaka (Hazrat Shahjalal) air cargo'],
+    ['Export gateways', 'Main seaport · Dhaka air cargo'],
     ['Phone', SITE.phone],
     ['WhatsApp', SITE.whatsappDisplay],
     ['Email', SITE.email],

@@ -1,11 +1,11 @@
 {
   "default": {
-    "title": "BengalExport — Export trading house, Bangladesh",
-    "description": "Source garments, footwear, home textiles, jute, fresh vegetables, fruit, food and handicrafts from Bangladesh. Prices, specs, duty-free markets, shipping and proforma invoice in 24 hours."
+    "title": "BengalExport — Export House in Bangladesh",
+    "description": "Export house in Bangladesh with 10,000+ suppliers: garments, footwear, home textiles, jute, food and handicrafts. Compliance, own QC, shipping to your port, LC at sight. Quote in 24 hours."
   },
   "/": {
-    "title": "BengalExport — Source at factory prices, receive inspected goods at your port",
-    "description": "Garments, footwear, home textiles, jute and agro products from audited Bangladeshi factories and farms. Contracted on our proforma invoice, inspected before shipment, delivered CIF under an irrevocable Letter of Credit. Proforma invoice within 24 hours."
+    "title": "Bangladesh Export House & Sourcing Agent | BengalExport",
+    "description": "Source garments, footwear, home textiles, jute and food from Bangladesh through one export house: 10,000+ suppliers, certified factories, own QC, CIF to your port, 100% LC at sight. Quote in 24 hours."
   },
   "/products": {
     "title": "Products — BengalExport",
@@ -21,7 +21,7 @@
   },
   "/shipping": {
     "title": "Shipping from Bangladesh: modes and transit times — BengalExport",
-    "description": "Sea, reefer, air, land and courier shipping from Chattogram and Dhaka, transit times by destination, Incoterms and current route advisories."
+    "description": "Sea, reefer, air, land and courier shipping from Bangladesh by sea and air, transit times by destination, Incoterms and current route advisories."
   },
   "/how-we-work": {
     "title": "How to order and pay (100% LC at sight) — BengalExport",
@@ -36,8 +36,8 @@
     "description": "Month-by-month availability of Bangladeshi vegetables and fruits for export."
   },
   "/about": {
-    "title": "About us — BengalExport",
-    "description": "A Chattogram export trading house, founded in 2022, working with verified mills, factories, farms and artisan groups across Bangladesh."
+    "title": "About BengalExport — Export House in Bangladesh",
+    "description": "BengalExport is an export house in Bangladesh with 10,000+ onboarded suppliers. Reliability, compliance, quality control, logistics and documents for importers worldwide."
   },
   "/faq": {
     "title": "FAQ for importers — BengalExport",
