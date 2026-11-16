@@ -56,8 +56,9 @@ const ROLE = ['sales', 'purchasing', 'purchase', 'buying', 'buyer', 'sourcing', 
 const SKIP_DOMAINS = /(amazon|alibaba|ebay|etsy|facebook|linkedin|instagram|google|wikipedia|yelp|indiamart|made-in-china|tradekey|europages|kompass|yellowpages|zoominfo|bloomberg|dnb\.com|crunchbase|globalsources|exporthub|go4worldbusiness)\./i
 
 // ---------- AI ----------
-const COMPANY = `You work for BengalExport, an export trading house in Bangladesh (since 2022, about 22 people).
-BengalExport sources from verified Bangladeshi factories and farms, checks the factory, inspects goods before shipping, and handles export packing, export customs, documents, freight and insurance. Prices are delivered to the buyer's port (CIF by sea, CIP by air). Payment only by 100% irrevocable LC at sight, so the buyer's money is safe until goods ship. Paid samples of ready styles ship within 24 hours. Most goods enter the EU, UK, Canada, Australia and Japan at 0% import duty. Never invent prices, certificates, customers, awards or facts.`
+const COMPANY = `You write for BengalExport, an export house in Bangladesh with a network of 10,000+ suppliers: garment, footwear and home-textile factories, jute mills, farms and food processors.
+What BengalExport does for buyers, end to end: matches the right supplier to the product, volume and price; checks reliability (capacity, track record); manages compliance (partner factories certified to BSCI/amfori, WRAP, Sedex, OEKO-TEX, GOTS, ISO 9001, HACCP, ISO 22000, GlobalGAP, Halal, matched to the buyer's requirements); its own QC team inspects every order before shipment; handles export documents, certificates of origin, FCL/LCL/air freight and insurance to the buyer's port (CIF/CIP). Payment only by 100% irrevocable LC at sight. Quotations within 24 hours; ready-style samples ship within 24 hours. Most goods enter the EU, UK, Canada, Australia and Japan at 0% import duty (LDC rules).
+Voice: a serious, senior export professional writing to a buyer. Short, factual, calm, no hype, no exclamation marks. Never invent prices, customers, awards, years in business, headcount or certificates beyond those listed.`
 
 async function llm(system: string, prompt: string, opts: { json?: boolean; search?: boolean } = {}): Promise<string> {
   const g = Deno.env.get('GEMINI_API_KEY')
@@ -161,6 +162,8 @@ async function plan(n = 2) {
       const why: string[] = []
       let score = 10
       if (DUTY_FREE.has(country)) { score += 8; why.push('0% import duty') }
+      const lh = localHour(country)
+      if (lh.dow > 0 && lh.dow < 6 && lh.h >= 6 && lh.h < 15) { score += 30; why.push('office hours now') }
       if (demand) { score += Math.min(15, demand); why.push(`${demand} product view${demand > 1 ? 's' : ''} on the site`) }
       const asked = (leads ?? []).filter((l) => l.country === country).length
       if (asked) { score += asked * 6; why.push(`${asked} quote requests from ${country}`) }
@@ -181,21 +184,20 @@ async function plan(n = 2) {
 async function research(target: { fam: string; label: string; country: string; buyers: string }, want: number, save: boolean) {
   const { data: known } = await db.from('bde_contacts').select('email, website').limit(50000)
   const knownHosts = new Set((known ?? []).flatMap((k) => [hostOf(k.website ?? ''), String(k.email).split('@')[1]]).filter(Boolean))
-  const text = await llm(COMPANY, `Use web search to find ${want + 6} real, currently operating companies in ${target.country} that buy or import ${target.label}: ${target.buyers}.
+  const text = await llm(COMPANY, `Use web search to find ${want + 10} real, currently operating companies in ${target.country} that buy or import ${target.label}: ${target.buyers}.
 First choice: companies with evidence that they already import from Bangladesh (shipment records on ImportYeti, Panjiva or Volza, "made in Bangladesh" products, Bangladeshi suppliers named in news). Then small and mid-sized importers, wholesalers, distributors and private-label brands that source from Asia. Exclude marketplaces, directories, B2B portals, factories in Asia, and very large retailers.
 Return a JSON array: [{"company": "...", "website": "https://...", "type": "importer|wholesaler|brand|distributor|promotional supplier", "why": "one short sentence on what they sell and why ${target.label} fits", "bd_evidence": "how we know they already buy from Bangladesh, or empty"}]. Only include companies whose website you actually found.`, { json: true, search: true })
   let list: { company: string; website: string; type: string; why: string; bd_evidence?: string }[] = []
   try { list = parseJson(text) } catch { list = [] }
   const out: Record<string, unknown>[] = []
   let noEmail = 0
-  for (const c of list) {
+  // Check candidate websites in parallel: much faster than one by one.
+  const cands = list.map((c) => ({ c, h: hostOf(c.website ?? '') })).filter((x, i, arr) => x.h && !knownHosts.has(x.h) && !SKIP_DOMAINS.test(x.h) && arr.findIndex((y) => y.h === x.h) === i).slice(0, want + 8)
+  const checked = await Promise.all(cands.map(async (x) => ({ ...x, ...(await findEmail(x.h)) })))
+  for (const { c, h: host, email, contactUrl } of checked) {
     if (out.length >= want) break
-    const host = hostOf(c.website ?? '')
-    if (!host || knownHosts.has(host) || SKIP_DOMAINS.test(host)) continue
     knownHosts.add(host)
-    const { email, contactUrl } = await findEmail(host)
     if (!email) {
-      // No public email: hand it to the care team as a contact-form or LinkedIn task instead.
       if (save && noEmail++ < 4) await addTask(contactUrl ? 'contact_form' : 'linkedin', { company: c.company, country: target.country, label: target.label, why: c.why, url: contactUrl || linkedinSearch(c.company), website: `https://${host}` })
       continue
     }
@@ -210,8 +212,8 @@ Return a JSON array: [{"company": "...", "website": "https://...", "type": "impo
 function fallbackEmail(c: any, step: number) {
   const r = c.research ?? {}; const label = r.label ?? 'products'
   const duty = DUTY_FREE.has(c.country) ? ` They enter ${c.country} at 0% import duty.` : ''
-  if (step === 0) return { subject: `${label[0].toUpperCase() + label.slice(1)} from Bangladesh`, body: `Hello,\n\nI saw that ${c.company} works with ${label}, so I wanted to introduce BengalExport. We supply ${label} from checked Bangladeshi factories, inspect every order before it ships, and quote one price delivered to your port.${duty}\n\nPayment is by LC at sight, so your money stays safe until the goods ship, and paid samples leave within 24 hours.\n\nWould it help if I sent prices delivered to your nearest port?` }
-  if (step === 1) return { subject: `Re: ${label} from Bangladesh`, body: `Hello again,\n\nA quick follow-up: if it is easier to judge quality first, we can send paid samples of ready styles within 24 hours, and the cost is credited on your first order.\n\nShall I send a short price list for ${label}?` }
+  if (step === 0) return { subject: `${label[0].toUpperCase() + label.slice(1)} from Bangladesh`, body: `Hello,\n\nI saw that ${c.company} works with ${label}, so I wanted to introduce BengalExport. We are an export house in Bangladesh with a network of 10,000+ suppliers, including certified factories for ${label}. Our own QC team inspects every order, and we quote delivered to your port.${duty}\n\nTerms are LC at sight. Ready-style samples can ship within 24 hours.\n\nWould a quotation for your next ${label} order be useful?` }
+  if (step === 1) return { subject: `Re: ${label} from Bangladesh`, body: `Hello again,\n\nA short follow-up. If it helps to judge quality first, we can ship ready-style samples of ${label} within 24 hours, and the sample cost is credited on your first order.\n\nShall I send a quotation for your usual specification?` }
   return { subject: `Close the file?`, body: `Hello,\n\nI do not want to fill your inbox, so this is my last note. If ${label} from Bangladesh become interesting later, just reply to this email and I will send prices delivered to your port.\n\nThank you for your time.` }
 }
 async function writeEmail(c: any, step: number) {
@@ -222,7 +224,7 @@ async function writeEmail(c: any, step: number) {
     const out = parseJson<{ subject: string; body: string }>(await llm(COMPANY, `Write the ${kind} of a cold B2B outreach from BengalExport to ${c.company} in ${c.country}.
 What we know about them: ${r.type ?? 'company'}; ${r.why ?? ''}. Product to offer: ${r.label}.
 ${DUTY_FREE.has(c.country) ? `Goods from Bangladesh enter ${c.country} at 0% import duty: mention it once.` : 'Do not mention import duty.'}
-Rules: plain text, 60-110 words, no greeting by personal name (we only have a company address, start with "Hello,"), first line specific to their business, one clear question as the call to action (for example whether to send prices delivered to their port), no links, no attachments, no exclamation marks, no spam words (free, guarantee, best price, cheap, urgent), no signature (it is added). Subject: 2-6 words, specific, lower-key${step ? ', may start with "Re: "' : ''}.
+Rules: plain text, 60-100 words, written by a senior export manager (not a salesperson), no greeting by personal name (we only have a company address, start with "Hello,"), first line specific to their business, mention the 10,000+ supplier network or the most relevant certifications for this product once, one clear question as the call to action (for example whether a quotation for their next order would be useful), no links, no attachments, no exclamation marks, no spam words (free, guarantee, best price, cheap, urgent), no signature (it is added). Subject: 2-6 words, specific, lower-key${step ? ', may start with "Re: "' : ''}.
 Return JSON {"subject": "...", "body": "..."}.`, { json: true }))
     if (out.subject && out.body && out.body.length < 1500) return out
   } catch { /* fall through */ }
@@ -246,6 +248,7 @@ async function sendOne(c: any, step: number, cfg: Record<string, any>, address: 
   await db.from('bde_contacts').update({ seq_step: step + 1, last_touch_at: now.toISOString(), next_touch_at: step + 1 >= 3 ? null : new Date(now.getTime() + gap * 864e5).toISOString() }).eq('id', c.id)
 }
 function todaysCap(cfg: Record<string, any>) {
+  if (cfg.warmup === false) return Number(cfg.daily_cap ?? 150)
   const start = cfg.warmup_start ? new Date(cfg.warmup_start).getTime() : Date.now()
   const days = Math.max(0, Math.floor((Date.now() - start) / 864e5))
   return Math.min(Number(cfg.daily_cap ?? 45), 10 + days * 4)
@@ -259,7 +262,11 @@ async function sendBatch(force = false) {
   const { count: sentToday } = await db.from('bde_outreach').select('id', { count: 'exact', head: true }).gte('created_at', since.toISOString())
   const cap = todaysCap(cfg); const room = cap - (sentToday ?? 0)
   if (room <= 0) return { sent: 0, reason: `daily limit ${cap} reached` }
-  const batch = force ? Math.min(room, 10) : Math.max(1, Math.ceil(room / 6)) // spread over the day, hourly runs
+  const perHour = Number(cfg.per_hour ?? 10)
+  const { count: lastHour } = await db.from('bde_outreach').select('id', { count: 'exact', head: true }).eq('status', 'sent').gte('created_at', new Date(Date.now() - 36e5).toISOString())
+  const hourRoom = perHour - (lastHour ?? 0)
+  if (!force && hourRoom <= 0) return { sent: 0, reason: `hourly limit ${perHour} reached` }
+  const batch = force ? Math.min(room, 10) : Math.max(1, Math.min(room, hourRoom, Math.ceil(perHour / 6) + 1))
   const { data: due } = await db.from('bde_contacts').select('*').contains('tags', ['prospect']).eq('status', 'subscribed').is('replied_at', null).lt('seq_step', 3).lte('next_touch_at', new Date().toISOString()).order('seq_step', { ascending: false }).order('score', { ascending: false }).limit(200)
   let sent = 0; const errors: string[] = []
   for (const c of due ?? []) {
@@ -271,7 +278,7 @@ async function sendBatch(force = false) {
       await db.from('bde_outreach').insert({ contact_id: c.id, step: c.seq_step ?? 0, subject: '-', body: '-', status: 'failed', error: clean(e).slice(0, 300) })
       if (/auth|login|credential/i.test(String(e))) break
     }
-    await new Promise((r) => setTimeout(r, 2500 + Math.random() * 3000))
+    await new Promise((r) => setTimeout(r, 1500 + Math.random() * 2000))
   }
   return { sent, cap, errors }
 }
@@ -444,10 +451,10 @@ async function researchDaily(force = false) {
   const { count: waiting } = await db.from('bde_contacts').select('id', { count: 'exact', head: true }).contains('tags', ['prospect']).eq('seq_step', 0).eq('status', 'subscribed')
   const need = Math.max(0, Number(cfg.daily_new ?? 15) - Math.floor((waiting ?? 0) / 3))
   if (!need) return { skipped: 'enough new buyers are waiting to be contacted', waiting }
-  const targets = await plan(2)
+  const targets = await plan(1)
   const results: any[] = []
   for (const t of targets) {
-    try { const got = await research(t, Math.ceil(need / targets.length), true); results.push({ ...t, found: got.length, companies: got.map((g: any) => g.company) }) } catch (e) { results.push({ ...t, error: clean(e).slice(0, 200) }) }
+    try { const got = await research(t, Math.min(12, need), true); results.push({ ...t, found: got.length, companies: got.map((g: any) => g.company) }) } catch (e) { results.push({ ...t, error: clean(e).slice(0, 200) }) }
   }
   await log('research', { results })
   return { results }
