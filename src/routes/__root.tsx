@@ -1,4 +1,6 @@
-import { HeadContent, Outlet, Scripts, createRootRoute } from '@tanstack/react-router'
+import { HeadContent, Outlet, Scripts, createRootRoute, useRouterState } from '@tanstack/react-router'
+import { useEffect } from 'react'
+import { bindClicks, trackPage, watchSections } from '@/lib/track'
 import { SiteFooter, SiteHeader, WhatsAppFab } from '@/components/site-shell'
 import { SITE } from '@/data/site'
 import '../styles.css'
@@ -37,6 +39,15 @@ export const Route = createRootRoute({
 })
 
 function RootLayout() {
+  const path = useRouterState({ select: (s) => s.location.pathname })
+  const isAdmin = path.includes('/admin')
+  useEffect(() => {
+    if (isAdmin) return
+    bindClicks()
+    trackPage(path)
+    watchSections(path)
+  }, [path, isAdmin])
+  if (isAdmin) return <Outlet />
   return (
     <>
       <SiteHeader />

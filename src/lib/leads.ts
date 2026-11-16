@@ -1,4 +1,5 @@
 import { SITE } from '@/data/site'
+import { track, visitorId } from '@/lib/track'
 
 export interface LeadPayload {
   reference?: string
@@ -65,7 +66,7 @@ export async function submitLead(p: LeadPayload): Promise<'saved' | 'email'> {
   const res = await fetch(`${URL_}/rest/v1/rpc/bde_submit_lead`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', apikey: KEY!, Authorization: `Bearer ${KEY}` },
-    body: JSON.stringify({ p }),
+    body: JSON.stringify({ p: { ...p, visitorId: visitorId() } }),
   })
   if (!res.ok) {
     let msg = 'Something went wrong. Please try again, or email us.'
@@ -77,6 +78,7 @@ export async function submitLead(p: LeadPayload): Promise<'saved' | 'email'> {
     }
     throw new Error(msg)
   }
+  track('quote_submitted', { label: p.kind })
   return 'saved'
 }
 
