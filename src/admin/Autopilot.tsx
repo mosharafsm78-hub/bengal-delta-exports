@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Bot, CheckCircle2, Circle, Copy, ExternalLink, Globe2, Inbox, Linkedin, Mail, MousePointerClick, Megaphone, Play, Search, Send, Target } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { sb, ago, fmtTime, pct } from './client'
@@ -79,6 +79,8 @@ export function Autopilot({ owner }: { owner: boolean }) {
       </section>
 
       <ErrorNote error={err || (status.data as any)?.error} />
+
+      <Engines running={!!(c.enabled && ready)} perHour={Number(c.per_hour ?? 10)} />
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-6">
         <Kpi label="Buyers found" value={pros.length} sub={`${pros.filter((p) => new Date(p.created_at).getTime() > week).length} this week`} />
@@ -272,5 +274,55 @@ function TaskList({ tasks, onChanged }: { tasks: any[]; onChanged: () => void })
         </ul>
       ) : <Empty title={show === 'open' ? 'Nothing to do right now' : 'No finished tasks yet'}>{show === 'open' ? 'New buying requests and LinkedIn tasks appear every morning while the autopilot is on.' : undefined}</Empty>}
     </Card>
+  )
+}
+
+const OFFSET: Record<string, number> = { 'United Kingdom': 0, Ireland: 0, Netherlands: 1, France: 1, Spain: 1, Italy: 1, Poland: 1, Belgium: 1, Denmark: 1, Sweden: 1, Germany: 1, Austria: 1, Canada: -5, 'United States': -5, Australia: 10, Japan: 9, Malaysia: 8, Singapore: 8, 'Saudi Arabia': 3 }
+const openNow = (country: string) => { const d = new Date(Date.now() + (OFFSET[country] ?? 0) * 3600e3); const h = d.getUTCHours(), w = d.getUTCDay(); return w > 0 && w < 6 && h >= 9 && h < 16 }
+
+/** Two always-on engines: one finds buyers, one emails them in their office hours. Refreshes every 30 seconds. */
+function Engines({ running, perHour }: { running: boolean; perHour: number }) {
+  const [tick, setTick] = useState(0)
+  useEffect(() => { const t = setInterval(() => setTick((x) => x + 1), 30000); return () => clearInterval(t) }, [])
+  const d = useAsync(async () => {
+    const s = sb(); const hour = new Date(Date.now() - 36e5).toISOString(); const day = new Date(); day.setHours(0, 0, 0, 0)
+    const [foundH, foundD, waiting, sentH, sentD, lastRes, lastSent, queue] = await Promise.all([
+      s.from('bde_contacts').select('id', { count: 'exact', head: true }).contains('tags', ['autopilot']).gte('created_at', hour),
+      s.from('bde_contacts').select('id', { count: 'exact', head: true }).contains('tags', ['autopilot']).gte('created_at', day.toISOString()),
+      s.from('bde_contacts').select('id', { count: 'exact', head: true }).contains('tags', ['prospect']).eq('seq_step', 0).eq('status', 'subscribed'),
+      s.from('bde_outreach').select('id', { count: 'exact', head: true }).eq('status', 'sent').gte('created_at', hour),
+      s.from('bde_outreach').select('id', { count: 'exact', head: true }).eq('status', 'sent').gte('created_at', day.toISOString()),
+      s.from('bde_autopilot_log').select('created_at, summary').eq('kind', 'research').order('created_at', { ascending: false }).limit(1).maybeSingle(),
+      s.from('bde_outreach').select('created_at, subject, contact_id').eq('status', 'sent').order('created_at', { ascending: false }).limit(1).maybeSingle(),
+      s.from('bde_contacts').select('country').contains('tags', ['prospect']).eq('status', 'subscribed').is('replied_at', null).lt('seq_step', 3).lte('next_touch_at', new Date().toISOString()).limit(1000),
+    ])
+    const due = (queue.data ?? []) as { country: string }[]
+    return { foundH: foundH.count ?? 0, foundD: foundD.count ?? 0, waiting: waiting.count ?? 0, sentH: sentH.count ?? 0, sentD: sentD.count ?? 0, lastRes: lastRes.data as any, lastSent: lastSent.data as any, due: due.length, dueOpen: due.filter((x) => openNow(x.country)).length }
+  }, [tick])
+  const v = d.data
+  const open = Object.keys(OFFSET).filter(openNow)
+  const last = v?.lastRes?.summary?.results?.[0]
+  const pulse = <span className="relative mr-1 inline-flex size-2.5"><span className={cn('absolute inline-flex h-full w-full rounded-full opacity-75', running && 'animate-ping bg-emerald-400')} /><span className={cn('relative inline-flex size-2.5 rounded-full', running ? 'bg-emerald-500' : 'bg-muted-foreground')} /></span>
+  return (
+    <div className="grid gap-3 lg:grid-cols-2">
+      <Card title={<span className="flex items-center gap-2">{pulse}<Search className="size-4 text-brand" />Lead engine</span>}>
+        <p className="m-0 text-[13px] text-muted-foreground">Every 15 minutes: picks a market in office hours, finds real importers and wholesalers, checks their public company email.</p>
+        <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+          <div className="rounded-lg bg-muted/60 p-2"><b className="num block text-[22px]">{v?.foundH ?? '…'}</b><span className="text-[12px] text-muted-foreground">found last hour</span></div>
+          <div className="rounded-lg bg-muted/60 p-2"><b className="num block text-[22px]">{v?.foundD ?? '…'}</b><span className="text-[12px] text-muted-foreground">found today</span></div>
+          <div className="rounded-lg bg-muted/60 p-2"><b className="num block text-[22px]">{v?.waiting ?? '…'}</b><span className="text-[12px] text-muted-foreground">waiting for 1st email</span></div>
+        </div>
+        <p className="mt-3 mb-0 text-[13px]">{v?.lastRes ? <>Last run {ago(v.lastRes.created_at)}{last ? <>: <b>{last.label}</b> in <b>{last.country}</b>, {last.found ?? 0} new{last.companies?.length ? ` (${last.companies.slice(0, 3).join(', ')})` : ''}</> : ''}</> : 'No run yet'}</p>
+      </Card>
+      <Card title={<span className="flex items-center gap-2">{pulse}<Send className="size-4 text-brand" />Send engine</span>}>
+        <p className="m-0 text-[13px] text-muted-foreground">Every 10 minutes: up to {perHour} emails an hour, only in each buyer's office hours (Mon to Fri, 9:00 to 16:00 their time).</p>
+        <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+          <div className="rounded-lg bg-muted/60 p-2"><b className="num block text-[22px]">{v ? `${v.sentH}/${perHour}` : '…'}</b><span className="text-[12px] text-muted-foreground">sent last hour</span></div>
+          <div className="rounded-lg bg-muted/60 p-2"><b className="num block text-[22px]">{v?.sentD ?? '…'}</b><span className="text-[12px] text-muted-foreground">sent today</span></div>
+          <div className="rounded-lg bg-muted/60 p-2"><b className="num block text-[22px]">{v ? `${v.dueOpen}/${v.due}` : '…'}</b><span className="text-[12px] text-muted-foreground">due now / due total</span></div>
+        </div>
+        <p className="mt-3 mb-0 text-[13px]">{open.length ? <>Office hours now: <b>{open.join(', ')}</b></> : 'No target market is in office hours right now; sending resumes when the next one opens.'}{v?.lastSent ? <> · last email {ago(v.lastSent.created_at)}</> : ''}</p>
+      </Card>
+    </div>
   )
 }

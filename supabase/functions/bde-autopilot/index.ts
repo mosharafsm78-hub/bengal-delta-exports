@@ -50,6 +50,16 @@ const TARGETS: Target[] = [
   { fam: 'frozen', cat: 'food', label: 'frozen fish and shrimp', buyers: 'seafood importers, Asian food wholesalers', markets: ['United Kingdom', 'United States', 'Canada', 'Australia', 'Japan', 'Netherlands'] },
   { fam: 'handicrafts', cat: 'crafts', label: 'handicrafts and handloom', buyers: 'home decor and fair-trade importers, gift wholesalers', markets: APPAREL },
 ]
+// Who the lead engine looks for. Weighted: companies already buying from Bangladesh come first.
+const SEGMENTS: { id: string; label: string; brief: string; w: number }[] = [
+  { id: 'bd_importers', label: 'Already buying from Bangladesh', brief: 'companies with clear evidence they already import from Bangladesh: shipment records on ImportYeti, Panjiva or Volza, "made in Bangladesh" products on their site, or Bangladeshi suppliers named in news', w: 40 },
+  { id: 'wholesalers', label: 'Importers and wholesalers', brief: 'small and mid-sized importers, wholesalers and distributors that source from Asia', w: 20 },
+  { id: 'brands', label: 'Brands and private label', brief: 'brands and private-label companies that outsource production to Asian factories', w: 15 },
+  { id: 'retail', label: 'Retail chains', brief: 'retail chains, department stores and supermarket groups, using the contact of their sourcing, buying or vendor-relations office (not consumer customer service)', w: 10 },
+  { id: 'online', label: 'Online sellers', brief: 'e-commerce companies and Amazon/online brands selling this product under their own label', w: 10 },
+  { id: 'specialist', label: 'Specialist buyers', brief: 'the specialist buyer types for this product', w: 5 },
+]
+function pickSegment() { let r = Math.random() * SEGMENTS.reduce((a, s) => a + s.w, 0); for (const s of SEGMENTS) { r -= s.w; if (r <= 0) return s } return SEGMENTS[0] }
 const DUTY_FREE = new Set(['United Kingdom', 'Netherlands', 'France', 'Spain', 'Italy', 'Poland', 'Belgium', 'Denmark', 'Sweden', 'Ireland', 'Germany', 'Austria', 'Canada', 'Australia', 'Japan', 'Norway', 'Switzerland', 'New Zealand'])
 const UTC_OFFSET: Record<string, number> = { 'United Kingdom': 0, Ireland: 0, Netherlands: 1, France: 1, Spain: 1, Italy: 1, Poland: 1, Belgium: 1, Denmark: 1, Sweden: 1, Germany: 1, Austria: 1, Norway: 1, Switzerland: 1, Canada: -5, 'United States': -5, Australia: 10, Japan: 9, Malaysia: 8, Singapore: 8, 'Saudi Arabia': 3, 'New Zealand': 12 }
 const ROLE = ['sales', 'purchasing', 'purchase', 'buying', 'buyer', 'sourcing', 'procurement', 'import', 'trade', 'info', 'contact', 'hello', 'office', 'enquiries', 'inquiries', 'mail', 'service', 'kontakt', 'admin']
@@ -184,9 +194,11 @@ async function plan(n = 2) {
 async function research(target: { fam: string; label: string; country: string; buyers: string }, want: number, save: boolean) {
   const { data: known } = await db.from('bde_contacts').select('email, website').limit(50000)
   const knownHosts = new Set((known ?? []).flatMap((k) => [hostOf(k.website ?? ''), String(k.email).split('@')[1]]).filter(Boolean))
-  const text = await llm(COMPANY, `Use web search to find ${want + 10} real, currently operating companies in ${target.country} that buy or import ${target.label}: ${target.buyers}.
-First choice: companies with evidence that they already import from Bangladesh (shipment records on ImportYeti, Panjiva or Volza, "made in Bangladesh" products, Bangladeshi suppliers named in news). Then small and mid-sized importers, wholesalers, distributors and private-label brands that source from Asia. Exclude marketplaces, directories, B2B portals, factories in Asia, and very large retailers.
-Return a JSON array: [{"company": "...", "website": "https://...", "type": "importer|wholesaler|brand|distributor|promotional supplier", "why": "one short sentence on what they sell and why ${target.label} fits", "bd_evidence": "how we know they already buy from Bangladesh, or empty"}]. Only include companies whose website you actually found.`, { json: true, search: true })
+  const seg = pickSegment()
+  const text = await llm(COMPANY, `Use web search to find ${want + 10} real, currently operating companies in ${target.country} that buy ${target.label}.
+Focus on this buyer type: ${seg.brief}. Typical buyers of this product: ${target.buyers}.
+Exclude marketplaces, directories, B2B portals and factories in Asia.
+Return a JSON array: [{"company": "...", "website": "https://...", "type": "importer|wholesaler|brand|retail chain|online seller|distributor|promotional supplier", "why": "one short sentence on what they sell and why ${target.label} fits", "bd_evidence": "how we know they already buy from Bangladesh, or empty"}]. Only include companies whose website you actually found.`, { json: true, search: true })
   let list: { company: string; website: string; type: string; why: string; bd_evidence?: string }[] = []
   try { list = parseJson(text) } catch { list = [] }
   const out: Record<string, unknown>[] = []
@@ -201,7 +213,7 @@ Return a JSON array: [{"company": "...", "website": "https://...", "type": "impo
       if (save && noEmail++ < 4) await addTask(contactUrl ? 'contact_form' : 'linkedin', { company: c.company, country: target.country, label: target.label, why: c.why, url: contactUrl || linkedinSearch(c.company), website: `https://${host}` })
       continue
     }
-    const row = { email, company: String(c.company).slice(0, 120), country: target.country, website: `https://${host}`, interests: [TARGETS.find((t) => t.fam === target.fam)?.cat ?? ''], tags: ['prospect', 'autopilot'], source: 'autopilot', status: 'subscribed', seq_step: 0, next_touch_at: new Date().toISOString(), research: { fam: target.fam, label: target.label, type: c.type, why: c.why, bd: c.bd_evidence || '', found_at: new Date().toISOString() }, score: c.bd_evidence ? 15 : 5 }
+    const row = { email, company: String(c.company).slice(0, 120), country: target.country, website: `https://${host}`, interests: [TARGETS.find((t) => t.fam === target.fam)?.cat ?? ''], tags: ['prospect', 'autopilot'], source: 'autopilot', status: 'subscribed', seq_step: 0, next_touch_at: new Date().toISOString(), research: { fam: target.fam, label: target.label, segment: seg.id, type: c.type, why: c.why, bd: c.bd_evidence || '', found_at: new Date().toISOString() }, score: c.bd_evidence ? 15 : 5 }
     if (save) { const { error } = await db.from('bde_contacts').insert(row); if (error) continue }
     out.push(row)
   }
@@ -209,26 +221,26 @@ Return a JSON array: [{"company": "...", "website": "https://...", "type": "impo
 }
 
 // ---------- 3. Write and send ----------
-function fallbackEmail(c: any, step: number) {
+function fallbackEmail(c: any, step: number, link = SITE) {
   const r = c.research ?? {}; const label = r.label ?? 'products'
   const duty = DUTY_FREE.has(c.country) ? ` They enter ${c.country} at 0% import duty.` : ''
-  if (step === 0) return { subject: `${label[0].toUpperCase() + label.slice(1)} from Bangladesh`, body: `Hello,\n\nI saw that ${c.company} works with ${label}, so I wanted to introduce BengalExport. We are an export house in Bangladesh with a network of 10,000+ suppliers, including certified factories for ${label}. Our own QC team inspects every order, and we quote delivered to your port.${duty}\n\nTerms are LC at sight. Ready-style samples can ship within 24 hours.\n\nWould a quotation for your next ${label} order be useful?` }
-  if (step === 1) return { subject: `Re: ${label} from Bangladesh`, body: `Hello again,\n\nA short follow-up. If it helps to judge quality first, we can ship ready-style samples of ${label} within 24 hours, and the sample cost is credited on your first order.\n\nShall I send a quotation for your usual specification?` }
+  if (step === 0) return { subject: `${label[0].toUpperCase() + label.slice(1)} from Bangladesh`, body: `Hello,\n\nI saw that ${c.company} works with ${label}, so I wanted to introduce BengalExport. We are an export house in Bangladesh with a network of 10,000+ suppliers, including certified factories for ${label}. Our own QC team inspects every order, and we quote delivered to your port.${duty}\n\nTerms are LC at sight. Ready-style samples can ship within 24 hours.\n\nYou can see our ${label} range and request a quotation in one minute here:\n${link}\n\nOr simply reply with your specification and destination port.` }
+  if (step === 1) return { subject: `Re: ${label} from Bangladesh`, body: `Hello again,\n\nA short follow-up. If it helps to judge quality first, we can ship ready-style samples of ${label} within 24 hours, and the sample cost is credited on your first order.\n\nYou can request a quotation for your usual specification here:\n${link}` }
   return { subject: `Close the file?`, body: `Hello,\n\nI do not want to fill your inbox, so this is my last note. If ${label} from Bangladesh become interesting later, just reply to this email and I will send prices delivered to your port.\n\nThank you for your time.` }
 }
-async function writeEmail(c: any, step: number) {
-  if (!aiReady()) return fallbackEmail(c, step)
+async function writeEmail(c: any, step: number, link = SITE) {
+  if (!aiReady()) return fallbackEmail(c, step, link)
   const r = c.research ?? {}
   const kind = ['first email', 'second email, sent 4 days after the first, with a new angle: samples in 24 hours and the inspection before shipping', 'third and last email, sent 6 days after the second: short, polite, gives them an easy way to say yes later'][step]
   try {
     const out = parseJson<{ subject: string; body: string }>(await llm(COMPANY, `Write the ${kind} of a cold B2B outreach from BengalExport to ${c.company} in ${c.country}.
 What we know about them: ${r.type ?? 'company'}; ${r.why ?? ''}. Product to offer: ${r.label}.
 ${DUTY_FREE.has(c.country) ? `Goods from Bangladesh enter ${c.country} at 0% import duty: mention it once.` : 'Do not mention import duty.'}
-Rules: plain text, 60-100 words, written by a senior export manager (not a salesperson), no greeting by personal name (we only have a company address, start with "Hello,"), first line specific to their business, mention the 10,000+ supplier network or the most relevant certifications for this product once, one clear question as the call to action (for example whether a quotation for their next order would be useful), no links, no attachments, no exclamation marks, no spam words (free, guarantee, best price, cheap, urgent), no signature (it is added). Subject: 2-6 words, specific, lower-key${step ? ', may start with "Re: "' : ''}.
+Rules: plain text, 60-100 words, written by a senior export manager (not a salesperson), no greeting by personal name (we only have a company address, start with "Hello,"), first line specific to their business, mention the 10,000+ supplier network or the most relevant certifications for this product once, the call to action is to see the range and request a quotation on our website: put the placeholder {{LINK}} alone on its own line after one short sentence inviting them to do so (for example "You can see our range and request a quotation in one minute here:"), and add that they can also simply reply; no other links, no attachments, no exclamation marks, no spam words (free, guarantee, best price, cheap, urgent), no signature (it is added). Subject: 2-6 words, specific, lower-key${step ? ', may start with "Re: "' : ''}.
 Return JSON {"subject": "...", "body": "..."}.`, { json: true }))
-    if (out.subject && out.body && out.body.length < 1500) return out
+    if (out.subject && out.body && out.body.length < 1500) return { subject: out.subject, body: out.body.includes('{{LINK}}') ? out.body.replace('{{LINK}}', link) : `${out.body}\n\nRequest a quotation here:\n${link}` }
   } catch { /* fall through */ }
-  return fallbackEmail(c, step)
+  return fallbackEmail(c, step, link)
 }
 let transport: ReturnType<typeof nodemailer.createTransport> | null = null
 function mailer() {
@@ -236,11 +248,11 @@ function mailer() {
   return transport
 }
 async function sendOne(c: any, step: number, cfg: Record<string, any>, address: string) {
-  const { subject, body } = await writeEmail(c, step)
   const fam = c.research?.fam
   const link = `${SITE}products/${fam ? fam + '/' : ''}?utm_source=outreach&utm_medium=email&utm_campaign=c${c.id}`
+  const { subject, body } = await writeEmail(c, step, link)
   const unsub = `${FN}/u?c=${c.id}&h=${await sign(`u|${c.id}`)}`
-  const signature = `\n\n${cfg.sender_name || 'BengalExport sales team'}\nBengalExport, Bangladesh\nWhatsApp +880 1805-070650\nCatalogue: ${link}\n\n${address ? address + '\n' : ''}If this is not relevant, reply "no" or unsubscribe here: ${unsub}`
+  const signature = `\n\n${cfg.sender_name || 'BengalExport sales team'}\nBengalExport, Bangladesh\nWhatsApp +880 1805-070650\nbengalexport.online\n\n${address ? address + '\n' : ''}If this is not relevant, reply "no" or unsubscribe here: ${unsub}`
   const info = await mailer().sendMail({ from: { name: cfg.sender_name || 'BengalExport', address: SMTP.user }, to: c.email, subject, text: body + signature, headers: { 'List-Unsubscribe': `<${unsub}>, <mailto:${SMTP.user}?subject=unsubscribe>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' } })
   const now = new Date()
   const gap = step === 0 ? 4 : 6
@@ -298,7 +310,7 @@ async function readReplies() {
       const m = await simpleParser(msg.source)
       const from = (m.from?.value?.[0]?.address ?? '').toLowerCase()
       const text = String(m.text ?? '').split(/\n>|\nOn .+wrote:|\n-----Original/)[0].slice(0, 2500)
-      items.push({ uid: msg.uid, from, subject: m.subject ?? '', text, bounce: /mailer-daemon|postmaster/i.test(from) })
+      items.push({ uid: msg.uid, from, subject: m.subject ?? '', text, full: String(m.text ?? '').slice(0, 20000), messageId: m.messageId ?? null, inReplyTo: m.inReplyTo ?? null, bounce: /mailer-daemon|postmaster/i.test(from) })
     }
     if (items.length) await client.messageFlagsAdd(items.map((i) => i.uid), ['\\Seen'], { uid: true })
   } finally { lock.release(); await client.logout() }
@@ -311,6 +323,7 @@ async function readReplies() {
     }
     let { data: c } = await db.from('bde_contacts').select('*').eq('email', it.from).maybeSingle()
     if (!c) c = (await db.from('bde_contacts').select('*').contains('tags', ['prospect']).ilike('email', `%@${it.from.split('@')[1]}`).limit(1).maybeSingle()).data
+    const { data: row } = await db.from('bde_inbox').insert({ direction: 'in', from_email: it.from, to_email: SMTP.user, subject: it.subject, body: it.full || it.text, message_id: it.messageId, in_reply_to: it.inReplyTo, contact_id: c?.id ?? null }).select('id').maybeSingle()
     if (!c) continue
     let a = { label: /^\s*(no|stop|unsubscribe|remove)\b/i.test(it.text) ? 'not_interested' : 'question', summary: it.text.slice(0, 160), next_step: 'Read the reply and answer', care_note: '' }
     if (aiReady()) try { a = parseJson(await llm(COMPANY, `Classify this reply to our outreach email. Company: ${c.company}, ${c.country}. Product offered: ${c.research?.label}.
@@ -323,9 +336,43 @@ Return JSON {"label": "interested|question|not_now|not_interested|unsubscribe|au
     if (a.label === 'interested' || a.label === 'question') {
       await db.from('bde_leads').insert({ kind: 'email_reply', reference: `BDE-R${Date.now().toString(36).toUpperCase()}`, items: [{ style: c.research?.label ?? 'Products' }], requirement: it.text.slice(0, 2000), quantity: '-', country: c.country ?? '-', company: c.company ?? '-', name: c.name ?? c.company ?? '-', email: c.email, website: c.website, consent: false, contact_id: c.id, internal_notes: `Autopilot: ${a.summary}\nNext step: ${a.next_step}\nCare team: ${a.care_note}` })
     }
+    if (row?.id) await db.from('bde_inbox').update({ label: a.label, summary: a.summary, next_step: a.next_step, care_note: a.care_note }).eq('id', row.id)
     out.push({ company: c.company, country: c.country, email: c.email, ...a })
   }
   return { items: out }
+}
+/** Admin answers a buyer from the panel: sent from the sales mailbox, threaded, logged in the inbox. */
+async function sendReply(body: { inbox_id?: number; to?: string; subject?: string; text?: string }, by: string) {
+  const text = String(body.text ?? '').trim()
+  if (!text) throw new Error('Write a message first')
+  let to = String(body.to ?? '').trim(); let subject = String(body.subject ?? '').trim(); let inReplyTo: string | null = null; let contactId: number | null = null
+  if (body.inbox_id) {
+    const { data: m } = await db.from('bde_inbox').select('*').eq('id', body.inbox_id).maybeSingle()
+    if (!m) throw new Error('Message not found')
+    to = m.from_email; subject = m.subject?.toLowerCase().startsWith('re:') ? m.subject : `Re: ${m.subject ?? ''}`; inReplyTo = m.message_id; contactId = m.contact_id
+  }
+  if (!/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(to)) throw new Error('No valid recipient')
+  const cfg = await settings('autopilot')
+  const signature = `\n\n${cfg.sender_name || 'BengalExport sales team'}\nBengalExport, Bangladesh\nWhatsApp +880 1805-070650\nbengalexport.online`
+  const info = await mailer().sendMail({ from: { name: cfg.sender_name || 'BengalExport', address: SMTP.user }, to, subject: subject || 'BengalExport', text: text + signature, ...(inReplyTo ? { inReplyTo, references: [inReplyTo] } : {}) })
+  await db.from('bde_inbox').insert({ direction: 'out', from_email: SMTP.user, to_email: to, subject, body: text, message_id: info.messageId, in_reply_to: inReplyTo, contact_id: contactId, sent_by: by, handled: true })
+  if (body.inbox_id) await db.from('bde_inbox').update({ handled: true }).eq('id', body.inbox_id)
+  return { ok: true }
+}
+/** Every 15 minutes: read new replies and alert the owner at once about interested buyers. */
+async function repliesNow(force = false) {
+  const cfg = await settings('autopilot'); const alerts = await settings('alerts')
+  if (!cfg.enabled && !force) return { skipped: 'autopilot is off' }
+  const r = await readReplies()
+  const items = (r.items ?? []) as any[]
+  if (items.length) await log('replies', { items })
+  const hot = items.filter((x) => x.label === 'interested' || x.label === 'question')
+  const to = cfg.report_email || alerts.new_lead_email
+  if (hot.length && to && mailboxReady()) {
+    const text = hot.map((x) => `${x.company} (${x.country}) replied: ${x.label.toUpperCase()}\n${x.summary}\nWhat to do: ${x.next_step}\nCare team: ${x.care_note}\nTheir email: ${x.email}\n`).join('\n') + `\nReply from sales@ (webmail: https://privateemail.com) or open the admin panel: ${SITE}admin#leads`
+    try { await mailer().sendMail({ from: { name: 'BengalExport autopilot', address: SMTP.user }, to, subject: `Buyer reply: ${hot.map((x) => x.company).join(', ')}`, text }) } catch { /* panel still has it */ }
+  }
+  return { checked: items.length, hot: hot.length }
 }
 async function matchClicks() {
   const since = new Date(Date.now() - 864e5).toISOString()
@@ -348,6 +395,8 @@ async function morning(force = false) {
   try { replies = await readReplies() } catch (e) { replyError = clean(e).slice(0, 200) }
   const clicks = await matchClicks()
   const since = new Date(Date.now() - 864e5).toISOString()
+  const { data: rlogs } = await db.from('bde_autopilot_log').select('summary').eq('kind', 'replies').gte('created_at', since)
+  replies = { ...replies, items: [...(rlogs ?? []).flatMap((l: any) => l.summary?.items ?? []), ...(replies.items ?? [])] }
   const [{ count: sent }, { count: found }, { count: total }, { count: inSeq }] = await Promise.all([
     db.from('bde_outreach').select('id', { count: 'exact', head: true }).eq('status', 'sent').gte('created_at', since),
     db.from('bde_contacts').select('id', { count: 'exact', head: true }).contains('tags', ['autopilot']).gte('created_at', since),
@@ -454,7 +503,7 @@ async function researchDaily(force = false) {
   const targets = await plan(1)
   const results: any[] = []
   for (const t of targets) {
-    try { const got = await research(t, Math.min(12, need), true); results.push({ ...t, found: got.length, companies: got.map((g: any) => g.company) }) } catch (e) { results.push({ ...t, error: clean(e).slice(0, 200) }) }
+    try { const got = await research(t, Math.min(12, need), true); results.push({ ...t, segment: (got[0] as any)?.research?.segment, found: got.length, companies: got.map((g: any) => g.company) }) } catch (e) { results.push({ ...t, error: clean(e).slice(0, 200) }) }
   }
   await log('research', { results })
   return { results }
@@ -496,6 +545,8 @@ Deno.serve(async (req) => {
     else if (route === 'send') out = await sendBatch(force)
     else if (route === 'morning') out = await morning(force)
     else if (route === 'channels') out = await channelsDaily(force)
+    else if (route === 'replies') out = await repliesNow(force)
+    else if (route === 'reply') { if (!admin) return Response.json({ error: 'Not allowed' }, { status: 403, headers: cors }); out = await sendReply(await req.json().catch(() => ({})), 'admin') }
     else if (route === 'status') {
       const cfg = await settings('autopilot')
       out = { ai: aiReady(), ai_provider: Deno.env.get('GEMINI_API_KEY') ? 'gemini' : Deno.env.get('ANTHROPIC_API_KEY') ? 'anthropic' : null, mailbox: mailboxReady(), mailbox_address: SMTP.user || null, enabled: !!cfg.enabled, cap_today: todaysCap(cfg), plan: await plan() }

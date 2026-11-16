@@ -1,9 +1,10 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { BadgeCheck, BarChart3, Bot, Building2, FileText, LayoutDashboard, LogOut, Mail, Menu, Settings, Sparkles, Users, X } from 'lucide-react'
+import { BadgeCheck, BarChart3, Bot, Inbox as InboxIcon, Building2, FileText, LayoutDashboard, LogOut, Mail, Menu, Settings, Sparkles, Users, X } from 'lucide-react'
 import { Advisor } from './Advisor'
 import { Autopilot } from './Autopilot'
 import { Buyers } from './Buyers'
+import { Inbox } from './Inbox'
 import { cn } from '@/lib/utils'
 import { sb } from './client'
 import { btn, ErrorNote, Field, input } from './ui'
@@ -16,9 +17,10 @@ import { Analytics } from './Analytics'
 import { SettingsPage } from './Settings'
 import { CommandBar } from './Command'
 
-export type View = 'dashboard' | 'autopilot' | 'buyers' | 'advisor' | 'leads' | 'suppliers' | 'contacts' | 'campaigns' | 'analytics' | 'settings'
+export type View = 'dashboard' | 'inbox' | 'autopilot' | 'buyers' | 'advisor' | 'leads' | 'suppliers' | 'contacts' | 'campaigns' | 'analytics' | 'settings'
 const NAV: [View, string, typeof LayoutDashboard][] = [
   ['dashboard', 'Dashboard', LayoutDashboard],
+  ['inbox', 'Inbox', InboxIcon],
   ['autopilot', 'Sales autopilot', Bot],
   ['buyers', 'Buyers & agents', BadgeCheck],
   ['advisor', 'AI Advisor', Sparkles],
@@ -177,7 +179,7 @@ function Shell({ email, owner }: { email: string; owner: boolean }) {
     addEventListener('hashchange', on); addEventListener('popstate', on)
     return () => { removeEventListener('hashchange', on); removeEventListener('popstate', on) }
   }, [])
-  const Page = { dashboard: Dashboard, autopilot: Autopilot, buyers: Buyers, advisor: Advisor, leads: Leads, suppliers: Suppliers, contacts: Contacts, campaigns: Campaigns, analytics: Analytics, settings: SettingsPage }[view]
+  const Page = { dashboard: Dashboard, inbox: Inbox, autopilot: Autopilot, buyers: Buyers, advisor: Advisor, leads: Leads, suppliers: Suppliers, contacts: Contacts, campaigns: Campaigns, analytics: Analytics, settings: SettingsPage }[view]
   return (
     <div className="min-h-screen bg-muted/40 lg:grid lg:grid-cols-[240px_1fr]">
       <aside className={cn('fixed inset-y-0 left-0 z-40 w-[240px] border-r border-border bg-card p-4 transition-transform lg:sticky lg:top-0 lg:h-screen lg:translate-x-0', open ? 'translate-x-0' : '-translate-x-full')}>
