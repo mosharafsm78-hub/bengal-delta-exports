@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Bot, CheckCircle2, Circle, Globe2, Inbox, Mail, MousePointerClick, Play, Search, Send, Target } from 'lucide-react'
+import { Bot, CheckCircle2, Circle, Copy, ExternalLink, Globe2, Inbox, Linkedin, Mail, MousePointerClick, Megaphone, Play, Search, Send, Target } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { sb, ago, fmtTime, pct } from './client'
 import { Badge, Card, Drawer, Empty, ErrorNote, Field, Kpi, Loading, btn, input, useAsync } from './ui'
@@ -21,12 +21,13 @@ export function Autopilot({ owner }: { owner: boolean }) {
   const status = useAsync(() => ap<any>('status').catch((e) => ({ error: String(e.message) })), [])
   const cfg = useAsync(async () => (await sb().from('bde_settings').select('value').eq('key', 'autopilot').maybeSingle()).data?.value ?? {}, [])
   const data = useAsync(async () => {
-    const [pros, out, logs] = await Promise.all([
+    const [pros, out, logs, tasks] = await Promise.all([
       sb().from('bde_contacts').select('id, email, company, country, website, status, score, seq_step, next_touch_at, last_touch_at, replied_at, last_click_at, tags, research, created_at').contains('tags', ['prospect']).order('created_at', { ascending: false }).limit(1000),
       sb().from('bde_outreach').select('id, created_at, contact_id, step, subject, status, error').order('created_at', { ascending: false }).limit(2000),
       sb().from('bde_autopilot_log').select('*').order('created_at', { ascending: false }).limit(30),
+      sb().from('bde_tasks').select('*').order('created_at', { ascending: false }).limit(300),
     ])
-    return { pros: pros.data ?? [], out: out.data ?? [], logs: logs.data ?? [] }
+    return { pros: pros.data ?? [], out: out.data ?? [], logs: logs.data ?? [], tasks: tasks.data ?? [] }
   }, [])
   const [busy, setBusy] = useState('')
   const [err, setErr] = useState('')
@@ -45,7 +46,7 @@ export function Autopilot({ owner }: { owner: boolean }) {
   if (status.loading || cfg.loading || data.loading) return <Loading />
   const s = status.data ?? {}
   const c = (cfg.data ?? {}) as Record<string, any>
-  const { pros, out, logs } = data.data!
+  const { pros, out, logs, tasks } = data.data!
   const sent = out.filter((o) => o.status === 'sent')
   const week = Date.now() - 7 * 864e5
   const replied = pros.filter((p) => p.replied_at)
@@ -107,6 +108,7 @@ export function Autopilot({ owner }: { owner: boolean }) {
               <button type="button" disabled={!!busy || !s.ai} onClick={() => run('preview')} className={cn(btn, 'btn-outline')}><Search className="size-4" />{busy === 'preview' ? 'Searching… (about 1 minute)' : 'Preview: find 3 buyers now'}</button>
               <button type="button" disabled={!!busy || !s.ai} onClick={() => run('research')} className={cn(btn, 'btn-outline')}><Globe2 className="size-4" />{busy === 'research' ? 'Finding buyers…' : 'Find today’s buyers now'}</button>
               <button type="button" disabled={!!busy || !s.mailbox} onClick={() => run('send')} className={cn(btn, 'btn-outline')}><Send className="size-4" />{busy === 'send' ? 'Sending…' : 'Send next 10 now'}</button>
+              <button type="button" disabled={!!busy || !s.ai} onClick={() => run('channels')} className={cn(btn, 'btn-outline')}><Megaphone className="size-4" />{busy === 'channels' ? 'Searching… (about 1 minute)' : 'Find buying requests now'}</button>
               <button type="button" disabled={!!busy} onClick={() => run('morning')} className={cn(btn, 'btn-outline')}><Inbox className="size-4" />{busy === 'morning' ? 'Checking…' : 'Check replies now'}</button>
             </div>
           )}
@@ -124,6 +126,8 @@ export function Autopilot({ owner }: { owner: boolean }) {
           ) : <p className="m-0 text-sm text-muted-foreground">The first report arrives the morning after the autopilot starts (9:00 Bangladesh time).</p>}
         </Card>
       </div>
+
+      <TaskList tasks={tasks} onChanged={data.reload} />
 
       {preview && (
         <Card title="Preview (nothing was saved or sent)" action={<button type="button" className="text-[13px] text-muted-foreground" onClick={() => setPreview(null)}>Close</button>}>
@@ -226,5 +230,47 @@ function ChipSet({ label, all, picked, onToggle, hint }: { label: string; all: [
       <div className="flex flex-wrap gap-1.5">{all.map(([k, l]) => <button key={k} type="button" onClick={() => onToggle(k)} className={cn('rounded-full border px-3 py-1 text-[12.5px]', picked.includes(k) ? 'border-brand bg-brand text-white' : 'border-border bg-card')}>{l}</button>)}</div>
       {hint && <p className="m-0 mt-1.5 text-[12px] text-muted-foreground">{hint}</p>}
     </div>
+  )
+}
+
+const KIND: Record<string, [string, typeof Linkedin, 'good' | 'info' | 'warn' | 'neutral']> = { rfq: ['Buying request', Megaphone, 'good'], linkedin: ['LinkedIn', Linkedin, 'info'], contact_form: ['Contact form', Mail, 'warn'], follow_up: ['Follow-up', Send, 'neutral'] }
+
+function TaskList({ tasks, onChanged }: { tasks: any[]; onChanged: () => void }) {
+  const [show, setShow] = useState<'open' | 'done'>('open')
+  const [copied, setCopied] = useState<number | null>(null)
+  const list = tasks.filter((t) => (show === 'open' ? t.status === 'open' : t.status !== 'open'))
+  async function mark(t: any, status: 'done' | 'skipped') {
+    const { data } = await sb().auth.getUser()
+    await sb().from('bde_tasks').update({ status, done_at: new Date().toISOString(), done_by: data.user?.email ?? null }).eq('id', t.id)
+    onChanged()
+  }
+  const open = tasks.filter((t) => t.status === 'open')
+  return (
+    <Card title={<span className="flex items-center gap-2"><Megaphone className="size-4 text-brand" />Tasks for the care team {open.length > 0 && <Badge tone="warn">{open.length} open</Badge>}</span>} action={<div className="flex gap-1 text-[13px]">{(['open', 'done'] as const).map((k) => <button key={k} type="button" onClick={() => setShow(k)} className={cn('rounded-full px-3 py-1', show === k ? 'bg-brand text-white' : 'bg-muted')}>{k === 'open' ? 'To do' : 'Finished'}</button>)}</div>}>
+      <p className="mt-0 mb-4 text-[13px] text-muted-foreground">Channels that must not be automated (LinkedIn, website contact forms, buying-request boards) are prepared here with a ready message. Open the link, paste the message, send, then tick it off. About 15 minutes a day.</p>
+      {list.length ? (
+        <ul className="m-0 grid list-none gap-3 p-0">
+          {list.slice(0, 60).map((t) => {
+            const [label, Icon, tone] = KIND[t.kind] ?? ['Task', Send, 'neutral']
+            return (
+              <li key={t.id} className="rounded-lg border border-border p-4">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div className="min-w-0"><span className="mr-2 inline-flex"><Badge tone={tone}><Icon className="mr-1 size-3" />{label}</Badge></span><b className="text-[14.5px]">{t.title}</b><div className="text-[12.5px] text-muted-foreground">{[t.company, t.country, t.details?.quantity, ago(t.created_at)].filter(Boolean).join(' · ')}</div></div>
+                  {t.status === 'open' ? (
+                    <div className="flex flex-wrap gap-1.5">
+                      {t.url && <a href={t.url} target="_blank" rel="noreferrer" className={cn(btn, 'btn-outline !px-2.5 !py-1 text-[13px]')}><ExternalLink className="size-3.5" />Open</a>}
+                      {t.message && <button type="button" onClick={async () => { await navigator.clipboard.writeText(t.message); setCopied(t.id); setTimeout(() => setCopied(null), 1500) }} className={cn(btn, 'btn-outline !px-2.5 !py-1 text-[13px]')}><Copy className="size-3.5" />{copied === t.id ? 'Copied' : 'Copy message'}</button>}
+                      <button type="button" onClick={() => mark(t, 'done')} className={cn(btn, 'btn-primary !px-2.5 !py-1 text-[13px]')}>Done</button>
+                      <button type="button" onClick={() => mark(t, 'skipped')} className="px-2 text-[13px] text-muted-foreground">Skip</button>
+                    </div>
+                  ) : <Badge>{t.status} {t.done_by ? `by ${t.done_by}` : ''}</Badge>}
+                </div>
+                {t.message && t.status === 'open' && <pre className="m-0 mt-3 max-h-40 overflow-auto rounded-md bg-muted p-3 font-sans text-[13px] whitespace-pre-wrap">{t.message}</pre>}
+              </li>
+            )
+          })}
+        </ul>
+      ) : <Empty title={show === 'open' ? 'Nothing to do right now' : 'No finished tasks yet'}>{show === 'open' ? 'New buying requests and LinkedIn tasks appear every morning while the autopilot is on.' : undefined}</Empty>}
+    </Card>
   )
 }

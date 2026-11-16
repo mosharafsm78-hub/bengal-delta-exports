@@ -116,7 +116,8 @@ function pickEmail(emails: string[], host: string) {
   return ''
 }
 async function findEmail(website: string) {
-  const host = hostOf(website); if (!host || SKIP_DOMAINS.test(host)) return { host, email: '' }
+  const host = hostOf(website); if (!host || SKIP_DOMAINS.test(host)) return { host, email: '', contactUrl: '' }
+  let contactUrl = ''
   const root = `https://${host}`
   const home = await fetchText(root)
   let found = emailsIn(home)
@@ -126,12 +127,14 @@ async function findEmail(website: string) {
     for (const l of [...links, '/contact', '/contact-us']) {
       let u = l; try { u = new URL(l, root).toString() } catch { continue }
       if (hostOf(u) !== host) continue
-      found = emailsIn(await fetchText(u)); email = pickEmail(found, host)
+      const html = await fetchText(u)
+      if (!contactUrl && html && /<form/i.test(html) && /contact|kontakt|contatti|contacto/i.test(u)) contactUrl = u
+      found = emailsIn(html); email = pickEmail(found, host)
       if (email) break
     }
   }
   if (email && !(await hasMx(email.split('@')[1]))) email = ''
-  return { host, email }
+  return { host, email, contactUrl }
 }
 const localHour = (country: string) => { const off = UTC_OFFSET[country] ?? 0; const d = new Date(Date.now() + off * 3600e3); return { h: d.getUTCHours(), dow: d.getUTCDay() } }
 
@@ -177,19 +180,24 @@ async function research(target: { fam: string; label: string; country: string; b
   const { data: known } = await db.from('bde_contacts').select('email, website').limit(50000)
   const knownHosts = new Set((known ?? []).flatMap((k) => [hostOf(k.website ?? ''), String(k.email).split('@')[1]]).filter(Boolean))
   const text = await llm(COMPANY, `Use web search to find ${want + 6} real, currently operating companies in ${target.country} that buy or import ${target.label}: ${target.buyers}.
-Prefer small and mid-sized importers, wholesalers, distributors and private-label brands that source from Asia. Exclude marketplaces, directories, B2B portals, factories in Asia, and very large retailers.
-Return a JSON array: [{"company": "...", "website": "https://...", "type": "importer|wholesaler|brand|distributor|promotional supplier", "why": "one short sentence on what they sell and why ${target.label} fits"}]. Only include companies whose website you actually found.`, { json: true, search: true })
-  let list: { company: string; website: string; type: string; why: string }[] = []
+First choice: companies with evidence that they already import from Bangladesh (shipment records on ImportYeti, Panjiva or Volza, "made in Bangladesh" products, Bangladeshi suppliers named in news). Then small and mid-sized importers, wholesalers, distributors and private-label brands that source from Asia. Exclude marketplaces, directories, B2B portals, factories in Asia, and very large retailers.
+Return a JSON array: [{"company": "...", "website": "https://...", "type": "importer|wholesaler|brand|distributor|promotional supplier", "why": "one short sentence on what they sell and why ${target.label} fits", "bd_evidence": "how we know they already buy from Bangladesh, or empty"}]. Only include companies whose website you actually found.`, { json: true, search: true })
+  let list: { company: string; website: string; type: string; why: string; bd_evidence?: string }[] = []
   try { list = parseJson(text) } catch { list = [] }
   const out: Record<string, unknown>[] = []
+  let noEmail = 0
   for (const c of list) {
     if (out.length >= want) break
     const host = hostOf(c.website ?? '')
     if (!host || knownHosts.has(host) || SKIP_DOMAINS.test(host)) continue
     knownHosts.add(host)
-    const { email } = await findEmail(host)
-    if (!email) continue
-    const row = { email, company: String(c.company).slice(0, 120), country: target.country, website: `https://${host}`, interests: [TARGETS.find((t) => t.fam === target.fam)?.cat ?? ''], tags: ['prospect', 'autopilot'], source: 'autopilot', status: 'subscribed', score: 5, seq_step: 0, next_touch_at: new Date().toISOString(), research: { fam: target.fam, label: target.label, type: c.type, why: c.why, found_at: new Date().toISOString() } }
+    const { email, contactUrl } = await findEmail(host)
+    if (!email) {
+      // No public email: hand it to the care team as a contact-form or LinkedIn task instead.
+      if (save && noEmail++ < 4) await addTask(contactUrl ? 'contact_form' : 'linkedin', { company: c.company, country: target.country, label: target.label, why: c.why, url: contactUrl || linkedinSearch(c.company), website: `https://${host}` })
+      continue
+    }
+    const row = { email, company: String(c.company).slice(0, 120), country: target.country, website: `https://${host}`, interests: [TARGETS.find((t) => t.fam === target.fam)?.cat ?? ''], tags: ['prospect', 'autopilot'], source: 'autopilot', status: 'subscribed', seq_step: 0, next_touch_at: new Date().toISOString(), research: { fam: target.fam, label: target.label, type: c.type, why: c.why, bd: c.bd_evidence || '', found_at: new Date().toISOString() }, score: c.bd_evidence ? 15 : 5 }
     if (save) { const { error } = await db.from('bde_contacts').insert(row); if (error) continue }
     out.push(row)
   }
@@ -337,8 +345,9 @@ async function morning(force = false) {
     db.from('bde_contacts').select('id', { count: 'exact', head: true }).contains('tags', ['autopilot']),
     db.from('bde_contacts').select('id', { count: 'exact', head: true }).contains('tags', ['prospect']).is('replied_at', null).lt('seq_step', 3).eq('status', 'subscribed'),
   ])
+  const { data: openTasks } = await db.from('bde_tasks').select('kind, title, country').eq('status', 'open').order('created_at', { ascending: false }).limit(50)
   const today = await plan()
-  const report = { sent: sent ?? 0, found: found ?? 0, total_prospects: total ?? 0, in_sequence: inSeq ?? 0, replies: replies.items ?? [], clicks, plan: today, cap_today: todaysCap(cfg), reply_error: replyError || replies.skipped || '' }
+  const report = { tasks: { open: (openTasks ?? []).length, rfq: (openTasks ?? []).filter((t) => t.kind === 'rfq').length, top: (openTasks ?? []).slice(0, 5) }, sent: sent ?? 0, found: found ?? 0, total_prospects: total ?? 0, in_sequence: inSeq ?? 0, replies: replies.items ?? [], clicks, plan: today, cap_today: todaysCap(cfg), reply_error: replyError || replies.skipped || '' }
   await log('daily_report', report)
   const to = cfg.report_email || alerts.new_lead_email
   if (to && mailboxReady()) {
@@ -350,6 +359,8 @@ async function morning(force = false) {
       ...hot.map((r) => `- ${r.company} (${r.country}), ${r.label}: ${r.summary}\n  Care team: ${r.care_note || r.next_step}\n  Email: ${r.email}`), '',
       clicks.length ? `BUYERS WHO OPENED THE WEBSITE FROM OUR EMAIL (${clicks.length}):` : '',
       ...clicks.map((c) => `- ${c.company} (${c.country}) looked at ${c.pages.join(', ')}${c.quote ? ' and SENT A QUOTE REQUEST' : ''}`), '',
+      report.tasks.open ? `TASKS FOR THE CARE TEAM (${report.tasks.open} open, ${report.tasks.rfq} buying requests with ready replies):` : '',
+      ...report.tasks.top.map((t: any) => `- ${t.title}${t.country ? ` (${t.country})` : ''}`), '',
       `Today's focus: ${today.map((t) => `${t.label} in ${t.country} (${t.why.join(', ')})`).join('; ')}.`,
       `Today's sending limit: ${report.cap_today} emails, in each buyer's business hours.`, '',
       `Open the panel: ${SITE}admin#autopilot`,
@@ -358,6 +369,72 @@ async function morning(force = false) {
   }
   return report
 }
+// ---------- 5. Other channels: care-team tasks and buying requests ----------
+const linkedinSearch = (company: string) => `https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(`${company} purchasing OR sourcing OR buyer`)}`
+async function addTask(kind: 'rfq' | 'linkedin' | 'contact_form', t: { company: string; country: string; label: string; why?: string; url: string; website?: string; contact_id?: number; title?: string; message?: string; details?: Record<string, unknown> }) {
+  let message = t.message ?? ''
+  if (!message) {
+    const limit = kind === 'linkedin' ? 280 : 700
+    const what = kind === 'linkedin' ? 'a LinkedIn connection note (max 280 characters) to the purchasing or sourcing person' : 'a short message for their website contact form'
+    message = kind === 'linkedin'
+      ? `Hello, I work with BengalExport in Bangladesh. We supply ${t.label} from checked factories, delivered to your port with LC payment. Happy to connect and share prices if useful.`
+      : `Hello,\n\nBengalExport supplies ${t.label} from checked Bangladeshi factories. We inspect every order before shipping and quote one price delivered to your port${DUTY_FREE.has(t.country) ? `, and the goods enter ${t.country} at 0% import duty` : ''}. Payment is by LC at sight and samples ship within 24 hours.\n\nWould you like prices delivered to your port? You can reach us on WhatsApp +880 1805-070650 or ${SITE}`
+    if (aiReady()) try {
+      const out = await llm(COMPANY, `Write ${what} from BengalExport to ${t.company} in ${t.country}. About them: ${t.why ?? ''}. Offer: ${t.label}. Plain text, specific to them, one easy question, no exclamation marks, no invented facts.${kind === 'linkedin' ? ' Hard limit 280 characters.' : ' 60-100 words, end with WhatsApp +880 1805-070650 and the website ' + SITE}. Return only the message.`)
+      if (out.trim() && out.length <= limit + 40) message = out.trim().slice(0, limit)
+    } catch { /* keep template */ }
+  }
+  const title = t.title ?? (kind === 'linkedin' ? `Connect on LinkedIn: ${t.company}` : kind === 'contact_form' ? `Send the contact form: ${t.company}` : t.company)
+  await db.from('bde_tasks').upsert({ kind, title, company: t.company, country: t.country, url: t.url, message, contact_id: t.contact_id ?? null, details: { label: t.label, why: t.why, website: t.website, ...(t.details ?? {}) }, dedupe_key: `${kind}:${(t.website ? hostOf(t.website) : t.url).toLowerCase()}` }, { onConflict: 'dedupe_key', ignoreDuplicates: true })
+}
+/** LinkedIn tasks for the best prospects who got our email but have not answered. */
+async function linkedinFollowUps(n = 5) {
+  const { data } = await db.from('bde_contacts').select('id, company, country, website, research, score').contains('tags', ['prospect']).is('replied_at', null).gte('seq_step', 1).eq('status', 'subscribed').order('score', { ascending: false }).limit(60)
+  let made = 0
+  for (const c of data ?? []) {
+    if (made >= n) break
+    const { count } = await db.from('bde_tasks').select('id', { count: 'exact', head: true }).eq('dedupe_key', `linkedin:${hostOf(c.website ?? '')}`)
+    if (count) continue
+    await addTask('linkedin', { company: c.company, country: c.country, label: c.research?.label ?? 'products', why: c.research?.why, url: linkedinSearch(c.company), website: c.website, contact_id: c.id })
+    made++
+  }
+  return made
+}
+/** Public buying requests ("we need 10,000 T-shirts") that match what we sell, each with a draft reply. */
+async function scanBuyingRequests() {
+  if (!aiReady()) return { skipped: 'AI is not connected', found: 0 }
+  const cfg = await settings('autopilot')
+  const focus = new Set<string>((cfg.focus_families ?? []).map(String))
+  const labels = [...new Set(TARGETS.filter((t) => !focus.size || focus.has(t.cat) || focus.has(t.fam)).map((t) => t.label))]
+  const pick = labels.sort(() => Math.random() - 0.5).slice(0, 4)
+  const text = await llm(COMPANY, `Use web search to find buying requests posted in the last 30 days by real importers, wholesalers or brands who want to BUY any of: ${pick.join('; ')}.
+Look at public buying-lead and RFQ boards (for example go4WorldBusiness buying leads, TradeKey buy offers, EC21 buy offers, ExportersIndia and TradeIndia buy leads, Fibre2Fashion, Global Sources RFQs) and trade forums.
+Skip offers to SELL, skip requests older than 30 days, skip anything that looks like spam or asks for payment up front. Prefer requests from the UK, EU, USA, Canada, Australia, Japan, Singapore and Saudi Arabia.
+Return a JSON array of up to 8: [{"title": "short summary", "buyer": "company or name if shown", "country": "...", "product": "...", "quantity": "...", "url": "link to the request", "posted": "date if shown"}].`, { json: true, search: true })
+  let list: { title: string; buyer?: string; country?: string; product: string; quantity?: string; url: string; posted?: string }[] = []
+  try { list = parseJson(text) } catch { list = [] }
+  let saved = 0
+  for (const r of list) {
+    if (!r.url || !/^https?:\/\//.test(r.url)) continue
+    const { count } = await db.from('bde_tasks').select('id', { count: 'exact', head: true }).eq('dedupe_key', `rfq:${r.url.toLowerCase()}`)
+    if (count) continue
+    let reply = ''
+    try { reply = (await llm(COMPANY, `Write a reply to this buying request from BengalExport. Request: ${JSON.stringify(r)}. 70-120 words, plain text, specific to their product and quantity, ask the 2 details we need for a firm price (specification and destination port), mention delivery to their port, LC at sight and samples in 24 hours, end with WhatsApp +880 1805-070650 and ${SITE}. No invented prices or facts.`)).trim() } catch { /* empty */ }
+    await db.from('bde_tasks').upsert({ kind: 'rfq', title: r.title?.slice(0, 160) || r.product, company: r.buyer ?? null, country: r.country ?? null, url: r.url, message: reply, details: r, dedupe_key: `rfq:${r.url.toLowerCase()}` }, { onConflict: 'dedupe_key', ignoreDuplicates: true })
+    saved++
+  }
+  await log('rfq', { searched: pick, found: list.length, saved })
+  return { searched: pick, found: list.length, saved }
+}
+async function channelsDaily(force = false) {
+  const cfg = await settings('autopilot')
+  if (!cfg.enabled && !force) return { skipped: 'autopilot is off' }
+  let rfq: unknown = null; let li = 0
+  try { rfq = await scanBuyingRequests() } catch (e) { rfq = { error: String(e).slice(0, 200) } }
+  try { li = await linkedinFollowUps(5) } catch { /* next day */ }
+  return { rfq, linkedin: li }
+}
+
 async function researchDaily(force = false) {
   const cfg = await settings('autopilot')
   if (!cfg.enabled && !force) return { skipped: 'autopilot is off' }
@@ -409,6 +486,7 @@ Deno.serve(async (req) => {
     if (route === 'research') out = await researchDaily(force)
     else if (route === 'send') out = await sendBatch(force)
     else if (route === 'morning') out = await morning(force)
+    else if (route === 'channels') out = await channelsDaily(force)
     else if (route === 'status') {
       const cfg = await settings('autopilot')
       out = { ai: aiReady(), ai_provider: Deno.env.get('GEMINI_API_KEY') ? 'gemini' : Deno.env.get('ANTHROPIC_API_KEY') ? 'anthropic' : null, mailbox: mailboxReady(), mailbox_address: SMTP.user || null, enabled: !!cfg.enabled, cap_today: todaysCap(cfg), plan: await plan() }
