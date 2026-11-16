@@ -10,10 +10,10 @@ export const Route = createFileRoute('/about')({
 })
 
 const HISTORY: [string, string, string][] = [
-  ['2022', 'Founded in Bangladesh', 'BengalExport was founded close to Bangladesh\'s main seaport, to help overseas buyers source from Bangladesh.'],
-  ['Growing', 'A verified sourcing network', 'We built relationships with garment and home-textile mills, footwear and leather factories, jute mills, farms and artisan groups, and a process to check each one.'],
-  ['Growing', 'A team of about 22', 'Sourcing, quality control, documentation, logistics and sales under one roof.'],
-  ['2026', 'BengalExport export hub', 'We opened our catalogue to importers worldwide: one exporter for clothing, footwear, fresh produce, food, jute, home textiles and handicrafts.'],
+  ['Network', '10,000+ suppliers', 'Garment, footwear and textile factories, jute mills, farms and artisan groups across Bangladesh.'],
+  ['Standards', 'Compliance first', 'Partner factories certified to BSCI, WRAP, Sedex, OEKO-TEX, GOTS, ISO and more.'],
+  ['Control', 'Our own QC team', 'Every order inspected before it leaves Bangladesh.'],
+  ['Delivery', 'To any port', 'FCL, LCL and air freight, with all export documents and LC handled.'],
 ]
 
 const DEPARTMENTS: [typeof Search, string, string, string][] = [
@@ -50,10 +50,10 @@ function About() {
       <section className="bg-ink text-paper">
         <div className="mx-auto max-w-7xl px-4 py-16">
           <div className="eyebrow mb-3 text-jute">About {SITE.name}</div>
-          <h1 className="m-0 max-w-4xl text-[clamp(2.2rem,5vw,3.6rem)] leading-[1.06] text-paper">A Bangladeshi company that makes, sources and exports the best of Bangladesh.</h1>
-          <p className="mt-5 max-w-[62ch] text-lg text-paper/80">{SITE.name} was founded in 2022 in Bangladesh. Today a team of about 22 people helps importers buy clothing, footwear, fresh produce, food, jute and home textiles from one accountable exporter.</p>
+          <h1 className="m-0 max-w-4xl text-[clamp(2.2rem,5vw,3.6rem)] leading-[1.06] text-paper">Your sourcing partner in Bangladesh.</h1>
+          <p className="mt-5 max-w-[62ch] text-lg text-paper/80">One accountable team between you and 10,000+ Bangladeshi suppliers.</p>
           <dl className="m-0 mt-10 grid max-w-3xl grid-cols-3 gap-4 sm:gap-6">
-            {[[CalendarDays, '2022', 'Founded'], [Users, '≈ 22', 'People on our team'], [MapPin, 'Bangladesh', 'Head office']].map(([I, b, s]) => {
+            {[[Users, '10,000+', 'Suppliers in our network'], [CalendarDays, '24 h', 'Quotation turnaround'], [MapPin, 'Bangladesh', 'Head office']].map(([I, b, s]) => {
               const Icon = I as typeof Users
               return (
                 <div key={s as string}>
@@ -70,7 +70,7 @@ function About() {
       <div className="mx-auto max-w-7xl px-4">
         {/* History */}
         <section className="pt-16">
-          <h2 className="m-0 mb-8 text-[clamp(1.8rem,3.4vw,2.4rem)]">Our story</h2>
+          <h2 className="m-0 mb-8 text-[clamp(1.8rem,3.4vw,2.4rem)]">What we stand for</h2>
           <ol className="m-0 grid list-none gap-5 p-0 md:grid-cols-4">
             {HISTORY.map(([y, t, d], i) => (
               <li key={t} className="relative rounded-xl border border-border bg-card p-6">
@@ -107,7 +107,7 @@ function About() {
 
         {/* Team */}
         <section className="pt-16">
-          <h2 className="m-0 mb-2 text-[clamp(1.8rem,3.4vw,2.4rem)]">Our team: about 22 people, 8 departments</h2>
+          <h2 className="m-0 mb-2 text-[clamp(1.8rem,3.4vw,2.4rem)]">Our team: 8 departments, one point of contact</h2>
           <p className="mt-0 mb-8 max-w-[70ch] text-muted-foreground">Each order passes through the same people, from your first email to the day your goods arrive.</p>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {DEPARTMENTS.map(([Icon, c, t, d]) => (

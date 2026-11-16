@@ -352,12 +352,8 @@ export function WhatsAppIcon({ className }: { className?: string }) {
 export function WhatsAppFab() {
   if (!SITE.whatsapp) return null
   return (
-    <a href={`https://wa.me/${SITE.whatsapp}?text=${encodeURIComponent(`Hello ${SITE.name}, I'm interested in your products.`)}`} target="_blank" rel="noopener noreferrer" className="fixed right-4 bottom-24 z-40 flex items-center gap-2.5 rounded-full bg-[#25D366] py-2.5 pr-5 pl-3 text-white no-underline shadow-lg ring-4 ring-white/70 transition hover:-translate-y-0.5 hover:shadow-xl lg:bottom-6 print:hidden">
+    <a href={`https://wa.me/${SITE.whatsapp}?text=${encodeURIComponent(`Hello ${SITE.name}, I'm interested in your products.`)}`} target="_blank" rel="noopener noreferrer" aria-label={`WhatsApp ${SITE.whatsappDisplay}`} title={`WhatsApp ${SITE.whatsappDisplay}`} className="group fixed right-5 bottom-24 z-40 grid size-14 place-items-center rounded-full bg-[#25D366] text-white no-underline shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl lg:bottom-6 print:hidden">
       <WhatsAppIcon className="size-7" />
-      <span className="leading-tight">
-        <span className="block text-[15px] font-bold">Talk with us</span>
-        <span className="hidden text-[11.5px] opacity-90 sm:block">WhatsApp {SITE.whatsappDisplay}</span>
-      </span>
     </a>
   )
 }

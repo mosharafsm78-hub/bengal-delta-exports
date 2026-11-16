@@ -22,11 +22,11 @@ export function HeroBanner() {
     void navigate({ to: '/products', search: { q: q.trim() || undefined } })
   }
   return (
-    <section className="relative isolate overflow-hidden bg-[#0b1d19] text-white">
+    <section className="relative isolate overflow-hidden bg-[#0b2545] text-white">
       {/* Map with routes */}
       <svg className="absolute inset-0 -z-10 h-full w-full" viewBox={`0 0 ${MAP_W} ${MAP_H}`} preserveAspectRatio="xMidYMid slice" aria-hidden="true">
         <defs>
-          <radialGradient id="hb-glow" cx="73%" cy="44%" r="45%"><stop offset="0" stopColor="#14b8a6" stopOpacity=".28" /><stop offset="1" stopColor="#14b8a6" stopOpacity="0" /></radialGradient>
+          <radialGradient id="hb-glow" cx="73%" cy="44%" r="45%"><stop offset="0" stopColor="#2dd4bf" stopOpacity=".22" /><stop offset="1" stopColor="#14b8a6" stopOpacity="0" /></radialGradient>
           <linearGradient id="hb-line" x1="1" x2="0"><stop offset="0" stopColor="#5eead4" stopOpacity=".9" /><stop offset="1" stopColor="#5eead4" stopOpacity=".25" /></linearGradient>
         </defs>
         <rect width={MAP_W} height={MAP_H} fill="url(#hb-glow)" />
@@ -47,7 +47,7 @@ export function HeroBanner() {
         <g transform={`translate(${ORIGIN.x + 18} ${ORIGIN.y + 6})`}><rect x="0" y="-17" width="118" height="30" rx="15" fill="#fbbf24" /><text x="59" y="4" textAnchor="middle" fill="#1c1917" fontSize="15" fontWeight="700">Bangladesh</text></g>
       </svg>
       {/* Readability fade on the text side */}
-      <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#0b1d19] via-[#0b1d19]/85 to-transparent lg:via-[#0b1d19]/70" aria-hidden="true" />
+      <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#0b2545] via-[#0b2545]/85 to-transparent lg:via-[#0b2545]/70" aria-hidden="true" />
 
       <div className="mx-auto max-w-7xl px-4 pt-16 pb-14 sm:pt-24 sm:pb-20 lg:pt-28 lg:pb-24">
         <h1 className="m-0 max-w-[16ch] text-[clamp(2.4rem,6vw,4.4rem)] leading-[1.02] font-semibold tracking-tight text-white">

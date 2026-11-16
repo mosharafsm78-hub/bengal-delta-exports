@@ -5,7 +5,7 @@
 
 @plugin '@tailwindcss/typography';
 
-/* Brand: a Bangladeshi trade house. River teal (delta), jute gold, warm paper neutrals. */
+/* Brand: a Bangladeshi trade house. Deep navy (trust), river teal (action), jute gold, warm paper neutrals. */
 :root {
   --brand: 171 79% 24%;
   --brand-ink: 0 0% 100%;
@@ -13,7 +13,7 @@
   --jute: 39 63% 40%;
   --jute-soft: 42 63% 90%;
   --paper: 60 14% 97%;
-  --ink: 170 30% 10%;
+  --ink: 214 64% 15%;
   --warn: 33 100% 30%;
   --warn-soft: 40 100% 93%;
   --ok: 123 46% 30%;
@@ -22,7 +22,7 @@
   --danger-soft: 4 80% 95%;
 
   --background: 60 14% 97%;
-  --foreground: 170 30% 10%;
+  --foreground: 215 40% 13%;
   --card: 0 0% 100%;
   --muted: 60 10% 93%;
   --muted-foreground: 165 8% 36%;

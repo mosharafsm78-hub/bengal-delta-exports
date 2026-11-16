@@ -118,8 +118,8 @@ function QuotePage() {
   return (
     <div className="mx-auto max-w-6xl px-4 pt-10">
       <div className="mb-8">
-        <h1 className="m-0 text-[clamp(2rem,4vw,2.8rem)]">Get your firm price</h1>
-        <p className="mt-2 mb-0 text-[17px] text-muted-foreground">Free, no commitment. We reply within 24 hours with a proforma invoice.</p>
+        <h1 className="m-0 text-[clamp(2rem,4vw,2.8rem)]">Request a quotation</h1>
+        <p className="mt-2 mb-0 text-[17px] text-muted-foreground">Proforma invoice within 24 hours. No commitment.</p>
       </div>
 
       <div className="grid gap-8 lg:grid-cols-[1.5fr_.7fr]">

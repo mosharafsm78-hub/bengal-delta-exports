@@ -121,7 +121,7 @@ function ItemBody() {
           )}
           <p className="mt-3 flex items-start gap-2 text-[13px] text-muted-foreground">
             <Info className="mt-0.5 size-4 flex-none" aria-hidden="true" />
-            Catalogue sample image: it shows the product type, not your exact lot. Order a paid sample to see the real goods, and before shipping we send photos and video of your order.
+            Representative image. Production photos and video are shared before shipment.
           </p>
           <TrustRow className="mt-4" />
           <QuickOffer cat={f.cat} family={f.name} style={s.n} qty={q} unit={unitName(unit, q || 2)} estimate={`≈${money(mid)}/${unit}${custom ? ` · ${quote.specParts.join(' · ')}` : ''}`} leadMin={leadMin} leadMax={leadMax} />
@@ -158,7 +158,7 @@ function ItemBody() {
               <span className="num font-display text-[42px] leading-none font-semibold">{money(mid)}</span>
               <span className="text-muted-foreground">per {unitName(unit, 1)}</span>
             </div>
-            <p className="mt-1.5 mb-0 text-[13px] text-muted-foreground">A guide for planning, packed and export-cleared. Your free, no-obligation offer confirms the exact price delivered to your port.</p>
+            <p className="mt-1.5 mb-0 text-[13px] text-muted-foreground">Guide price, export-packed. Your quotation confirms the delivered price.</p>
 
             <label htmlFor="qty" className="mt-5 mb-1.5 block font-semibold">How many {unitName(unit)}?</label>
             <div className="flex flex-wrap gap-2">
@@ -176,7 +176,7 @@ function ItemBody() {
                 <span className="font-medium">Approximate order value</span>
                 <span className="num font-display text-[24px] leading-none font-semibold">{q > 0 ? `≈ ${usd(mid * q)}` : '—'}</span>
               </div>
-              <p className="mt-1.5 mb-0 text-[12.5px] text-muted-foreground">Nothing to pay now. This is only an estimate to help you plan. You pay later, by LC at your own bank, and only if you accept our firm offer.</p>
+              <p className="mt-1.5 mb-0 text-[12.5px] text-muted-foreground">Estimate only. Payment by LC at sight, after you accept the quotation.</p>
             </div>
 
             {optGroups.length > 0 && (
@@ -207,7 +207,7 @@ function ItemBody() {
 
             <div className="mt-5 grid gap-2.5">
               <Link to="/quote" onClick={() => { if (!inBasket && !added) add() }} className="btn btn-primary py-3.5 text-base">Request a quotation <ArrowRight className="size-4" aria-hidden="true" /></Link>
-              <button type="button" onClick={add} className="btn btn-outline">{added || inBasket ? <><CheckCircle2 className="size-4" aria-hidden="true" /> Added to your list</> : 'Add to list and keep shopping'}</button>
+              <button type="button" onClick={add} className="btn btn-outline">{added || inBasket ? <><CheckCircle2 className="size-4" aria-hidden="true" /> Added to quote list</> : 'Add to quote list'}</button>
             </div>
             {(added || inBasket) && <p className="mt-2 mb-0 text-center text-[13.5px]"><Link to="/quote" className="font-semibold text-brand">View your list ({items.length}) →</Link></p>}
 
