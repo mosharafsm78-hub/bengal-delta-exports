@@ -226,7 +226,7 @@ Return a JSON array: [{"company": "...", "website": "https://...", "email": "the
   try { list = parseJson(text) } catch { list = []; stats.parse_failed = 1 }
   if (!Array.isArray(list)) list = []
   const before = list.length
-  list = list.filter((c) => Number(c.import_score ?? 0) >= 4 || !!c.bd_evidence)
+  list = list.filter((c) => !!c.bd_evidence || Number(c.import_score ?? 0) >= (/online|retail|shop|store/i.test(c.type ?? '') ? 4 : 3))
   stats.low_fit_dropped = before - list.length
   const out: Record<string, unknown>[] = []
   stats.candidates = list.length; stats.ai_text = text.length; stats.ai_turns = lastAi.turns; (stats as any).ai_stop = lastAi.stop
