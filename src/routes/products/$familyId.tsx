@@ -11,6 +11,7 @@ import { basket, useBasket } from '@/lib/quote-basket'
 import { money, slug } from '@/lib/slug'
 import { PHOTOS, photoAbs } from '@/data/photos'
 import { catStyle } from '@/lib/cat-style'
+import { QuickQuote } from '@/components/quick-quote'
 import { MARKETS } from '@/data/markets'
 
 export const Route = createFileRoute('/products/$familyId')({
@@ -103,6 +104,7 @@ function FamilyBody() {
                 <a href="#builder" className="btn btn-outline">Price calculator</a>
               </div>
               <p className="mt-3 mb-0 text-[13.5px] text-muted-foreground">Proforma invoice within 24 hours. Samples dispatched within 24 hours of the sample invoice.</p>
+              <QuickQuote familyId={f.id} familyName={f.name} unit={unit} />
 
               <p className="mt-5 flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground">Import guide by market:{MARKETS.filter((k) => k.cats.includes(f.cat)).map((k) => <Link key={k.id} to="/export-to/$market/$familyId" params={{ market: k.id, familyId: f.id }} className="rounded-full border border-border px-2 py-0.5 text-[12.5px] text-foreground no-underline hover:border-brand">{k.name}</Link>)}</p>
             </div>
