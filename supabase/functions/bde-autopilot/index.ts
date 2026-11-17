@@ -329,11 +329,15 @@ async function sendBatch(force = false, maxRun = 0) {
   const { count: sentToday } = await db.from('bde_outreach').select('id', { count: 'exact', head: true }).gte('created_at', since.toISOString())
   const cap = todaysCap(cfg); const room = cap - (sentToday ?? 0)
   if (room <= 0) return { sent: 0, reason: `daily limit ${cap} reached` }
-  const perHour = Number(cfg.per_hour ?? 10)
+  // Pace to the daily target: spread what is left over the runs left today (UTC day = 06:00-06:00 Dhaka).
+  const runsLeft = Math.max(1, Math.ceil((since.getTime() + 864e5 - Date.now()) / 18e5))
+  const base = Number(cfg.per_hour ?? 10)
+  const perRun = Math.min(15, Math.max(Math.ceil(base / 2), Math.ceil(room / runsLeft)))
+  const perHour = Math.max(base, perRun * 2)
   const { count: lastHour } = await db.from('bde_outreach').select('id', { count: 'exact', head: true }).eq('status', 'sent').gte('created_at', new Date(Date.now() - 50 * 6e4).toISOString())
   const hourRoom = perHour - (lastHour ?? 0)
   if (!force && hourRoom <= 0) return { sent: 0, reason: `hourly limit ${perHour} reached` }
-  const batch = force ? Math.min(room, 10) : Math.max(1, Math.min(room, hourRoom, maxRun || Math.ceil(perHour / 2)))
+  const batch = force ? Math.min(room, 10) : Math.max(1, Math.min(room, hourRoom, maxRun || perRun))
   const { data: due } = await db.from('bde_contacts').select('*').contains('tags', ['prospect']).eq('status', 'subscribed').is('replied_at', null).lt('seq_step', 3).lte('next_touch_at', new Date().toISOString()).order('seq_step', { ascending: false }).order('score', { ascending: false }).limit(200)
   let sent = 0; const errors: string[] = []
   // Buyers in office hours go first; if there are not enough, send anyway so the hourly target is met (the email waits in their inbox).
@@ -349,7 +353,16 @@ async function sendBatch(force = false, maxRun = 0) {
     }
     await new Promise((r) => setTimeout(r, 1000 + Math.random() * 1000))
   }
-  return { sent, cap, errors, ai_written: written.size }
+  if (!force && sent < batch) await alertOwner(cfg, `Send run sent ${sent} of ${batch}`, `The autopilot sent ${sent} of ${batch} emails this run (${sentToday ?? 0} of ${cap} today).\n${pick.length < batch ? `Only ${pick.length} buyers were waiting: the finder is behind.` : ''}${errors.length ? `\nErrors: ${errors.join(' | ')}` : ''}\n\nPanel: ${SITE}admin#autopilot`)
+  return { sent, batch, cap, sent_today: (sentToday ?? 0) + sent, runs_left: runsLeft, errors, ai_written: written.size }
+}
+async function alertOwner(cfg: Record<string, any>, subject: string, text: string) {
+  const to = cfg.report_email || (await settings('alerts')).new_lead_email
+  if (!to || !mailboxReady()) return
+  const { count } = await db.from('bde_autopilot_log').select('id', { count: 'exact', head: true }).eq('kind', 'alert').gte('created_at', new Date(Date.now() - 3 * 36e5).toISOString())
+  if (count) return
+  await log('alert', { subject, text })
+  try { await mailer().sendMail({ from: { name: 'BengalExport autopilot', address: SMTP.user }, to, subject: `Autopilot alert: ${subject}`, text }) } catch { /* logged */ }
 }
 
 // ---------- 4. Morning: replies, clicks, report ----------
