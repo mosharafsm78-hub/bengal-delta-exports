@@ -87,7 +87,7 @@ async function llm(system: string, prompt: string, opts: { json?: boolean; searc
     for (let turn = 0; turn < 3; turn++) {
       const r = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST', headers: { 'x-api-key': a, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
-        body: JSON.stringify({ model: Deno.env.get('ANTHROPIC_MODEL') ?? 'claude-haiku-5-5', max_tokens: opts.search ? 10000 : 4000, system, messages, ...(opts.search ? { tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 5 }] } : {}) }),
+        body: JSON.stringify({ model: Deno.env.get('ANTHROPIC_MODEL') ?? 'claude-haiku-5-5', max_tokens: opts.search ? 10000 : 6000, system, messages, ...(opts.search ? { tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 5 }] } : {}) }),
       })
       if (!r.ok) throw new Error(`Anthropic ${r.status}: ${(await r.text()).slice(0, 200)}`)
       const j = await r.json()
@@ -279,14 +279,18 @@ Return JSON {"subject": "...", "body": "..."}.`, { json: true }))
 }
 let transport: ReturnType<typeof nodemailer.createTransport> | null = null
 function mailer() {
-  transport ??= nodemailer.createTransport({ host: SMTP.host, port: SMTP.port, secure: SMTP.port === 465, auth: { user: SMTP.user, pass: SMTP.pass } })
+  transport ??= nodemailer.createTransport({ pool: true, maxConnections: 1, host: SMTP.host, port: SMTP.port, secure: SMTP.port === 465, auth: { user: SMTP.user, pass: SMTP.pass } })
   return transport
 }
 const linkFor = (c: any) => `${SITE}products/${c.research?.fam ? c.research.fam + '/' : ''}?utm_source=outreach&utm_medium=email&utm_campaign=c${c.id}`
+let aiErr = ''
+// Small parallel chunks: one big batch can be cut off mid-JSON and lose every email.
 async function writeBatch(list: { c: any; step: number }[]) {
-  const out = await writeOnce(list)
+  const out = new Map<number, { subject: string; body: string }>()
+  const run = async (l: typeof list) => { const parts: (typeof list)[] = []; for (let i = 0; i < l.length; i += 3) parts.push(l.slice(i, i + 3)); for (const m of await Promise.all(parts.map(writeOnce))) for (const [k, v] of m) out.set(k, v) }
+  await run(list)
   const missing = list.filter((x) => !out.has(x.c.id))
-  if (missing.length) for (const [k, v] of await writeOnce(missing)) out.set(k, v)
+  if (missing.length) await run(missing)
   return out
 }
 async function writeOnce(list: { c: any; step: number }[]) {
@@ -295,14 +299,15 @@ async function writeOnce(list: { c: any; step: number }[]) {
   const kinds = ['first email', 'second email, 4 days after the first, new angle: samples in 24 hours and inspection before shipping', 'third and last email, 6 days after the second: short, polite, easy way to say yes later']
   const items = list.map(({ c, step }) => ({ id: c.id, company: c.company, country: c.country, about: `${c.research?.type ?? 'company'}; ${c.research?.why ?? ''}`, product: c.research?.label, email: kinds[step] ?? kinds[0], duty_free: DUTY_FREE.has(c.country) }))
   try {
-    const arr = parseJson<{ id: number; subject: string; body: string }[]>(await llm(COMPANY, `Write one cold B2B outreach email from BengalExport for each company below.\n${JSON.stringify(items)}\nRules for every email: plain text, 60-100 words, written by a senior export manager (not a salesperson), start with "Hello," (no personal name), first line specific to their business, mention the 10,000+ supplier network or the most relevant certifications once, if duty_free is true mention once that goods from Bangladesh enter their country at 0% import duty (otherwise do not mention duty), the call to action is our product page for their product: in one short sentence say what they will find there (the range with specifications, minimum orders, indicative prices and lead times, and a one-minute quote form that returns a price delivered to their port within 24 hours), then put the placeholder {{LINK}} alone on its own line; then one line saying they can also simply reply with their specification. Sound like a real person who looked at their business, not a template: no buzzwords (leverage, synergy, solutions, cutting-edge, seamless), no flattery, no claims you cannot back. No other links, no exclamation marks, no spam words (free, guarantee, best price, cheap, urgent, act now), no signature. Follow-ups may use a subject starting "Re: ". Subject: 2-6 words naming their product, lower-key, no capitals except the first word and names. Each email must be different.\nReturn a JSON array [{"id": <id>, "subject": "...", "body": "..."}] with one entry per company.`, { json: true }))
+    const arr = parseJson<{ id: number; subject: string; body: string }[]>(await llm(COMPANY, `Write one cold B2B outreach email from BengalExport for each company below.\n${JSON.stringify(items)}\nRules for every email: plain text, 60-100 words, written by a senior export manager (not a salesperson), start with "Hello," (no personal name), first line specific to their business, mention the 10,000+ supplier network or the most relevant certifications once, if duty_free is true mention once that goods from Bangladesh enter their country at 0% import duty (otherwise do not mention duty), the call to action is our product page for their product: in one short sentence say what they will find there (the range with specifications, minimum orders, indicative prices and lead times, and a one-minute quote form that returns a price delivered to their port within 24 hours), then put the placeholder [[LINK]] alone on its own line; then one line saying they can also simply reply with their specification. Sound like a real person who looked at their business, not a template: no buzzwords (leverage, synergy, solutions, cutting-edge, seamless), no flattery, no claims you cannot back. No other links, no exclamation marks, no spam words (free, guarantee, best price, cheap, urgent, act now), no signature. Follow-ups may use a subject starting "Re: ". Subject: 2-6 words naming their product, lower-key, no capitals except the first word and names. Each email must be different.\nReturn a JSON array [{"id": <id>, "subject": "...", "body": "..."}] with one entry per company.`, { json: true }))
     for (const e of Array.isArray(arr) ? arr : []) {
       const it = list.find((x) => x.c.id === Number(e.id))
       if (!it || !e.subject || !e.body || e.body.length > 1500) continue
       const link = linkFor(it.c)
-      out.set(it.c.id, { subject: e.subject, body: e.body.includes('{{LINK}}') ? e.body.replace('{{LINK}}', link) : `${e.body}\n\nRequest a quotation here:\n${link}` })
+      out.set(it.c.id, { subject: e.subject, body: e.body.includes('[[LINK]]') ? e.body.replace('[[LINK]]', link) : `${e.body}\n\nRequest a quotation here:\n${link}` })
     }
-  } catch { /* fallback per email */ }
+  } catch (e) { aiErr = clean(e).slice(0, 300) }
+  if (!out.size && !aiErr) aiErr = 'AI returned no usable emails'
   return out
 }
 async function sendOne(c: any, step: number, cfg: Record<string, any>, address: string, pre?: { subject: string; body: string }, hot?: { inReplyTo?: string; bcc?: string }) {
@@ -324,6 +329,12 @@ async function sendOne(c: any, step: number, cfg: Record<string, any>, address: 
   if (hot) return
   await db.from('bde_contacts').update({ seq_step: step + 1, last_touch_at: now.toISOString(), next_touch_at: step + 1 >= 3 ? null : new Date(now.getTime() + gap * 864e5).toISOString() }).eq('id', c.id)
 }
+/** The mailbox allows a fixed number of messages per rolling hour (trial Private Email: 20). Keep 2 free for owner alerts. */
+async function mailboxRoom(cfg: Record<string, any>) {
+  const { count } = await db.from('bde_outreach').select('id', { count: 'exact', head: true }).eq('status', 'sent').gte('created_at', new Date(Date.now() - 61 * 6e4).toISOString())
+  return Number(cfg.mailbox_per_hour ?? 18) - (count ?? 0)
+}
+const RATE = /too many messages|rate limit|sending limit/i
 function todaysCap(cfg: Record<string, any>) {
   if (cfg.warmup === false) return Number(cfg.daily_cap ?? 150)
   const start = cfg.warmup_start ? new Date(cfg.warmup_start).getTime() : Date.now()
@@ -336,7 +347,7 @@ async function sendCold(force = false, maxRun = 0) {
   if (!mailboxReady()) return { skipped: 'outreach mailbox not connected' }
   if (!cfg.warmup_start) { cfg.warmup_start = new Date().toISOString(); await db.from('bde_settings').update({ value: cfg }).eq('key', 'autopilot') }
   const since = new Date(); since.setUTCHours(0, 0, 0, 0)
-  const { count: sentToday } = await db.from('bde_outreach').select('id', { count: 'exact', head: true }).lt('step', 10).gte('created_at', since.toISOString())
+  const { count: sentToday } = await db.from('bde_outreach').select('id', { count: 'exact', head: true }).eq('status', 'sent').lt('step', 10).gte('created_at', since.toISOString())
   const cap = todaysCap(cfg); const room = cap - (sentToday ?? 0)
   if (room <= 0) return { sent: 0, reason: `daily limit ${cap} reached` }
   // Pace to the daily target: spread what is left over the runs left today (UTC day = 06:00-06:00 Dhaka).
@@ -345,26 +356,30 @@ async function sendCold(force = false, maxRun = 0) {
   const perRun = Math.min(15, Math.max(Math.ceil(base / 2), Math.ceil(room / runsLeft)))
   const perHour = Math.max(base, perRun * 2)
   const { count: lastHour } = await db.from('bde_outreach').select('id', { count: 'exact', head: true }).eq('status', 'sent').lt('step', 10).gte('created_at', new Date(Date.now() - 50 * 6e4).toISOString())
-  const hourRoom = perHour - (lastHour ?? 0)
-  if (!force && hourRoom <= 0) return { sent: 0, reason: `hourly limit ${perHour} reached` }
-  const batch = force ? Math.min(room, 10) : Math.max(1, Math.min(room, hourRoom, maxRun || perRun))
+  const box = await mailboxRoom(cfg)
+  const hourRoom = Math.min(perHour - (lastHour ?? 0), box)
+  if (hourRoom <= 0) return { sent: 0, reason: box <= 0 ? 'mailbox hourly limit reached, next run continues' : `hourly limit ${perHour} reached` }
+  const batch = force ? Math.min(room, hourRoom, 10) : Math.max(1, Math.min(room, hourRoom, maxRun || perRun))
   const { data: due } = await db.from('bde_contacts').select('*').contains('tags', ['prospect']).eq('status', 'subscribed').is('replied_at', null).lt('seq_step', 3).lte('next_touch_at', new Date().toISOString()).order('seq_step', { ascending: false }).order('score', { ascending: false }).limit(200)
   let sent = 0; const errors: string[] = []
   // Buyers in office hours go first; if there are not enough, send anyway so the hourly target is met (the email waits in their inbox).
   const inHours = (c: any) => { const { h, dow } = localHour(c.country ?? ''); return dow > 0 && dow < 6 && h >= 8 && h < 17 }
   const ordered = [...(due ?? [])].sort((a, b) => Number(inHours(b)) - Number(inHours(a)))
   const pick = ordered.slice(0, batch)
+  aiErr = ''
   const written = await writeBatch(pick.map((c) => ({ c, step: c.seq_step ?? 0 })))
+  let limited = false
   for (const c of pick) {
     try { await sendOne(c, c.seq_step ?? 0, cfg, email.physical_address ?? '', written.get(c.id)); sent++ } catch (e) {
       errors.push(clean(e).slice(0, 160))
       await db.from('bde_outreach').insert({ contact_id: c.id, step: c.seq_step ?? 0, subject: '-', body: '-', status: 'failed', error: clean(e).slice(0, 300) })
       if (/auth|login|credential/i.test(String(e))) break
+      if (RATE.test(String(e))) { limited = true; await db.from('bde_outreach').delete().eq('contact_id', c.id).eq('status', 'failed'); break }
     }
     await new Promise((r) => setTimeout(r, 1000 + Math.random() * 1000))
   }
-  if (!force && sent < batch) await alertOwner(cfg, `Send run sent ${sent} of ${batch}`, `The autopilot sent ${sent} of ${batch} emails this run (${sentToday ?? 0} of ${cap} today).\n${pick.length < batch ? `Only ${pick.length} buyers were waiting: the finder is behind.` : ''}${errors.length ? `\nErrors: ${errors.join(' | ')}` : ''}\n\nPanel: ${SITE}admin#autopilot`)
-  return { sent, batch, cap, sent_today: (sentToday ?? 0) + sent, runs_left: runsLeft, errors, ai_written: written.size }
+  if (!force && sent < batch && !limited) await alertOwner(cfg, `Send run sent ${sent} of ${batch}`, `The autopilot sent ${sent} of ${batch} emails this run (${sentToday ?? 0} of ${cap} today).\n${pick.length < batch ? `Only ${pick.length} buyers were waiting: the finder is behind.` : ''}${errors.length ? `\nErrors: ${errors.join(' | ')}` : ''}\n\nPanel: ${SITE}admin#autopilot`)
+  return { sent, batch, cap, sent_today: (sentToday ?? 0) + sent, runs_left: runsLeft, errors, ai_written: written.size, ai_error: aiErr || undefined, mailbox_limited: limited || undefined }
 }
 async function sendBatch(force = false) {
   const cold = await sendCold(force)
@@ -384,11 +399,11 @@ async function writeHot(c: any, step: number, link: string) {
   if (!aiReady()) return hotFallback(c, step, link)
   const r = c.research ?? {}
   const kind = step === 10
-    ? 'a short personal follow-up asking for exactly what we need to give a firm quotation: the item and specification they usually buy, quantity per order, and destination port (as a numbered list of 3); promise a proforma invoice with the price delivered to their port within 24 hours; then put the placeholder {{LINK}} alone on its own line after one short sentence saying they can also use the one-minute form there'
+    ? 'a short personal follow-up asking for exactly what we need to give a firm quotation: the item and specification they usually buy, quantity per order, and destination port (as a numbered list of 3); promise a proforma invoice with the price delivered to their port within 24 hours; then put the placeholder [[LINK]] alone on its own line after one short sentence saying they can also use the one-minute form there'
     : 'a short personal follow-up the next working day with one concrete low-risk offer: we send a small set of samples to their office so they can check quality first, sample cost credited on the first order; ask them to reply with the delivery address and which items they want to see; no link'
   try {
     const out = parseJson<{ body: string }>(await llm(COMPANY, `Write ${kind}.\nTo: ${c.company} in ${c.country} (${r.type ?? 'company'}; ${r.why ?? ''}). Product: ${r.label}.\nIt continues an email thread we started about ${r.label}. Plain text, 50-90 words, start with "Hello," (no personal name), written by a senior export manager, natural and specific to their business. Never say or hint that we saw them visit the website or click anything. No exclamation marks, no spam words (free, guarantee, best price, cheap, urgent), no buzzwords, no signature.\nReturn JSON {"body": "..."}.`, { json: true }))
-    if (out.body && out.body.length < 1200 && (step === 11 || out.body.includes('{{LINK}}'))) return { body: out.body.replace('{{LINK}}', link) }
+    if (out.body && out.body.length < 1200 && (step === 11 || out.body.includes('[[LINK]]'))) return { body: out.body.replace('[[LINK]]', link) }
   } catch { /* fallback */ }
   return hotFallback(c, step, link)
 }
@@ -400,8 +415,9 @@ async function sendHot(cfg: Record<string, any>, address: string) {
   const inHours = (c: any) => { const { h, dow } = localHour(c.country ?? ''); return dow > 0 && dow < 6 && h >= 9 && h < 17 }
   const now = Date.now(); const ago = (t?: string | null) => (t ? now - new Date(t).getTime() : Infinity) / 36e5
   let sent = 0; const done: string[] = []
+  const room = Math.min(4, await mailboxRoom(cfg))
   for (const c of list) {
-    if (sent >= 4) break
+    if (sent >= room) break
     if (quoted.has(String(c.email).toLowerCase())) continue
     const tags: string[] = c.tags ?? []
     const step = !tags.includes('hot_fu1') ? 10 : !tags.includes('hot_fu2') ? 11 : 0
@@ -413,11 +429,11 @@ async function sendHot(cfg: Record<string, any>, address: string) {
     const { body } = await writeHot(c, step, link)
     const base = (last?.subject ?? `${c.research?.label ?? 'products'} from Bangladesh`).replace(/^re:\s*/i, '')
     try {
-      await sendOne(c, step, cfg, address, { subject: `Re: ${base}`, body }, { inReplyTo: last?.message_id ?? undefined, bcc: cfg.report_email || undefined })
+      await sendOne(c, step, cfg, address, { subject: `Re: ${base}`, body }, { inReplyTo: last?.message_id ?? undefined })
       const next = Math.max(new Date(c.next_touch_at ?? 0).getTime(), now + 3 * 864e5)
       await db.from('bde_contacts').update({ tags: [...new Set([...tags, step === 10 ? 'hot_fu1' : 'hot_fu2'])], research: { ...(c.research ?? {}), [step === 10 ? 'hot_fu1_at' : 'hot_fu2_at']: new Date().toISOString() }, last_touch_at: new Date().toISOString(), next_touch_at: c.seq_step >= 3 ? c.next_touch_at : new Date(next).toISOString() }).eq('id', c.id)
       sent++; done.push(`${c.company} (${step === 10 ? 'quote request' : 'samples offer'})`)
-    } catch (e) { await db.from('bde_outreach').insert({ contact_id: c.id, step, subject: '-', body: '-', status: 'failed', error: clean(e).slice(0, 300) }) }
+    } catch (e) { if (RATE.test(String(e))) break; await db.from('bde_outreach').insert({ contact_id: c.id, step, subject: '-', body: '-', status: 'failed', error: clean(e).slice(0, 300) }) }
     await new Promise((r) => setTimeout(r, 1000))
   }
   return { sent, done }
@@ -430,7 +446,7 @@ async function hotClick(id: number) {
   const to = cfg.report_email || (await settings('alerts')).new_lead_email
   if (!to || !mailboxReady()) return
   const label = c.research?.label ?? 'products'
-  const text = `${c.company} (${c.country}) just clicked the link in our email and is looking at your ${label} page now.\n\nWho they are: ${c.research?.why ?? ''}\nTheir email: ${c.email}\nWebsite: ${c.website ?? ''}\n\nWhat happens next (automatic, you get a copy of each):\n1. In their next office hours, Injamam asks for item/spec, quantity and port to send a firm price within 24 hours.\n2. The next working day, a samples offer to their office.\nBoth stop if they reply or request a quote. Best extra step: find their buyer on LinkedIn and connect.\n\nPanel: ${SITE}admin#autopilot`
+  const text = `${c.company} (${c.country}) just clicked the link in our email and is looking at your ${label} page now.\n\nWho they are: ${c.research?.why ?? ''}\nTheir email: ${c.email}\nWebsite: ${c.website ?? ''}\n\nWhat happens next (automatic, see them in the panel):\n1. In their next office hours, Injamam asks for item/spec, quantity and port to send a firm price within 24 hours.\n2. The next working day, a samples offer to their office.\nBoth stop if they reply or request a quote. Best extra step: find their buyer on LinkedIn and connect.\n\nPanel: ${SITE}admin#autopilot`
   try { await mailer().sendMail({ from: { name: 'BengalExport autopilot', address: SMTP.user }, to, subject: `Hot buyer: ${c.company} (${c.country}) is on your ${label} page`, text }) } catch { /* tagged hot in the panel */ }
 }
 async function alertOwner(cfg: Record<string, any>, subject: string, text: string) {
@@ -711,6 +727,7 @@ Deno.serve(async (req) => {
       out = r
     }
     else if (route === 'send') out = await sendBatch(force)
+    else if (route === 'writetest') { const { data } = await db.from('bde_contacts').select('*').contains('tags', ['prospect']).eq('seq_step', 0).limit(9); aiErr = ''; const w = await writeBatch((data ?? []).map((c) => ({ c, step: 0 }))); out = { asked: data?.length ?? 0, written: w.size, ai_error: aiErr, sample: [...w.values()][0] ?? null } }
     else if (route === 'morning') out = await morning(force)
     else if (route === 'channels') out = await channelsDaily(force)
     else if (route === 'replies') out = await repliesNow(force)
