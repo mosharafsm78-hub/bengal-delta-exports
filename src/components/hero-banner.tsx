@@ -50,7 +50,7 @@ export function HeroBanner() {
       <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#0b2545] via-[#0b2545]/85 to-transparent lg:via-[#0b2545]/70" aria-hidden="true" />
 
       <div className="mx-auto max-w-7xl px-4 pt-16 pb-14 sm:pt-24 sm:pb-20 lg:pt-28 lg:pb-24">
-        <p className="eyebrow m-0 mb-4 text-[#99f6e4]">Global sourcing · Inspected · Insured to your port</p>
+        <p className="eyebrow m-0 mb-4 text-[#99f6e4]">Export house in Bangladesh · Inspected · Insured to your port</p>
         <h1 className="m-0 max-w-[20ch] text-[clamp(2.3rem,5.4vw,4.1rem)] leading-[1.04] font-semibold tracking-tight text-white">
           Source at factory prices. Receive inspected goods at your port.
         </h1>

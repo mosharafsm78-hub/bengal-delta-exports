@@ -15,6 +15,7 @@ const PRIMARY = [
 ] as const
 
 const GUIDES = [
+  { to: '/export-from-bangladesh', label: 'Export from Bangladesh' },
   { to: '/prices', label: 'Price list' },
   { to: '/duty-free-markets', label: 'Duty-free markets' },
   { to: '/export-to', label: 'Guides by country' },

@@ -14,6 +14,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as DutyFreeMarketsRouteImport } from './routes/duty-free-markets'
+import { Route as ExportFromBangladeshRouteImport } from './routes/export-from-bangladesh'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as HowWeWorkRouteImport } from './routes/how-we-work'
 import { Route as NotFoundRouteImport } from './routes/not-found'
@@ -56,6 +57,11 @@ const AdminRoute = AdminRouteImport.update({
 const DutyFreeMarketsRoute = DutyFreeMarketsRouteImport.update({
   id: '/duty-free-markets',
   path: '/duty-free-markets',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExportFromBangladeshRoute = ExportFromBangladeshRouteImport.update({
+  id: '/export-from-bangladesh',
+  path: '/export-from-bangladesh',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FaqRoute = FaqRouteImport.update({
@@ -155,6 +161,7 @@ export interface FileRoutesByFullPath {
   '/account': typeof AccountRoute
   '/admin': typeof AdminRoute
   '/duty-free-markets': typeof DutyFreeMarketsRoute
+  '/export-from-bangladesh': typeof ExportFromBangladeshRoute
   '/faq': typeof FaqRoute
   '/how-we-work': typeof HowWeWorkRoute
   '/not-found': typeof NotFoundRoute
@@ -180,6 +187,7 @@ export interface FileRoutesByTo {
   '/account': typeof AccountRoute
   '/admin': typeof AdminRoute
   '/duty-free-markets': typeof DutyFreeMarketsRoute
+  '/export-from-bangladesh': typeof ExportFromBangladeshRoute
   '/faq': typeof FaqRoute
   '/how-we-work': typeof HowWeWorkRoute
   '/not-found': typeof NotFoundRoute
@@ -206,6 +214,7 @@ export interface FileRoutesById {
   '/account': typeof AccountRoute
   '/admin': typeof AdminRoute
   '/duty-free-markets': typeof DutyFreeMarketsRoute
+  '/export-from-bangladesh': typeof ExportFromBangladeshRoute
   '/faq': typeof FaqRoute
   '/how-we-work': typeof HowWeWorkRoute
   '/not-found': typeof NotFoundRoute
@@ -233,6 +242,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/admin'
     | '/duty-free-markets'
+    | '/export-from-bangladesh'
     | '/faq'
     | '/how-we-work'
     | '/not-found'
@@ -258,6 +268,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/admin'
     | '/duty-free-markets'
+    | '/export-from-bangladesh'
     | '/faq'
     | '/how-we-work'
     | '/not-found'
@@ -283,6 +294,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/admin'
     | '/duty-free-markets'
+    | '/export-from-bangladesh'
     | '/faq'
     | '/how-we-work'
     | '/not-found'
@@ -309,6 +321,7 @@ export interface RootRouteChildren {
   AccountRoute: typeof AccountRoute
   AdminRoute: typeof AdminRoute
   DutyFreeMarketsRoute: typeof DutyFreeMarketsRoute
+  ExportFromBangladeshRoute: typeof ExportFromBangladeshRoute
   FaqRoute: typeof FaqRoute
   HowWeWorkRoute: typeof HowWeWorkRoute
   NotFoundRoute: typeof NotFoundRoute
@@ -364,6 +377,13 @@ declare module '@tanstack/react-router' {
       path: '/duty-free-markets'
       fullPath: '/duty-free-markets'
       preLoaderRoute: typeof DutyFreeMarketsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/export-from-bangladesh': {
+      id: '/export-from-bangladesh'
+      path: '/export-from-bangladesh'
+      fullPath: '/export-from-bangladesh'
+      preLoaderRoute: typeof ExportFromBangladeshRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/faq': {
@@ -501,6 +521,7 @@ const rootRouteChildren: RootRouteChildren = {
   AccountRoute: AccountRoute,
   AdminRoute: AdminRoute,
   DutyFreeMarketsRoute: DutyFreeMarketsRoute,
+  ExportFromBangladeshRoute: ExportFromBangladeshRoute,
   FaqRoute: FaqRoute,
   HowWeWorkRoute: HowWeWorkRoute,
   NotFoundRoute: NotFoundRoute,
