@@ -72,6 +72,7 @@ const COMPANY = `You write for BengalExport, an export house in Bangladesh with 
 What BengalExport does for buyers, end to end: matches the right supplier to the product, volume and price; checks reliability (capacity, track record); manages compliance (partner factories certified to BSCI/amfori, WRAP, Sedex, OEKO-TEX, GOTS, ISO 9001, HACCP, ISO 22000, GlobalGAP, Halal, matched to the buyer's requirements); its own QC team inspects every order before shipment; handles export documents, certificates of origin, FCL/LCL/air freight and insurance to the buyer's port (CIF/CIP). Payment only by 100% irrevocable LC at sight. Quotations within 24 hours; ready-style samples ship within 24 hours. Most goods enter the EU, UK, Canada, Australia and Japan at 0% import duty (LDC rules).
 Voice: a serious, senior export professional writing to a buyer. Short, factual, calm, no hype, no exclamation marks. Never invent prices, customers, awards, years in business, headcount or certificates beyond those listed.`
 
+const lastAi = { stop: '', turns: 0, len: 0 }
 async function llm(system: string, prompt: string, opts: { json?: boolean; search?: boolean } = {}): Promise<string> {
   const g = Deno.env.get('GEMINI_API_KEY')
   if (g) {
@@ -84,12 +85,23 @@ async function llm(system: string, prompt: string, opts: { json?: boolean; searc
   // Accept a pasted key even if extra text came with it, and never echo it back.
   const a = (Deno.env.get('ANTHROPIC_API_KEY') ?? '').match(/sk-ant-[A-Za-z0-9_-]+/)?.[0]
   if (a) {
-    const r = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST', headers: { 'x-api-key': a, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
-      body: JSON.stringify({ model: Deno.env.get('ANTHROPIC_MODEL') ?? 'claude-haiku-5-5', max_tokens: 3000, system, messages: [{ role: 'user', content: prompt + (opts.json ? '\nReply with JSON only, no other text.' : '') }], ...(opts.search ? { tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 5 }] } : {}) }),
-    })
-    if (!r.ok) throw new Error(`Anthropic ${r.status}: ${(await r.text()).slice(0, 200)}`)
-    const j = await r.json(); return j.content?.filter((c: { type: string }) => c.type === 'text').map((c: { text?: string }) => c.text ?? '').join('') ?? ''
+    const messages: any[] = [{ role: 'user', content: prompt + (opts.json ? '\nReply with JSON only, no other text.' : '') }]
+    for (let turn = 0; turn < 3; turn++) {
+      const r = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST', headers: { 'x-api-key': a, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
+        body: JSON.stringify({ model: Deno.env.get('ANTHROPIC_MODEL') ?? 'claude-haiku-5-5', max_tokens: 4000, system, messages, ...(opts.search ? { tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 5 }] } : {}) }),
+      })
+      if (!r.ok) throw new Error(`Anthropic ${r.status}: ${(await r.text()).slice(0, 200)}`)
+      const j = await r.json()
+      lastAi.stop = j.stop_reason ?? ''; lastAi.turns = turn + 1
+      if (j.stop_reason === 'pause_turn') { messages.push({ role: 'assistant', content: j.content }); continue }
+      const blocks = (j.content ?? []) as { type: string; text?: string }[]
+      const lastTool = blocks.map((c) => c.type).lastIndexOf('web_search_tool_result')
+      const text = blocks.slice(lastTool + 1).filter((c) => c.type === 'text').map((c) => c.text ?? '').join('')
+      lastAi.len = text.length
+      return text
+    }
+    return ''
   }
   throw new Error('AI is not connected')
 }
@@ -202,9 +214,10 @@ Focus on this buyer type: ${seg.brief}. Typical buyers of this product: ${target
 Exclude marketplaces, directories, B2B portals and factories in Asia.
 Return a JSON array: [{"company": "...", "website": "https://...", "email": "their public company email (sales@, info@, purchasing@ etc.) if you saw it in the search results or on their site, else empty", "type": "importer|wholesaler|brand|retail chain|online seller|distributor|promotional supplier", "why": "one short sentence on what they sell and why ${target.label} fits", "bd_evidence": "how we know they already buy from Bangladesh, or empty"}]. Only include companies whose website you actually found. Prefer companies that show a public contact email.`, { json: true, search: true })
   let list: { company: string; website: string; email?: string; type: string; why: string; bd_evidence?: string }[] = []
-  try { list = parseJson(text) } catch { list = [] }
+  try { list = parseJson(text) } catch { list = []; stats.parse_failed = 1 }
+  if (!Array.isArray(list)) list = []
   const out: Record<string, unknown>[] = []
-  stats.candidates = list.length
+  stats.candidates = list.length; stats.ai_text = text.length; stats.ai_turns = lastAi.turns; (stats as any).ai_stop = lastAi.stop
   let noEmail = 0
   // Check candidate websites in parallel: much faster than one by one.
   const cands = list.map((c) => ({ c, h: hostOf(c.website ?? '') })).filter((x, i, arr) => x.h && !knownHosts.has(x.h) && !SKIP_DOMAINS.test(x.h) && arr.findIndex((y) => y.h === x.h) === i).slice(0, want + 8)
