@@ -54,17 +54,15 @@ const TARGETS: Target[] = [
 ]
 // Who the lead engine looks for. Weighted: companies already buying from Bangladesh come first.
 const SEGMENTS: { id: string; label: string; brief: string; w: number }[] = [
-  { id: 'bd_importers', label: 'Already buying from Bangladesh', brief: 'companies with clear evidence they already import from Bangladesh: shipment records on ImportYeti, Panjiva or Volza, "made in Bangladesh" products on their site, or Bangladeshi suppliers named in news', w: 40 },
-  { id: 'wholesalers', label: 'Importers and wholesalers', brief: 'small and mid-sized importers, wholesalers and distributors that source from Asia', w: 20 },
-  { id: 'brands', label: 'Brands and private label', brief: 'brands and private-label companies that outsource production to Asian factories', w: 15 },
-  { id: 'retail', label: 'Retail chains', brief: 'retail chains, department stores and supermarket groups, using the contact of their sourcing, buying or vendor-relations office (not consumer customer service)', w: 10 },
-  { id: 'online', label: 'Online sellers', brief: 'e-commerce companies and Amazon/online brands selling this product under their own label', w: 10 },
-  { id: 'specialist', label: 'Specialist buyers', brief: 'the specialist buyer types for this product', w: 5 },
+  { id: 'bd_importers', label: 'Already buying from Bangladesh', brief: 'companies with clear evidence they already import from Bangladesh: shipment records on ImportYeti, Panjiva or Volza, "made in Bangladesh" products on their site, or Bangladeshi suppliers named in news', w: 45 },
+  { id: 'wholesalers', label: 'Importers and wholesalers', brief: 'importers, wholesalers and distributors that buy direct from factories in Asia in container or carton volumes', w: 30 },
+  { id: 'brands', label: 'Brands and private label', brief: 'brands and private-label companies that have their own products made by factories in Asia', w: 20 },
+  { id: 'retail', label: 'Retail chains', brief: 'large retail chains (dozens of stores or more) with their own sourcing or buying office that imports private-label goods', w: 5 },
 ]
 function pickSegment() { let r = Math.random() * SEGMENTS.reduce((a, s) => a + s.w, 0); for (const s of SEGMENTS) { r -= s.w; if (r <= 0) return s } return SEGMENTS[0] }
 const DUTY_FREE = new Set(['United Kingdom', 'Netherlands', 'France', 'Spain', 'Italy', 'Poland', 'Belgium', 'Denmark', 'Sweden', 'Ireland', 'Germany', 'Austria', 'Canada', 'Australia', 'Japan', 'Norway', 'Switzerland', 'New Zealand'])
 const UTC_OFFSET: Record<string, number> = { Mexico: -6, Brazil: -3, Chile: -3, Colombia: -5, Portugal: 0, 'Czech Republic': 1, Finland: 2, Greece: 2, Turkey: 3, 'United Arab Emirates': 4, Qatar: 3, Kuwait: 3, Oman: 4, Israel: 2, Egypt: 2, 'South Africa': 2, Kenya: 3, Nigeria: 1, India: 5.5, 'Sri Lanka': 5.5, Thailand: 7, Philippines: 8, Indonesia: 7, 'Hong Kong': 8, 'South Korea': 9, China: 8, 'United Kingdom': 0, Ireland: 0, Netherlands: 1, France: 1, Spain: 1, Italy: 1, Poland: 1, Belgium: 1, Denmark: 1, Sweden: 1, Germany: 1, Austria: 1, Norway: 1, Switzerland: 1, Canada: -5, 'United States': -5, Australia: 10, Japan: 9, Malaysia: 8, Singapore: 8, 'Saudi Arabia': 3, 'New Zealand': 12 }
-const ROLE = ['sales', 'purchasing', 'purchase', 'buying', 'buyer', 'sourcing', 'procurement', 'import', 'trade', 'info', 'contact', 'hello', 'office', 'enquiries', 'inquiries', 'mail', 'service', 'kontakt', 'admin']
+const ROLE = ['purchasing', 'purchase', 'buying', 'buyer', 'sourcing', 'procurement', 'import', 'einkauf', 'achats', 'compras', 'trade', 'sales', 'info', 'contact', 'hello', 'office', 'enquiries', 'inquiries', 'mail', 'service', 'kontakt', 'admin']
 const SKIP_DOMAINS = /(amazon|alibaba|ebay|etsy|facebook|linkedin|instagram|google|wikipedia|yelp|indiamart|made-in-china|tradekey|europages|kompass|yellowpages|zoominfo|bloomberg|dnb\.com|crunchbase|globalsources|exporthub|go4worldbusiness)\./i
 
 // ---------- AI ----------
@@ -222,11 +220,14 @@ async function research(target: { fam: string; label: string; country: string; b
   const seg = pickSegment()
   const text = await llm(COMPANY, `Use web search to find ${want + 10} real, currently operating companies in ${target.country} that buy ${target.label}.
 Focus on this buyer type: ${seg.brief}. Typical buyers of this product: ${target.buyers}.
-Exclude marketplaces, directories, B2B portals and factories in Asia.
-Return a JSON array: [{"company": "...", "website": "https://...", "email": "their public company email (sales@, info@, purchasing@ etc.) if you saw it in the search results or on their site, else empty", "type": "importer|wholesaler|brand|retail chain|online seller|distributor|promotional supplier", "why": "one short sentence on what they sell and why ${target.label} fits", "bd_evidence": "how we know they already buy from Bangladesh, or empty"}]. Only include companies whose website you actually found. Prefer companies that show a public contact email. Keep \"why\" and \"bd_evidence\" under 15 words each. Your final message must be only the JSON array, with no commentary before or after it. If you find fewer companies, return the ones you have.`, { json: true, search: true })
-  let list: { company: string; website: string; email?: string; type: string; why: string; bd_evidence?: string }[] = []
+Exclude marketplaces, directories, B2B portals and factories in Asia. Also exclude: shops that only resell other brands (for example a shoe shop selling Skechers and Clarks), single-store or family shops, second-hand or vintage traders, print-on-demand and single-piece sellers, and anyone too small to order at least one carton or pallet direct from a factory.
+Return a JSON array: [{"company": "...", "website": "https://...", "email": "their public company email (sales@, info@, purchasing@ etc.) if you saw it in the search results or on their site, else empty", "type": "importer|wholesaler|brand|retail chain|online seller|distributor|promotional supplier", "why": "one short sentence on what they sell and why ${target.label} fits", "bd_evidence": "how we know they already buy from Bangladesh, or empty", "import_score": 1-5 (5 = clearly imports direct from Asian factories or runs its own label in volume, 3 = unclear, 1 = small reseller)}]. Only include companies whose website you actually found. Prefer companies that show a public contact email. Keep \"why\" and \"bd_evidence\" under 15 words each. Your final message must be only the JSON array, with no commentary before or after it. If you find fewer companies, return the ones you have.`, { json: true, search: true })
+  let list: { company: string; website: string; email?: string; type: string; why: string; bd_evidence?: string; import_score?: number }[] = []
   try { list = parseJson(text) } catch { list = []; stats.parse_failed = 1 }
   if (!Array.isArray(list)) list = []
+  const before = list.length
+  list = list.filter((c) => Number(c.import_score ?? 0) >= 4 || !!c.bd_evidence)
+  stats.low_fit_dropped = before - list.length
   const out: Record<string, unknown>[] = []
   stats.candidates = list.length; stats.ai_text = text.length; stats.ai_turns = lastAi.turns; (stats as any).ai_stop = lastAi.stop
   let noEmail = 0
@@ -245,7 +246,7 @@ Return a JSON array: [{"company": "...", "website": "https://...", "email": "the
       if (save && noEmail++ < 4) await addTask(contactUrl ? 'contact_form' : 'linkedin', { company: c.company, country: target.country, label: target.label, why: c.why, url: contactUrl || linkedinSearch(c.company), website: `https://${host}` })
       continue
     }
-    const row = { email, company: String(c.company).slice(0, 120), country: target.country, website: `https://${host}`, interests: [TARGETS.find((t) => t.fam === target.fam)?.cat ?? ''], tags: ['prospect', 'autopilot'], source: 'autopilot', status: 'subscribed', seq_step: 0, next_touch_at: new Date().toISOString(), research: { fam: target.fam, label: target.label, segment: seg.id, type: c.type, why: c.why, bd: c.bd_evidence || '', found_at: new Date().toISOString() }, score: c.bd_evidence ? 15 : 5 }
+    const row = { email, company: String(c.company).slice(0, 120), country: target.country, website: `https://${host}`, interests: [TARGETS.find((t) => t.fam === target.fam)?.cat ?? ''], tags: ['prospect', 'autopilot'], source: 'autopilot', status: 'subscribed', seq_step: 0, next_touch_at: new Date().toISOString(), research: { fam: target.fam, label: target.label, segment: seg.id, type: c.type, why: c.why, bd: c.bd_evidence || '', fit: Number(c.import_score ?? 0), found_at: new Date().toISOString() }, score: (c.bd_evidence ? 15 : 5) + Number(c.import_score ?? 0) }
     if (save) { const { error } = await db.from('bde_contacts').insert(row); if (error) continue }
     out.push(row)
   }
