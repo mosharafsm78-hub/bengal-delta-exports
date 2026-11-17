@@ -133,7 +133,7 @@ async function fetchText(url: string) {
   try {
     const r = await fetch(url, { headers: { 'user-agent': 'Mozilla/5.0 (compatible; BengalExportBot/1.0; +' + SITE + ')' }, redirect: 'follow', signal: AbortSignal.timeout(8000) })
     if (!r.ok || !(r.headers.get('content-type') ?? '').includes('html')) return ''
-    return (await r.text()).slice(0, 400_000)
+    return (await r.text()).slice(0, 150_000)
   } catch { return '' }
 }
 function emailsIn(html: string) {
@@ -233,11 +233,13 @@ Return a JSON array: [{"company": "...", "website": "https://...", "email": "the
   let noEmail = 0
   // Check candidate websites in parallel: much faster than one by one.
   const cands = list.map((c) => ({ c, h: hostOf(c.website ?? '') })).filter((x, i, arr) => x.h && !knownHosts.has(x.h) && !SKIP_DOMAINS.test(x.h) && arr.findIndex((y) => y.h === x.h) === i).slice(0, want + 8)
-  const checked = await Promise.all(cands.map(async (x) => {
+  const checkOne = async (x: (typeof cands)[number]) => {
     const f = await findEmail(x.h)
     if (!f.email && x.c.email) { const e = pickEmail([String(x.c.email).toLowerCase().trim()], x.h); if (e && (await hasMx(e.split('@')[1]))) f.email = e }
     return { ...x, ...f }
-  }))
+  }
+  const checked: Awaited<ReturnType<typeof checkOne>>[] = []
+  for (let i = 0; i < cands.length; i += 6) checked.push(...(await Promise.all(cands.slice(i, i + 6).map(checkOne))))
   stats.new_sites = cands.length; stats.with_email = checked.filter((x) => x.email).length
   for (const { c, h: host, email, contactUrl } of checked) {
     if (out.length >= want) break
@@ -282,6 +284,12 @@ function mailer() {
 }
 const linkFor = (c: any) => `${SITE}products/${c.research?.fam ? c.research.fam + '/' : ''}?utm_source=outreach&utm_medium=email&utm_campaign=c${c.id}`
 async function writeBatch(list: { c: any; step: number }[]) {
+  const out = await writeOnce(list)
+  const missing = list.filter((x) => !out.has(x.c.id))
+  if (missing.length) for (const [k, v] of await writeOnce(missing)) out.set(k, v)
+  return out
+}
+async function writeOnce(list: { c: any; step: number }[]) {
   const out = new Map<number, { subject: string; body: string }>()
   if (!aiReady() || !list.length) return out
   const kinds = ['first email', 'second email, 4 days after the first, new angle: samples in 24 hours and inspection before shipping', 'third and last email, 6 days after the second: short, polite, easy way to say yes later']
@@ -356,6 +364,17 @@ async function sendBatch(force = false, maxRun = 0) {
   }
   if (!force && sent < batch) await alertOwner(cfg, `Send run sent ${sent} of ${batch}`, `The autopilot sent ${sent} of ${batch} emails this run (${sentToday ?? 0} of ${cap} today).\n${pick.length < batch ? `Only ${pick.length} buyers were waiting: the finder is behind.` : ''}${errors.length ? `\nErrors: ${errors.join(' | ')}` : ''}\n\nPanel: ${SITE}admin#autopilot`)
   return { sent, batch, cap, sent_today: (sentToday ?? 0) + sent, runs_left: runsLeft, errors, ai_written: written.size }
+}
+async function hotClick(id: number) {
+  const { data: c } = await db.from('bde_contacts').select('id, company, country, email, website, research, tags').eq('id', id).maybeSingle()
+  if (!c || (c.tags ?? []).includes('hot_alerted')) return
+  await db.from('bde_contacts').update({ tags: [...new Set([...(c.tags ?? []), 'hot', 'hot_alerted'])] }).eq('id', id)
+  const cfg = await settings('autopilot')
+  const to = cfg.report_email || (await settings('alerts')).new_lead_email
+  if (!to || !mailboxReady()) return
+  const label = c.research?.label ?? 'products'
+  const text = `${c.company} (${c.country}) just clicked the link in our email and is looking at your ${label} page now.\n\nWho they are: ${c.research?.why ?? ''}\nTheir email: ${c.email}\nWebsite: ${c.website ?? ''}\n\nWhat to do now (within the hour, while they are interested):\n1. Reply personally from sales@bengalexport.online: thank them for looking, ask their usual specification and destination port, offer samples within 24 hours.\n2. If they do not answer in 2 days, find their buyer on LinkedIn and connect.\n\nPanel: ${SITE}admin#autopilot`
+  try { await mailer().sendMail({ from: { name: 'BengalExport autopilot', address: SMTP.user }, to, subject: `Hot buyer: ${c.company} (${c.country}) is on your ${label} page`, text }) } catch { /* tagged hot in the panel */ }
 }
 async function alertOwner(cfg: Record<string, any>, subject: string, text: string) {
   const to = cfg.report_email || (await settings('alerts')).new_lead_email
@@ -611,6 +630,7 @@ Deno.serve(async (req) => {
       const c = Number(url.searchParams.get('c')); const st = Number(url.searchParams.get('s'))
       const ok = c && Number.isFinite(st) && (await sign(`t|${c}|${st}`)) === url.searchParams.get('h')
       if (ok) await db.rpc('bde_track_outreach', { p_contact: c, p_step: st, p_kind: route === 'o' ? 'open' : 'click' })
+      if (ok && route === 'r') { const job = hotClick(c).catch(() => {}); const rt = (globalThis as any).EdgeRuntime; if (rt?.waitUntil) rt.waitUntil(job); else await job }
       if (route === 'o') return new Response(Uint8Array.from(atob('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'), (ch) => ch.charCodeAt(0)), { headers: { 'content-type': 'image/gif', 'cache-control': 'no-store, max-age=0' } })
       let to = url.searchParams.get('u') ?? SITE
       if (!to.startsWith(SITE)) to = SITE
