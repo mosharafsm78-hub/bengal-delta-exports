@@ -309,7 +309,7 @@ function Engines({ running, perHour }: { running: boolean; perHour: number }) {
   return (
     <div className="grid gap-3 lg:grid-cols-2">
       <Card title={<span className="flex items-center gap-2">{pulse}<Search className="size-4 text-brand" />Lead engine</span>}>
-        <p className="m-0 text-[13px] text-muted-foreground">Twice an hour (:00 and :30): picks a market in office hours and finds 5 real buyers with a checked company email each run, 10 an hour.</p>
+        <p className="m-0 text-[13px] text-muted-foreground">Twice an hour (:00 and :30): finds 5 real buyers with a checked company email, then the send engine emails them in the same run.</p>
         <div className="mt-3 grid grid-cols-3 gap-2 text-center">
           <div className="rounded-lg bg-muted/60 p-2"><b className="num block text-[22px]">{v?.foundH ?? '…'}</b><span className="text-[12px] text-muted-foreground">found last hour</span></div>
           <div className="rounded-lg bg-muted/60 p-2"><b className="num block text-[22px]">{v?.foundD ?? '…'}</b><span className="text-[12px] text-muted-foreground">found today</span></div>
@@ -318,7 +318,7 @@ function Engines({ running, perHour }: { running: boolean; perHour: number }) {
         <p className="mt-3 mb-0 text-[13px]">{v?.lastRes ? <>Last run {ago(v.lastRes.created_at)}{last ? <>: <b>{last.label}</b> in <b>{last.country}</b>, {last.found ?? 0} new{last.companies?.length ? ` (${last.companies.slice(0, 3).join(', ')})` : ''}</> : ''}</> : 'No run yet'}</p>
       </Card>
       <Card title={<span className="flex items-center gap-2">{pulse}<Send className="size-4 text-brand" />Send engine</span>}>
-        <p className="m-0 text-[13px] text-muted-foreground">Every 10 minutes: up to {perHour} emails an hour, only in each buyer's office hours (Mon to Fri, 9:00 to 16:00 their time).</p>
+        <p className="m-0 text-[13px] text-muted-foreground">Runs right after each search: up to {perHour} emails an hour, all 5 written in one AI request. Buyers in office hours go first.</p>
         <div className="mt-3 grid grid-cols-3 gap-2 text-center">
           <div className="rounded-lg bg-muted/60 p-2"><b className="num block text-[22px]">{v ? `${v.sentH}/${perHour}` : '…'}</b><span className="text-[12px] text-muted-foreground">sent last hour</span></div>
           <div className="rounded-lg bg-muted/60 p-2"><b className="num block text-[22px]">{v?.sentD ?? '…'}</b><span className="text-[12px] text-muted-foreground">sent today</span></div>
