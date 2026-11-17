@@ -305,7 +305,7 @@ async function writeOnce(list: { c: any; step: number }[]) {
   } catch { /* fallback per email */ }
   return out
 }
-async function sendOne(c: any, step: number, cfg: Record<string, any>, address: string, pre?: { subject: string; body: string }) {
+async function sendOne(c: any, step: number, cfg: Record<string, any>, address: string, pre?: { subject: string; body: string }, hot?: { inReplyTo?: string; bcc?: string }) {
   const link = linkFor(c)
   const { subject, body } = pre ?? fallbackEmail(c, step, link)
   const unsub = `${FN}/u?c=${c.id}&h=${await sign(`u|${c.id}`)}`
@@ -317,10 +317,11 @@ async function sendOne(c: any, step: number, cfg: Record<string, any>, address: 
   const esc = (t: string) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
   const htmlBody = esc(body + signature).split(esc(link)).join(`<a href="${tracked}" style="color:#0f6b5c">${esc(link.split('?')[0])}</a>`).replace(esc(unsub), `<a href="${unsub}" style="color:#888">unsubscribe</a>`).replace(/\n/g, '<br>')
   const html = `<div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.55;color:#1f2937;max-width:600px">${htmlBody}</div><img src="${pixel}" width="1" height="1" alt="" style="display:block;border:0;width:1px;height:1px">`
-  const info = await mailer().sendMail({ from: { name: cfg.sender_name || 'BengalExport', address: SMTP.user }, to: c.email, subject, text: body + signature, html, headers: { 'List-Unsubscribe': `<${unsub}>, <mailto:${SMTP.user}?subject=unsubscribe>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' } })
+  const info = await mailer().sendMail({ from: { name: cfg.sender_name || 'BengalExport', address: SMTP.user }, to: c.email, ...(hot?.bcc ? { bcc: hot.bcc } : {}), ...(hot?.inReplyTo ? { inReplyTo: hot.inReplyTo, references: hot.inReplyTo } : {}), subject, text: body + signature, html, headers: { 'List-Unsubscribe': `<${unsub}>, <mailto:${SMTP.user}?subject=unsubscribe>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' } })
   const now = new Date()
   const gap = step === 0 ? 4 : 6
   await db.from('bde_outreach').insert({ contact_id: c.id, step, subject, body, status: 'sent', message_id: info.messageId })
+  if (hot) return
   await db.from('bde_contacts').update({ seq_step: step + 1, last_touch_at: now.toISOString(), next_touch_at: step + 1 >= 3 ? null : new Date(now.getTime() + gap * 864e5).toISOString() }).eq('id', c.id)
 }
 function todaysCap(cfg: Record<string, any>) {
@@ -329,13 +330,13 @@ function todaysCap(cfg: Record<string, any>) {
   const days = Math.max(0, Math.floor((Date.now() - start) / 864e5))
   return Math.min(Number(cfg.daily_cap ?? 45), 10 + days * 4)
 }
-async function sendBatch(force = false, maxRun = 0) {
+async function sendCold(force = false, maxRun = 0) {
   const cfg = await settings('autopilot'); const email = await settings('email')
   if (!cfg.enabled && !force) return { skipped: 'autopilot is off' }
   if (!mailboxReady()) return { skipped: 'outreach mailbox not connected' }
   if (!cfg.warmup_start) { cfg.warmup_start = new Date().toISOString(); await db.from('bde_settings').update({ value: cfg }).eq('key', 'autopilot') }
   const since = new Date(); since.setUTCHours(0, 0, 0, 0)
-  const { count: sentToday } = await db.from('bde_outreach').select('id', { count: 'exact', head: true }).gte('created_at', since.toISOString())
+  const { count: sentToday } = await db.from('bde_outreach').select('id', { count: 'exact', head: true }).lt('step', 10).gte('created_at', since.toISOString())
   const cap = todaysCap(cfg); const room = cap - (sentToday ?? 0)
   if (room <= 0) return { sent: 0, reason: `daily limit ${cap} reached` }
   // Pace to the daily target: spread what is left over the runs left today (UTC day = 06:00-06:00 Dhaka).
@@ -343,7 +344,7 @@ async function sendBatch(force = false, maxRun = 0) {
   const base = Number(cfg.per_hour ?? 10)
   const perRun = Math.min(15, Math.max(Math.ceil(base / 2), Math.ceil(room / runsLeft)))
   const perHour = Math.max(base, perRun * 2)
-  const { count: lastHour } = await db.from('bde_outreach').select('id', { count: 'exact', head: true }).eq('status', 'sent').gte('created_at', new Date(Date.now() - 50 * 6e4).toISOString())
+  const { count: lastHour } = await db.from('bde_outreach').select('id', { count: 'exact', head: true }).eq('status', 'sent').lt('step', 10).gte('created_at', new Date(Date.now() - 50 * 6e4).toISOString())
   const hourRoom = perHour - (lastHour ?? 0)
   if (!force && hourRoom <= 0) return { sent: 0, reason: `hourly limit ${perHour} reached` }
   const batch = force ? Math.min(room, 10) : Math.max(1, Math.min(room, hourRoom, maxRun || perRun))
@@ -365,6 +366,62 @@ async function sendBatch(force = false, maxRun = 0) {
   if (!force && sent < batch) await alertOwner(cfg, `Send run sent ${sent} of ${batch}`, `The autopilot sent ${sent} of ${batch} emails this run (${sentToday ?? 0} of ${cap} today).\n${pick.length < batch ? `Only ${pick.length} buyers were waiting: the finder is behind.` : ''}${errors.length ? `\nErrors: ${errors.join(' | ')}` : ''}\n\nPanel: ${SITE}admin#autopilot`)
   return { sent, batch, cap, sent_today: (sentToday ?? 0) + sent, runs_left: runsLeft, errors, ai_written: written.size }
 }
+async function sendBatch(force = false) {
+  const cold = await sendCold(force)
+  const cfg = await settings('autopilot')
+  if ((!cfg.enabled && !force) || !mailboxReady()) return cold
+  const hot = await sendHot(cfg, (await settings('email')).physical_address ?? '').catch((e) => ({ sent: 0, error: clean(e).slice(0, 160) }))
+  return { ...cold, hot }
+}
+// ---------- Hot buyers: two personal follow-ups asking for what we need to quote ----------
+// 10 = same/next working day after their click, 11 = the next working day. Replies, quotes and unsubscribes stop them.
+function hotFallback(c: any, step: number, link: string) {
+  const label = c.research?.label ?? 'products'
+  if (step === 10) return { body: `Hello,\n\nFollowing my note about ${label}: to send you a firm price rather than a range, I only need three things:\n\n1. The item and specification you usually buy\n2. The quantity per order\n3. Your destination port\n\nWith those I will send a proforma invoice with the price delivered to your port within 24 hours, and ready samples can ship the same week.\n\nYou can also send it through the one-minute form here:\n${link}` }
+  return { body: `Hello,\n\nOne practical offer: I can send a small set of ${label} samples to your office so your team can check quality before any price discussion. The sample cost is credited on your first order.\n\nIf that is useful, just reply with the delivery address and the items you would like to see.` }
+}
+async function writeHot(c: any, step: number, link: string) {
+  if (!aiReady()) return hotFallback(c, step, link)
+  const r = c.research ?? {}
+  const kind = step === 10
+    ? 'a short personal follow-up asking for exactly what we need to give a firm quotation: the item and specification they usually buy, quantity per order, and destination port (as a numbered list of 3); promise a proforma invoice with the price delivered to their port within 24 hours; then put the placeholder {{LINK}} alone on its own line after one short sentence saying they can also use the one-minute form there'
+    : 'a short personal follow-up the next working day with one concrete low-risk offer: we send a small set of samples to their office so they can check quality first, sample cost credited on the first order; ask them to reply with the delivery address and which items they want to see; no link'
+  try {
+    const out = parseJson<{ body: string }>(await llm(COMPANY, `Write ${kind}.\nTo: ${c.company} in ${c.country} (${r.type ?? 'company'}; ${r.why ?? ''}). Product: ${r.label}.\nIt continues an email thread we started about ${r.label}. Plain text, 50-90 words, start with "Hello," (no personal name), written by a senior export manager, natural and specific to their business. Never say or hint that we saw them visit the website or click anything. No exclamation marks, no spam words (free, guarantee, best price, cheap, urgent), no buzzwords, no signature.\nReturn JSON {"body": "..."}.`, { json: true }))
+    if (out.body && out.body.length < 1200 && (step === 11 || out.body.includes('{{LINK}}'))) return { body: out.body.replace('{{LINK}}', link) }
+  } catch { /* fallback */ }
+  return hotFallback(c, step, link)
+}
+async function sendHot(cfg: Record<string, any>, address: string) {
+  const { data: list } = await db.from('bde_contacts').select('*').contains('tags', ['hot']).eq('status', 'subscribed').is('replied_at', null).order('last_click_at', { ascending: true }).limit(50)
+  if (!list?.length) return { sent: 0 }
+  const { data: leads } = await db.from('bde_leads').select('email').in('email', list.map((c) => c.email))
+  const quoted = new Set((leads ?? []).map((l) => String(l.email).toLowerCase()))
+  const inHours = (c: any) => { const { h, dow } = localHour(c.country ?? ''); return dow > 0 && dow < 6 && h >= 9 && h < 17 }
+  const now = Date.now(); const ago = (t?: string | null) => (t ? now - new Date(t).getTime() : Infinity) / 36e5
+  let sent = 0; const done: string[] = []
+  for (const c of list) {
+    if (sent >= 4) break
+    if (quoted.has(String(c.email).toLowerCase())) continue
+    const tags: string[] = c.tags ?? []
+    const step = !tags.includes('hot_fu1') ? 10 : !tags.includes('hot_fu2') ? 11 : 0
+    if (!step) continue
+    const since = step === 10 ? ago(c.last_click_at) : ago(c.research?.hot_fu1_at)
+    if (!(since >= (step === 10 ? 2 : 22) && (inHours(c) || since >= (step === 10 ? 26 : 46)))) continue
+    const { data: last } = await db.from('bde_outreach').select('subject, message_id').eq('contact_id', c.id).eq('status', 'sent').order('created_at', { ascending: false }).limit(1).maybeSingle()
+    const link = linkFor(c)
+    const { body } = await writeHot(c, step, link)
+    const base = (last?.subject ?? `${c.research?.label ?? 'products'} from Bangladesh`).replace(/^re:\s*/i, '')
+    try {
+      await sendOne(c, step, cfg, address, { subject: `Re: ${base}`, body }, { inReplyTo: last?.message_id ?? undefined, bcc: cfg.report_email || undefined })
+      const next = Math.max(new Date(c.next_touch_at ?? 0).getTime(), now + 3 * 864e5)
+      await db.from('bde_contacts').update({ tags: [...new Set([...tags, step === 10 ? 'hot_fu1' : 'hot_fu2'])], research: { ...(c.research ?? {}), [step === 10 ? 'hot_fu1_at' : 'hot_fu2_at']: new Date().toISOString() }, last_touch_at: new Date().toISOString(), next_touch_at: c.seq_step >= 3 ? c.next_touch_at : new Date(next).toISOString() }).eq('id', c.id)
+      sent++; done.push(`${c.company} (${step === 10 ? 'quote request' : 'samples offer'})`)
+    } catch (e) { await db.from('bde_outreach').insert({ contact_id: c.id, step, subject: '-', body: '-', status: 'failed', error: clean(e).slice(0, 300) }) }
+    await new Promise((r) => setTimeout(r, 1000))
+  }
+  return { sent, done }
+}
 async function hotClick(id: number) {
   const { data: c } = await db.from('bde_contacts').select('id, company, country, email, website, research, tags').eq('id', id).maybeSingle()
   if (!c || (c.tags ?? []).includes('hot_alerted')) return
@@ -373,7 +430,7 @@ async function hotClick(id: number) {
   const to = cfg.report_email || (await settings('alerts')).new_lead_email
   if (!to || !mailboxReady()) return
   const label = c.research?.label ?? 'products'
-  const text = `${c.company} (${c.country}) just clicked the link in our email and is looking at your ${label} page now.\n\nWho they are: ${c.research?.why ?? ''}\nTheir email: ${c.email}\nWebsite: ${c.website ?? ''}\n\nWhat to do now (within the hour, while they are interested):\n1. Reply personally from sales@bengalexport.online: thank them for looking, ask their usual specification and destination port, offer samples within 24 hours.\n2. If they do not answer in 2 days, find their buyer on LinkedIn and connect.\n\nPanel: ${SITE}admin#autopilot`
+  const text = `${c.company} (${c.country}) just clicked the link in our email and is looking at your ${label} page now.\n\nWho they are: ${c.research?.why ?? ''}\nTheir email: ${c.email}\nWebsite: ${c.website ?? ''}\n\nWhat happens next (automatic, you get a copy of each):\n1. In their next office hours, Injamam asks for item/spec, quantity and port to send a firm price within 24 hours.\n2. The next working day, a samples offer to their office.\nBoth stop if they reply or request a quote. Best extra step: find their buyer on LinkedIn and connect.\n\nPanel: ${SITE}admin#autopilot`
   try { await mailer().sendMail({ from: { name: 'BengalExport autopilot', address: SMTP.user }, to, subject: `Hot buyer: ${c.company} (${c.country}) is on your ${label} page`, text }) } catch { /* tagged hot in the panel */ }
 }
 async function alertOwner(cfg: Record<string, any>, subject: string, text: string) {
