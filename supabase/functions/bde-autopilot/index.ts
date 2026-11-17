@@ -319,7 +319,7 @@ async function sendBatch(force = false, maxRun = 0) {
   const cap = todaysCap(cfg); const room = cap - (sentToday ?? 0)
   if (room <= 0) return { sent: 0, reason: `daily limit ${cap} reached` }
   const perHour = Number(cfg.per_hour ?? 10)
-  const { count: lastHour } = await db.from('bde_outreach').select('id', { count: 'exact', head: true }).eq('status', 'sent').gte('created_at', new Date(Date.now() - 36e5).toISOString())
+  const { count: lastHour } = await db.from('bde_outreach').select('id', { count: 'exact', head: true }).eq('status', 'sent').gte('created_at', new Date(Date.now() - 50 * 6e4).toISOString())
   const hourRoom = perHour - (lastHour ?? 0)
   if (!force && hourRoom <= 0) return { sent: 0, reason: `hourly limit ${perHour} reached` }
   const batch = force ? Math.min(room, 10) : Math.max(1, Math.min(room, hourRoom, maxRun || Math.ceil(perHour / 2)))
