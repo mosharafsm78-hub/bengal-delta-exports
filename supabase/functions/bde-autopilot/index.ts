@@ -89,7 +89,7 @@ async function llm(system: string, prompt: string, opts: { json?: boolean; searc
     for (let turn = 0; turn < 3; turn++) {
       const r = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST', headers: { 'x-api-key': a, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
-        body: JSON.stringify({ model: Deno.env.get('ANTHROPIC_MODEL') ?? 'claude-haiku-5-5', max_tokens: 4000, system, messages, ...(opts.search ? { tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 5 }] } : {}) }),
+        body: JSON.stringify({ model: Deno.env.get('ANTHROPIC_MODEL') ?? 'claude-haiku-5-5', max_tokens: opts.search ? 10000 : 4000, system, messages, ...(opts.search ? { tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 5 }] } : {}) }),
       })
       if (!r.ok) throw new Error(`Anthropic ${r.status}: ${(await r.text()).slice(0, 200)}`)
       const j = await r.json()
@@ -109,7 +109,13 @@ const clean = (e: unknown) => String(e).replace(/sk-ant-[A-Za-z0-9_-]+/g, '[key]
 function parseJson<T>(s: string): T {
   const t = s.replace(/```(json)?/g, '').trim()
   const start = t.search(/[[{]/); const end = Math.max(t.lastIndexOf(']'), t.lastIndexOf('}'))
-  return JSON.parse(t.slice(start, end + 1))
+  try { return JSON.parse(t.slice(start, end + 1)) } catch (e) {
+    if (t[start] !== '[') throw e
+    const objs: unknown[] = []
+    for (const m of t.slice(start).matchAll(/\{[^{}]*\}/g)) { try { objs.push(JSON.parse(m[0])) } catch { /* skip */ } }
+    if (!objs.length) throw e
+    return objs as T
+  }
 }
 
 // ---------- helpers ----------
@@ -175,6 +181,9 @@ async function plan(n = 2) {
     db.from('bde_contacts').select('country, interests, research, replied_at').contains('tags', ['prospect']).limit(20000),
   ])
   const skip = new Set<string>((cfg.skip_countries ?? []).map(String))
+  const { data: recent } = await db.from('bde_autopilot_log').select('summary').eq('kind', 'research').gte('created_at', new Date(Date.now() - 8 * 36e5).toISOString()).limit(40)
+  const tried = new Map<string, number>()
+  for (const l of recent ?? []) for (const r of ((l as any).summary?.results ?? []) as any[]) { const k = `${r.fam}|${r.country}`; tried.set(k, (tried.get(k) ?? 0) + (r.found ? 0.5 : 1)) }
   const focusC = new Set<string>((cfg.focus_countries ?? []).map(String))
   const focusF = new Set<string>((cfg.focus_families ?? []).map(String))
   const rows: { t: Target; country: string; score: number; why: string[] }[] = []
@@ -194,7 +203,9 @@ async function plan(n = 2) {
       const done = (pros ?? []).filter((p) => p.country === country && (p.research as any)?.fam === t.fam)
       const replies = done.filter((p) => p.replied_at).length
       if (done.length >= 8) { const rate = replies / done.length; score += rate * 60 - done.length * 0.6; if (replies) why.push(`${replies} replies from ${done.length} contacted`) } else if (!done.length) { score += 4; why.push('new market to test') }
-      score += Math.random() * 6 // keep exploring
+      const fails = tried.get(`${t.fam}|${country}`) ?? 0
+      if (fails) score -= 25 * fails
+      score += Math.random() * 6
       rows.push({ t, country, score, why })
     }
   }
@@ -212,7 +223,7 @@ async function research(target: { fam: string; label: string; country: string; b
   const text = await llm(COMPANY, `Use web search to find ${want + 10} real, currently operating companies in ${target.country} that buy ${target.label}.
 Focus on this buyer type: ${seg.brief}. Typical buyers of this product: ${target.buyers}.
 Exclude marketplaces, directories, B2B portals and factories in Asia.
-Return a JSON array: [{"company": "...", "website": "https://...", "email": "their public company email (sales@, info@, purchasing@ etc.) if you saw it in the search results or on their site, else empty", "type": "importer|wholesaler|brand|retail chain|online seller|distributor|promotional supplier", "why": "one short sentence on what they sell and why ${target.label} fits", "bd_evidence": "how we know they already buy from Bangladesh, or empty"}]. Only include companies whose website you actually found. Prefer companies that show a public contact email.`, { json: true, search: true })
+Return a JSON array: [{"company": "...", "website": "https://...", "email": "their public company email (sales@, info@, purchasing@ etc.) if you saw it in the search results or on their site, else empty", "type": "importer|wholesaler|brand|retail chain|online seller|distributor|promotional supplier", "why": "one short sentence on what they sell and why ${target.label} fits", "bd_evidence": "how we know they already buy from Bangladesh, or empty"}]. Only include companies whose website you actually found. Prefer companies that show a public contact email. Keep \"why\" and \"bd_evidence\" under 15 words each. Your final message must be only the JSON array, with no commentary before or after it. If you find fewer companies, return the ones you have.`, { json: true, search: true })
   let list: { company: string; website: string; email?: string; type: string; why: string; bd_evidence?: string }[] = []
   try { list = parseJson(text) } catch { list = []; stats.parse_failed = 1 }
   if (!Array.isArray(list)) list = []
@@ -543,20 +554,21 @@ async function researchDaily(force = false) {
   const cfg = await settings('autopilot')
   if (!cfg.enabled && !force) return { skipped: 'autopilot is off' }
   if (!aiReady()) return { skipped: 'AI is not connected' }
-  const hourStart = new Date(); hourStart.setUTCMinutes(0, 0, 0)
-  const [{ count: thisHour }, { count: today }] = await Promise.all([
-    db.from('bde_contacts').select('id', { count: 'exact', head: true }).contains('tags', ['autopilot']).gte('created_at', hourStart.toISOString()),
+  const [{ count: waiting }, { count: today }] = await Promise.all([
+    db.from('bde_contacts').select('id', { count: 'exact', head: true }).contains('tags', ['prospect']).eq('seq_step', 0).eq('status', 'subscribed').is('replied_at', null),
     db.from('bde_contacts').select('id', { count: 'exact', head: true }).contains('tags', ['autopilot']).gte('created_at', new Date(new Date().setUTCHours(0, 0, 0, 0)).toISOString()),
   ])
-  const hourly = Number(cfg.hourly_new ?? cfg.per_hour ?? 10)
-  const need = Math.min(hourly - (thisHour ?? 0), Number(cfg.daily_new ?? 240) - (today ?? 0))
-  if (need <= 0 && !force) return { skipped: `found ${thisHour} new buyers this hour (target ${hourly})` }
-  const targets = await plan(1)
+  const stock = Number(cfg.stock_target ?? 150)
+  const need = Math.min(stock - (waiting ?? 0), Number(cfg.daily_new ?? 300) - (today ?? 0))
+  if (need <= 0 && !force) return { skipped: `${waiting} buyers waiting (target ${stock}), ${today} found today` }
+  const started = Date.now()
+  const targets = await plan(3)
   const results: any[] = []
+  let want = force ? 5 : Math.min(need, 10)
   for (const t of targets) {
+    if (want <= 0 || (results.length && Date.now() - started > 55_000)) break
     const stats: Record<string, number> = {}
-    const want = force ? 5 : new Date().getUTCMinutes() < 30 ? Math.min(need, Math.ceil(hourly / 2)) : Math.min(need, hourly)
-    try { const got = await research(t, Math.max(1, want), true, stats); results.push({ ...t, ...stats, segment: (got[0] as any)?.research?.segment, found: got.length, companies: got.map((g: any) => g.company) }) } catch (e) { results.push({ ...t, ...stats, error: clean(e).slice(0, 200) }) }
+    try { const got = await research(t, Math.max(1, want), true, stats); want -= got.length; results.push({ ...t, ...stats, segment: (got[0] as any)?.research?.segment, found: got.length, companies: got.map((g: any) => g.company) }) } catch (e) { results.push({ ...t, ...stats, error: clean(e).slice(0, 200) }) }
   }
   await log('research', { results })
   return { results }
@@ -605,7 +617,7 @@ Deno.serve(async (req) => {
     let out: unknown
     if (route === 'research') {
       let r: unknown; try { r = await researchDaily(force) } catch (e) { r = { error: clean(e).slice(0, 200) } }
-      out = cron ? { research: r, send: await sendBatch(false, Math.ceil(Number((await settings('autopilot')).per_hour ?? 10) / 2)) } : r
+      out = r
     }
     else if (route === 'send') out = await sendBatch(force)
     else if (route === 'morning') out = await morning(force)
