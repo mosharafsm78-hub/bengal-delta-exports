@@ -441,7 +441,10 @@ async function sendHot(cfg: Record<string, any>, address: string) {
 async function hotClick(id: number) {
   const { data: c } = await db.from('bde_contacts').select('id, company, country, email, website, research, tags').eq('id', id).maybeSingle()
   if (!c || (c.tags ?? []).includes('hot_alerted')) return
-  await db.from('bde_contacts').update({ tags: [...new Set([...(c.tags ?? []), 'hot', 'hot_alerted'])] }).eq('id', id)
+  // Company email scanners (Microsoft, Mimecast, Proofpoint) open every link seconds after delivery: not a person.
+  const { data: last } = await db.from('bde_outreach').select('created_at').eq('contact_id', id).eq('status', 'sent').order('created_at', { ascending: false }).limit(1).maybeSingle()
+  if (last && Date.now() - new Date(last.created_at).getTime() < 5 * 6e4) { await db.from('bde_contacts').update({ tags: [...new Set([...(c.tags ?? []), 'bot_click'])] }).eq('id', id); return }
+  await db.from('bde_contacts').update({ tags: [...new Set([...(c.tags ?? []).filter((t: string) => t !== 'bot_click'), 'hot', 'hot_alerted'])] }).eq('id', id)
   const cfg = await settings('autopilot')
   const to = cfg.report_email || (await settings('alerts')).new_lead_email
   if (!to || !mailboxReady()) return
@@ -527,14 +530,16 @@ async function readReplies() {
     const { data: row } = await db.from('bde_inbox').insert({ direction: 'in', from_email: it.from, to_email: SMTP.user, subject: it.subject, body: it.full || it.text, message_id: it.messageId, in_reply_to: it.inReplyTo, contact_id: c?.id ?? null }).select('id').maybeSingle()
     if (!c) continue
     let a = { label: /^\s*(no|stop|unsubscribe|remove)\b/i.test(it.text) ? 'not_interested' : 'question', summary: it.text.slice(0, 160), next_step: 'Read the reply and answer', care_note: '' }
-    if (aiReady()) try { a = parseJson(await llm(COMPANY, `Classify this reply to our outreach email. Company: ${c.company}, ${c.country}. Product offered: ${c.research?.label}.
+    if (it.text.trim().length < 20) a = { label: 'auto_reply', summary: 'Email with no message text (often an automatic ticket).', next_step: 'Open it in webmail if unsure', care_note: '' }
+    else if (aiReady()) try { a = parseJson(await llm(COMPANY, `Classify this reply to our outreach email. Company: ${c.company}, ${c.country}. Product offered: ${c.research?.label}.
 Reply subject: ${it.subject}
 Reply: ${it.text}
 Return JSON {"label": "interested|question|not_now|not_interested|unsubscribe|auto_reply|wrong_person", "summary": "one sentence", "next_step": "one concrete action for the team", "care_note": "max 60 words hand-over note for the customer care team: who they are, what they want, what to send"}`, { json: true })) } catch { /* keep rule-based */ }
     const stop = a.label !== 'auto_reply'
     await db.from('bde_contacts').update({ replied_at: stop ? new Date().toISOString() : c.replied_at, next_touch_at: stop ? null : c.next_touch_at, status: a.label === 'unsubscribe' || a.label === 'not_interested' ? 'unsubscribed' : c.status, score: (c.score ?? 0) + (a.label === 'interested' ? 40 : a.label === 'question' ? 25 : 0), tags: [...new Set([...(c.tags ?? []), `reply:${a.label}`])] }).eq('id', c.id)
     await db.from('bde_activity').insert({ entity: 'contact', entity_id: c.id, actor: 'autopilot', kind: 'reply', body: `Email reply (${a.label}): ${a.summary}` })
-    if (a.label === 'interested' || a.label === 'question') {
+    // Only a reply with real words becomes a quote request; an empty or ticket-only email never does.
+    if ((a.label === 'interested' || a.label === 'question') && it.text.trim().length >= 20) {
       await db.from('bde_leads').insert({ kind: 'email_reply', reference: `BDE-R${Date.now().toString(36).toUpperCase()}`, items: [{ style: c.research?.label ?? 'Products' }], requirement: it.text.slice(0, 2000), quantity: '-', country: c.country ?? '-', company: c.company ?? '-', name: c.name ?? c.company ?? '-', email: c.email, website: c.website, consent: false, contact_id: c.id, internal_notes: `Autopilot: ${a.summary}\nNext step: ${a.next_step}\nCare team: ${a.care_note}` })
     }
     if (row?.id) await db.from('bde_inbox').update({ label: a.label, summary: a.summary, next_step: a.next_step, care_note: a.care_note }).eq('id', row.id)
@@ -583,7 +588,7 @@ async function matchClicks() {
   const out: any[] = []
   for (const [id, v] of Object.entries(by)) {
     const { data: c } = await db.from('bde_contacts').select('id, company, country, score, tags, last_click_at').eq('id', Number(id)).maybeSingle()
-    if (!c) continue
+    if (!c || ((c.tags ?? []).includes('bot_click') && !(c.tags ?? []).includes('hot'))) continue
     if (!c.last_click_at || c.last_click_at < since) await db.from('bde_contacts').update({ last_click_at: new Date().toISOString(), score: (c.score ?? 0) + 10, tags: [...new Set([...(c.tags ?? []), 'hot'])] }).eq('id', c.id)
     out.push({ company: c.company, country: c.country, pages: [...v.pages].slice(0, 5), quote: v.quote })
   }
