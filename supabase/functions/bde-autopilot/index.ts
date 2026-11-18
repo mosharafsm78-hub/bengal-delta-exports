@@ -459,6 +459,43 @@ async function alertOwner(cfg: Record<string, any>, subject: string, text: strin
 }
 
 // ---------- 4. Morning: replies, clicks, report ----------
+/** Plain text of a parsed email; many business replies (Outlook, helpdesks) are HTML only. */
+function bodyText(m: any) {
+  const t = String(m.text ?? '').trim()
+  if (t) return t
+  return String(m.html || m.textAsHtml || '').replace(/<(style|script)[\s\S]*?<\/\1>/gi, '').replace(/<br\s*\/?>|<\/(p|div|tr|li|h\d)>/gi, '\n').replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&#39;|&rsquo;/g, "'").replace(/\n\s*\n\s*\n+/g, '\n\n').trim()
+}
+/** Re-read replies that were saved with an empty body (HTML-only) and classify them again. */
+async function refetchEmpty() {
+  const { data: rows } = await db.from('bde_inbox').select('id, message_id, contact_id, subject, from_email, created_at').eq('direction', 'in').gte('created_at', new Date(Date.now() - 7 * 864e5).toISOString())
+  const empty = (rows ?? []).filter((r: any) => r.message_id)
+  const { data: lens } = await db.from('bde_inbox').select('id, body').in('id', empty.map((r: any) => r.id))
+  const todo = empty.filter((r: any) => String(lens?.find((l: any) => l.id === r.id)?.body ?? '').trim().length < 5)
+  if (!todo.length) return { fixed: 0 }
+  const { ImapFlow } = await import('npm:imapflow@1.0.164')
+  const { simpleParser } = await import('npm:mailparser@3.7.1')
+  const client = new ImapFlow({ host: SMTP.imapHost, port: SMTP.imapPort, secure: true, auth: { user: SMTP.user, pass: SMTP.pass }, logger: false })
+  await client.connect()
+  const out: any[] = []
+  const lock = await client.getMailboxLock('INBOX')
+  try {
+    for (const r of todo) {
+      let uids = await client.search({ header: { 'message-id': r.message_id } }, { uid: true })
+      if (!uids || !uids.length) uids = await client.search({ from: r.from_email, since: new Date(new Date(r.created_at).getTime() - 2 * 864e5) }, { uid: true })
+      if (!uids || !uids.length) continue
+      const msg = await client.fetchOne(String(uids[uids.length - 1]), { source: true }, { uid: true })
+      if (!msg) continue
+      const full = bodyText(await simpleParser(msg.source)).slice(0, 20000)
+      const text = full.split(/\n>|\nOn .+wrote:|\n-----Original|\nFrom: /)[0].slice(0, 2500)
+      const { data: c } = await db.from('bde_contacts').select('company, country, research').eq('id', r.contact_id ?? 0).maybeSingle()
+      let a: any = { label: 'question', summary: text.slice(0, 160), next_step: 'Read the reply and answer', care_note: '' }
+      if (aiReady() && text.trim()) try { a = parseJson(await llm(COMPANY, `Classify this reply to our outreach email. Company: ${c?.company}, ${c?.country}. Product offered: ${c?.research?.label}.\nReply subject: ${r.subject}\nReply: ${text}\nReturn JSON {"label": "interested|question|not_now|not_interested|unsubscribe|auto_reply|wrong_person", "summary": "one sentence", "next_step": "one concrete action for the team", "care_note": "max 60 words hand-over note for the customer care team: who they are, what they want, what to send"}`, { json: true })) } catch { /* keep */ }
+      await db.from('bde_inbox').update({ body: full || '(no text in this email)', label: a.label, summary: a.summary, next_step: a.next_step, care_note: a.care_note }).eq('id', r.id)
+      out.push({ id: r.id, label: a.label, summary: a.summary, text: text.slice(0, 600) })
+    }
+  } finally { lock.release(); await client.logout() }
+  return { fixed: out.length, items: out }
+}
 async function readReplies() {
   if (!mailboxReady()) return { skipped: 'outreach mailbox not connected', items: [] as any[] }
   const { ImapFlow } = await import('npm:imapflow@1.0.164')
@@ -472,8 +509,9 @@ async function readReplies() {
     for await (const msg of client.fetch({ since, seen: false }, { source: true, uid: true })) {
       const m = await simpleParser(msg.source)
       const from = (m.from?.value?.[0]?.address ?? '').toLowerCase()
-      const text = String(m.text ?? '').split(/\n>|\nOn .+wrote:|\n-----Original/)[0].slice(0, 2500)
-      items.push({ uid: msg.uid, from, subject: m.subject ?? '', text, full: String(m.text ?? '').slice(0, 20000), messageId: m.messageId ?? null, inReplyTo: m.inReplyTo ?? null, bounce: /mailer-daemon|postmaster/i.test(from) })
+      const plain = bodyText(m)
+      const text = plain.split(/\n>|\nOn .+wrote:|\n-----Original|\nFrom: /)[0].slice(0, 2500)
+      items.push({ uid: msg.uid, from, subject: m.subject ?? '', text, full: plain.slice(0, 20000), messageId: m.messageId ?? null, inReplyTo: m.inReplyTo ?? null, bounce: /mailer-daemon|postmaster/i.test(from) })
     }
     if (items.length) await client.messageFlagsAdd(items.map((i) => i.uid), ['\\Seen'], { uid: true })
   } finally { lock.release(); await client.logout() }
@@ -728,6 +766,7 @@ Deno.serve(async (req) => {
     }
     else if (route === 'send') out = await sendBatch(force)
     else if (route === 'writetest') { const { data } = await db.from('bde_contacts').select('*').contains('tags', ['prospect']).eq('seq_step', 0).limit(9); aiErr = ''; const w = await writeBatch((data ?? []).map((c) => ({ c, step: 0 }))); out = { asked: data?.length ?? 0, written: w.size, ai_error: aiErr, sample: [...w.values()][0] ?? null } }
+    else if (route === 'refetch') out = await refetchEmpty()
     else if (route === 'morning') out = await morning(force)
     else if (route === 'channels') out = await channelsDaily(force)
     else if (route === 'replies') out = await repliesNow(force)
