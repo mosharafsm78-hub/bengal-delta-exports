@@ -52,6 +52,8 @@ const TARGETS: Target[] = [
   { fam: 'frozen', cat: 'food', label: 'frozen fish and shrimp', buyers: 'seafood importers, Asian food wholesalers', markets: WORLD },
   { fam: 'handicrafts', cat: 'crafts', label: 'handicrafts and handloom', buyers: 'home decor and fair-trade importers, gift wholesalers', markets: APPAREL },
 ]
+// Indicative FOB prices from the website catalogue (src/data/catalog.ts). Never quote anything else.
+const PRICES: Record<string, string> = {"tshirts": "Crew-neck basic tee: US$1.65-3.5 FOB per pc; range from US$1.3; MOQ 500 pcs per style per colour (300 pcs from stock fabric)", "polos": "Classic pique polo: US$4.5-6.5 FOB per pc; range from US$3.8; MOQ 500 pcs per style per colour", "fleece": "Pullover hoodie: US$5.5-9.5 FOB per pc; range from US$3.15; MOQ 500 pcs per style per colour", "shirts": "Formal dress shirt: US$5.5-8.5 FOB per pc; range from US$4.5; MOQ 500 pcs per style per colour", "denim": "Slim-fit jeans: US$7.8-12.5 FOB per pc; range from US$5; MOQ 500 pcs per style per wash", "trousers": "Chino trousers: US$7-9 FOB per pc; range from US$4.5; MOQ 500 pcs per style per colour", "outerwear": "Puffer jacket: US$12-20 FOB per pc; range from US$7; MOQ 500 pcs per style per colour", "kids": "Baby bodysuit: US$1.2-2.2 FOB per pc; range from US$1.2; MOQ 1,000 pcs per style (multi-pack programs welcome)", "active": "Leggings: US$3.5-6.5 FOB per pc; range from US$1.9; MOQ 500 pcs per style (team kits from 100 sets)", "intimates": "Men's boxer briefs / trunks: US$0.7-1.4 FOB per pc; range from US$0.2; MOQ 3,000 pcs per style (multi-pack programs)", "casual-footwear": "EVA / PU slides: US$2.5-4 FOB per pair; range from US$0.9; MOQ 600 pairs per design (300 pairs on existing moulds)", "leather-shoes": "Oxford and derby shoes: US$14-24 FOB per pair; range from US$8; MOQ 300 pairs per design", "leather-goods": "Leather belts: US$3-7 FOB per pc; range from US$1.5; MOQ 300–500 pcs per design", "towels": "Bath towel: US$3-7 FOB per kg; range from US$3; MOQ 1,000 kg or 2,000 pcs per design", "bedding": "Flat and fitted sheet set: US$6-14 FOB per set; range from US$0.8; MOQ 500 sets per design", "kitchen": "Tea towels: US$0.6-1.5 FOB per pc; range from US$0.6; MOQ 2,000 pcs per design", "jute-bags": "Jute shopping tote: US$0.9-2.5 FOB per pc; range from US$0.15; MOQ 1,000 pcs per design", "jute-industrial": "Hessian sacks (B-twill / A-twill): US$0.6-1.2 FOB per pc; range from US$0.6; MOQ 5 t (cloth, sacks) · 3 t (rope, yarn)", "jute-decor": "Braided jute rug: US$4-25 FOB per pc; range from US$0.4; MOQ 200 pcs per design", "vegetables": "Potato (alu): US$0.25-0.4 FOB per kg; range from US$0.25; MOQ 300–500 kg by air · one reefer container by sea", "fruits": "Mango (aam): US$1.2-2.5 FOB per kg; range from US$0.4; MOQ 500 kg by air", "spices": "Turmeric powder: US$2.5-4.5 FOB per kg; range from US$2.2; MOQ 1 t per product (500 kg for blends)", "grocery": "Aromatic rice (Chinigura, Kalijira): US$1.6-2.6 FOB per kg; range from US$1.2; MOQ 1–2 t per product (mixed containers welcome)", "frozen": "Black tiger shrimp (bagda): US$8-16 FOB per kg; range from US$1.8; MOQ One 20 ft or 40 ft reefer (mixed loads possible)", "handicrafts": "Nakshi kantha: US$18-60 FOB per pc; range from US$0.8; MOQ 50–200 pcs per design"}
 // Who the lead engine looks for. Weighted: companies already buying from Bangladesh come first.
 const SEGMENTS: { id: string; label: string; brief: string; w: number }[] = [
   { id: 'bd_importers', label: 'Already buying from Bangladesh', brief: 'companies with clear evidence they already import from Bangladesh: shipment records on ImportYeti, Panjiva or Volza, "made in Bangladesh" products on their site, or Bangladeshi suppliers named in news', w: 45 },
@@ -147,7 +149,7 @@ function pickEmail(emails: string[], host: string) {
   return ''
 }
 async function findEmail(website: string) {
-  const host = hostOf(website); if (!host || SKIP_DOMAINS.test(host)) return { host, email: '', contactUrl: '' }
+  const host = hostOf(website); if (!host || SKIP_DOMAINS.test(host)) return { host, email: '', contactUrl: '', text: '' }
   let contactUrl = ''
   const root = `https://${host}`
   const home = await fetchText(root)
@@ -165,7 +167,8 @@ async function findEmail(website: string) {
     }
   }
   if (email && !(await hasMx(email.split('@')[1]))) email = ''
-  return { host, email, contactUrl }
+  const text = home.replace(/<(script|style|noscript|svg)[\s\S]*?<\/\1>/gi, ' ').replace(/<[^>]+>/g, ' ').replace(/&[a-z#0-9]+;/gi, ' ').replace(/\s+/g, ' ').trim().slice(0, 2500)
+  return { host, email, contactUrl, text }
 }
 const localHour = (country: string) => { const off = UTC_OFFSET[country] ?? 0; const d = new Date(Date.now() + off * 3600e3); return { h: d.getUTCHours(), dow: d.getUTCDay() } }
 
@@ -241,17 +244,34 @@ Return a JSON array: [{"company": "...", "website": "https://...", "email": "the
   const checked: Awaited<ReturnType<typeof checkOne>>[] = []
   for (let i = 0; i < cands.length; i += 6) checked.push(...(await Promise.all(cands.slice(i, i + 6).map(checkOne))))
   stats.new_sites = cands.length; stats.with_email = checked.filter((x) => x.email).length
+  // Deep check: read each company's own website and keep only real volume buyers of this product.
+  const deep = await qualify(checked.filter((x) => x.email), target).catch(() => new Map<string, any>())
+  stats.deep_checked = deep.size; stats.deep_dropped = 0
   for (const { c, h: host, email, contactUrl } of checked) {
     if (out.length >= want) break
     knownHosts.add(host)
+    const q = deep.get(host)
+    if (email && q && (!q.match || Number(q.fit) < 7)) { stats.deep_dropped++; continue }
     if (!email) {
       if (save && noEmail++ < 4) await addTask(contactUrl ? 'contact_form' : 'linkedin', { company: c.company, country: target.country, label: target.label, why: c.why, url: contactUrl || linkedinSearch(c.company), website: `https://${host}` })
       continue
     }
-    const row = { email, company: String(c.company).slice(0, 120), country: target.country, website: `https://${host}`, interests: [TARGETS.find((t) => t.fam === target.fam)?.cat ?? ''], tags: ['prospect', 'autopilot'], source: 'autopilot', status: 'subscribed', seq_step: 0, next_touch_at: new Date().toISOString(), research: { fam: target.fam, label: target.label, segment: seg.id, type: c.type, why: c.why, bd: c.bd_evidence || '', fit: Number(c.import_score ?? 0), found_at: new Date().toISOString() }, score: (c.bd_evidence ? 15 : 5) + Number(c.import_score ?? 0) }
+    const row = { email, company: String(c.company).slice(0, 120), country: target.country, website: `https://${host}`, interests: [TARGETS.find((t) => t.fam === target.fam)?.cat ?? ''], tags: ['prospect', 'autopilot'], source: 'autopilot', status: 'subscribed', seq_step: 0, next_touch_at: new Date().toISOString(), research: { fam: target.fam, label: target.label, segment: seg.id, type: c.type, why: q?.what || c.why, bd: c.bd_evidence || '', fit: Number(c.import_score ?? 0), deep_fit: q ? Number(q.fit) : null, size: q?.size ?? null, hook: q?.hook ?? '', found_at: new Date().toISOString() }, score: (c.bd_evidence ? 15 : 5) + Number(c.import_score ?? 0) + (q ? Number(q.fit) : 0) }
     if (save) { const { error } = await db.from('bde_contacts').insert(row); if (error) continue }
     out.push(row)
   }
+  return out
+}
+
+/** One AI call reads the companies' own homepages and judges each one. */
+async function qualify(list: { c: any; h: string; text?: string }[], target: { label: string; country: string }) {
+  const out = new Map<string, any>()
+  const items = list.filter((x) => (x.text ?? '').length > 200).slice(0, 10).map((x) => ({ host: x.h, company: x.c.company, homepage: x.text }))
+  if (!items.length || !aiReady()) return out
+  const arr = parseJson<any[]>(await llm(COMPANY, `You are qualifying B2B buyers for ${target.label} from Bangladesh, located in ${target.country}. For each company below, read its own homepage text and judge it strictly.
+${JSON.stringify(items)}
+Return a JSON array [{"host": "...", "match": true/false (they sell or use ${target.label} or a very close product), "size": "small|medium|large", "b2b": true/false (wholesale, trade, private label, uniforms, hospitality supply or retail chain buying in volume), "what": "what they sell, 12 words max, from the page", "hook": "one specific, verifiable detail from their page we can mention (a product line, brand, market or service), 15 words max", "fit": 1-10 (10 = clearly buys this product in container or carton volume from factories; 1 = tiny shop, wrong product or not a buyer)}]. Be strict: a reseller of branded goods, a one-person shop or an unrelated business scores 4 or less.`, { json: true }))
+  for (const a of Array.isArray(arr) ? arr : []) if (a?.host) out.set(String(a.host).replace(/^www\./, '').toLowerCase(), a)
   return out
 }
 
@@ -297,9 +317,9 @@ async function writeOnce(list: { c: any; step: number }[]) {
   const out = new Map<number, { subject: string; body: string }>()
   if (!aiReady() || !list.length) return out
   const kinds = ['first email', 'second email, 4 days after the first, new angle: samples in 24 hours and inspection before shipping', 'third and last email, 6 days after the second: short, polite, easy way to say yes later']
-  const items = list.map(({ c, step }) => ({ id: c.id, company: c.company, country: c.country, about: `${c.research?.type ?? 'company'}; ${c.research?.why ?? ''}`, product: c.research?.label, email: kinds[step] ?? kinds[0], duty_free: DUTY_FREE.has(c.country) }))
+  const items = list.map(({ c, step }) => ({ id: c.id, company: c.company, country: c.country, about: `${c.research?.type ?? 'company'}; ${c.research?.why ?? ''}`, detail_from_their_site: c.research?.hook || '', product: c.research?.label, our_price: PRICES[c.research?.fam] ?? '', email: kinds[step] ?? kinds[0], duty_free: DUTY_FREE.has(c.country) }))
   try {
-    const arr = parseJson<{ id: number; subject: string; body: string }[]>(await llm(COMPANY, `Write one cold B2B outreach email from BengalExport for each company below.\n${JSON.stringify(items)}\nRules for every email: plain text, 60-100 words, written by a senior export manager (not a salesperson), start with "Hello," (no personal name), first line specific to their business, mention the 10,000+ supplier network or the most relevant certifications once, if duty_free is true mention once that goods from Bangladesh enter their country at 0% import duty (otherwise do not mention duty), the call to action is our product page for their product: in one short sentence say what they will find there (the range with specifications, minimum orders, indicative prices and lead times, and a one-minute quote form that returns a price delivered to their port within 24 hours), then put the placeholder [[LINK]] alone on its own line; then one line saying they can also simply reply with their specification. Sound like a real person who looked at their business, not a template: no buzzwords (leverage, synergy, solutions, cutting-edge, seamless), no flattery, no claims you cannot back. No other links, no exclamation marks, no spam words (free, guarantee, best price, cheap, urgent, act now), no signature. Follow-ups may use a subject starting "Re: ". Subject: 2-6 words naming their product, lower-key, no capitals except the first word and names. Each email must be different.\nReturn a JSON array [{"id": <id>, "subject": "...", "body": "..."}] with one entry per company.`, { json: true }))
+    const arr = parseJson<{ id: number; subject: string; body: string }[]>(await llm(COMPANY, `Write one short B2B email from BengalExport for each company below.\n${JSON.stringify(items)}\nRules for every email: plain text, 50-80 words, written by a senior export manager who has looked at their business; start with "Hello," (no personal name). Line 1: one specific sentence using detail_from_their_site (or "about" if empty) that shows we know what they sell, no flattery. Then one sentence with a concrete number from our_price, quoted exactly as given (say it is an indicative FOB price), and the minimum order. If duty_free is true add that goods from Bangladesh enter their country at 0% import duty; otherwise do not mention duty. Mention the 10,000+ supplier network or our own QC inspection once. End with ONE easy question they can answer in one line by replying, about their current specification, volumes or what they pay now (for example: "What weight and quantity do you usually order? I will send a firm price delivered to your port."). After the question, on its own line: "Full range and prices:" and on the next line the placeholder [[LINK]]. No other links, no exclamation marks, no buzzwords (leverage, synergy, solutions, seamless), no spam words (free, guarantee, best price, cheap, urgent, act now), no signature. Never invent prices, customers or certificates. Follow-ups may use a subject starting "Re: ". Subject: 2-6 words naming their product, lower-key, no capitals except the first word and names. Each email must be different.\nReturn a JSON array [{"id": <id>, "subject": "...", "body": "..."}] with one entry per company.`, { json: true }))
     for (const e of Array.isArray(arr) ? arr : []) {
       const it = list.find((x) => x.c.id === Number(e.id))
       if (!it || !e.subject || !e.body || e.body.length > 1500) continue
@@ -315,13 +335,12 @@ async function sendOne(c: any, step: number, cfg: Record<string, any>, address: 
   const { subject, body } = pre ?? fallbackEmail(c, step, link)
   const unsub = `${FN}/u?c=${c.id}&h=${await sign(`u|${c.id}`)}`
   // Tracking: a click goes through our redirect (counted, then on to the page); an invisible pixel counts opens.
-  const th = await sign(`t|${c.id}|${step}`)
-  const tracked = `${FN}/r?c=${c.id}&s=${step}&h=${th}&u=${encodeURIComponent(link)}`
-  const pixel = `${FN}/o?c=${c.id}&s=${step}&h=${th}`
+  // Plain link straight to our own domain (no redirect, no tracking pixel): far better inbox placement.
+  // Visits are still matched to the buyer through the utm_campaign code on the website.
   const signature = `\n\n${cfg.sender_name || 'BengalExport sales team'}\nBengalExport, Bangladesh\nWhatsApp +880 1805-070650\nbengalexport.online\n\n${address ? address + '\n' : ''}If this is not relevant, reply "no" or unsubscribe here: ${unsub}`
   const esc = (t: string) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-  const htmlBody = esc(body + signature).split(esc(link)).join(`<a href="${tracked}" style="color:#0f6b5c">${esc(link.split('?')[0])}</a>`).replace(esc(unsub), `<a href="${unsub}" style="color:#888">unsubscribe</a>`).replace(/\n/g, '<br>')
-  const html = `<div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.55;color:#1f2937;max-width:600px">${htmlBody}</div><img src="${pixel}" width="1" height="1" alt="" style="display:block;border:0;width:1px;height:1px">`
+  const htmlBody = esc(body + signature).split(esc(link)).join(`<a href="${link}" style="color:#0f6b5c">${esc(link.split('?')[0])}</a>`).replace(esc(unsub), `<a href="${unsub}" style="color:#888">unsubscribe</a>`).replace(/\n/g, '<br>')
+  const html = `<div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.55;color:#1f2937;max-width:600px">${htmlBody}</div>`
   const info = await mailer().sendMail({ from: { name: cfg.sender_name || 'BengalExport', address: SMTP.user }, to: c.email, ...(hot?.bcc ? { bcc: hot.bcc } : {}), ...(hot?.inReplyTo ? { inReplyTo: hot.inReplyTo, references: hot.inReplyTo } : {}), subject, text: body + signature, html, headers: { 'List-Unsubscribe': `<${unsub}>, <mailto:${SMTP.user}?subject=unsubscribe>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' } })
   const now = new Date()
   const gap = step === 0 ? 4 : 6
@@ -381,12 +400,28 @@ async function sendCold(force = false, maxRun = 0) {
   if (!force && sent < batch && !limited) await alertOwner(cfg, `Send run sent ${sent} of ${batch}`, `The autopilot sent ${sent} of ${batch} emails this run (${sentToday ?? 0} of ${cap} today).\n${pick.length < batch ? `Only ${pick.length} buyers were waiting: the finder is behind.` : ''}${errors.length ? `\nErrors: ${errors.join(' | ')}` : ''}\n\nPanel: ${SITE}admin#autopilot`)
   return { sent, batch, cap, sent_today: (sentToday ?? 0) + sent, runs_left: runsLeft, errors, ai_written: written.size, ai_error: aiErr || undefined, mailbox_limited: limited || undefined }
 }
+/** Website visits from our emails (utm_campaign=c<id>) in the last 45 minutes: count the click and alert on real people. */
+async function webVisits() {
+  const { data } = await db.from('bde_web_events').select('utm_campaign, created_at').eq('utm_source', 'outreach').gte('created_at', new Date(Date.now() - 45 * 6e4).toISOString()).order('created_at', { ascending: true }).limit(2000)
+  const first = new Map<number, number>()
+  for (const e of data ?? []) { const id = Number(String(e.utm_campaign ?? '').replace(/^c/, '')); if (id && !first.has(id)) first.set(id, new Date(e.created_at).getTime()) }
+  let people = 0
+  for (const [id, at] of first) {
+    const { data: c } = await db.from('bde_contacts').select('tags').eq('id', id).maybeSingle()
+    if (!c || (c.tags ?? []).includes('hot_alerted')) continue
+    await hotClick(id, at)
+    const { data: c2 } = await db.from('bde_contacts').select('tags').eq('id', id).maybeSingle()
+    if ((c2?.tags ?? []).includes('hot_alerted')) { people++; const { data: o } = await db.from('bde_outreach').select('step').eq('contact_id', id).eq('status', 'sent').order('created_at', { ascending: false }).limit(1).maybeSingle(); await db.rpc('bde_track_outreach', { p_contact: id, p_step: o?.step ?? 0, p_kind: 'click' }) }
+  }
+  return { visits: first.size, people }
+}
 async function sendBatch(force = false) {
+  const visits = await webVisits().catch(() => null)
   const cold = await sendCold(force)
   const cfg = await settings('autopilot')
   if ((!cfg.enabled && !force) || !mailboxReady()) return cold
   const hot = await sendHot(cfg, (await settings('email')).physical_address ?? '').catch((e) => ({ sent: 0, error: clean(e).slice(0, 160) }))
-  return { ...cold, hot }
+  return { ...cold, hot, visits }
 }
 // ---------- Hot buyers: two personal follow-ups asking for what we need to quote ----------
 // 10 = same/next working day after their click, 11 = the next working day. Replies, quotes and unsubscribes stop them.
@@ -438,12 +473,12 @@ async function sendHot(cfg: Record<string, any>, address: string) {
   }
   return { sent, done }
 }
-async function hotClick(id: number) {
+async function hotClick(id: number, at = Date.now()) {
   const { data: c } = await db.from('bde_contacts').select('id, company, country, email, website, research, tags').eq('id', id).maybeSingle()
   if (!c || (c.tags ?? []).includes('hot_alerted')) return
   // Company email scanners (Microsoft, Mimecast, Proofpoint) open every link seconds after delivery: not a person.
   const { data: last } = await db.from('bde_outreach').select('created_at').eq('contact_id', id).eq('status', 'sent').order('created_at', { ascending: false }).limit(1).maybeSingle()
-  if (last && Date.now() - new Date(last.created_at).getTime() < 5 * 6e4) { await db.from('bde_contacts').update({ tags: [...new Set([...(c.tags ?? []), 'bot_click'])] }).eq('id', id); return }
+  if (last && at - new Date(last.created_at).getTime() < 5 * 6e4) { await db.from('bde_contacts').update({ tags: [...new Set([...(c.tags ?? []), 'bot_click'])] }).eq('id', id); return }
   await db.from('bde_contacts').update({ tags: [...new Set([...(c.tags ?? []).filter((t: string) => t !== 'bot_click'), 'hot', 'hot_alerted'])] }).eq('id', id)
   const cfg = await settings('autopilot')
   const to = cfg.report_email || (await settings('alerts')).new_lead_email
