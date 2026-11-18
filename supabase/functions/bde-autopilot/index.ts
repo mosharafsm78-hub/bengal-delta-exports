@@ -275,6 +275,29 @@ Return a JSON array [{"host": "...", "match": true/false (they sell or use ${tar
   return out
 }
 
+/** Deep-check buyers already waiting in the stock (found before the website check existed). */
+async function requalify(offset = 0) {
+  const { data: list } = await db.from('bde_contacts').select('id, company, country, website, research').contains('tags', ['prospect']).eq('seq_step', 0).eq('status', 'subscribed').order('id', { ascending: true }).range(offset, offset + 9)
+  const todo = (list ?? []).filter((c: any) => c.research?.deep_fit == null && c.website)
+  if (!todo.length) return { checked: 0 }
+  const texts = await Promise.all(todo.map(async (c: any) => ({ c, h: hostOf(c.website), text: (await findEmail(c.website)).text })))
+  const byFam = new Map<string, typeof texts>()
+  for (const t of texts) { const k = `${t.c.research?.label}|${t.c.country}`; byFam.set(k, [...(byFam.get(k) ?? []), t]) }
+  let kept = 0, dropped = 0
+  for (const [k, group] of byFam) {
+    const [label, country] = k.split('|')
+    const q = await qualify(group, { label, country }).catch(() => new Map<string, any>())
+    for (const g of group) {
+      const a = q.get(g.h)
+      if (!a) continue
+      const bad = !a.match || Number(a.fit) < 7
+      await db.from('bde_contacts').update({ status: bad ? 'unqualified' : 'subscribed', research: { ...(g.c.research ?? {}), deep_fit: Number(a.fit), size: a.size ?? null, hook: a.hook ?? '', why: a.what || g.c.research?.why } }).eq('id', g.c.id)
+      if (bad) dropped++; else kept++
+    }
+  }
+  return { checked: todo.length, kept, dropped }
+}
+
 // ---------- 3. Write and send ----------
 function fallbackEmail(c: any, step: number, link = SITE) {
   const r = c.research ?? {}; const label = r.label ?? 'products'
@@ -807,6 +830,7 @@ Deno.serve(async (req) => {
     else if (route === 'send') out = await sendBatch(force)
     else if (route === 'writetest') { const { data } = await db.from('bde_contacts').select('*').contains('tags', ['prospect']).eq('seq_step', 0).limit(9); aiErr = ''; const w = await writeBatch((data ?? []).map((c) => ({ c, step: 0 }))); out = { asked: data?.length ?? 0, written: w.size, ai_error: aiErr, sample: [...w.values()][0] ?? null } }
     else if (route === 'refetch') out = await refetchEmpty()
+    else if (route === 'requalify') out = await requalify(Number((await req.json().catch(() => ({}))).offset ?? 0))
     else if (route === 'morning') out = await morning(force)
     else if (route === 'channels') out = await channelsDaily(force)
     else if (route === 'replies') out = await repliesNow(force)
