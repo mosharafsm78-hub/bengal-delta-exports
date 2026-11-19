@@ -149,27 +149,45 @@ function pickEmail(emails: string[], host: string) {
   for (const r of ROLE) { const hit = own.find((e) => e.split('@')[0].replace(/[._-]/g, '') === r || e.split('@')[0].startsWith(r)); if (hit) return hit }
   return ''
 }
-async function findEmail(website: string) {
-  const host = hostOf(website); if (!host || SKIP_DOMAINS.test(host)) return { host, email: '', contactUrl: '', text: '' }
+// Named buying contacts are used only where the law allows emailing a published business address (UK, US, CA, AU, IE, NZ),
+// and only when the company itself publishes that address next to a buying job title.
+const NAMED_OK = new Set(['United Kingdom', 'United States', 'Canada', 'Australia', 'Ireland', 'New Zealand'])
+const BUYER_WORDS = /purchas|buyer|buying|sourcing|procure|merchandis|product manager|category manager|import manager|einkauf|inkoop|achats|acquisti/i
+function pickBuyer(html: string, host: string) {
+  const s = html.replace(/<[^>]+>/g, ' ').replace(/&#64;|&#x40;|\[at\]|\(at\)/gi, '@').replace(/\s+/g, ' ')
+  for (const m of s.matchAll(/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/gi)) {
+    const e = m[0].toLowerCase()
+    if (baseDomain(e.split('@')[1]) !== baseDomain(host)) continue
+    const around = s.slice(Math.max(0, (m.index ?? 0) - 160), (m.index ?? 0) + e.length + 160)
+    if (BUYER_WORDS.test(around) || BUYER_WORDS.test(e.split('@')[0])) return e
+  }
+  return ''
+}
+async function findEmail(website: string, country = '') {
+  const host = hostOf(website); if (!host || SKIP_DOMAINS.test(host)) return { host, email: '', contactUrl: '', text: '', buyer: false }
   let contactUrl = ''
   const root = `https://${host}`
   const home = await fetchText(root)
   let found = emailsIn(home)
-  let email = pickEmail(found, host)
-  if (!email) {
-    const links = [...home.matchAll(/href="([^"]+)"/gi)].map((m) => m[1]).filter((h) => /contact|kontakt|contatti|contacto|about|impressum|imprint|over-ons|nous-contacter/i.test(h)).slice(0, 3)
+  const named = NAMED_OK.has(country)
+  let buyer = named ? pickBuyer(home, host) : ''
+  let email = buyer || pickEmail(found, host)
+  // Look further (contact, team, about pages) when we have no address yet, or only a general one where a named buyer may be listed.
+  if (!email || (named && !buyer)) {
+    const links = [...home.matchAll(/href="([^"]+)"/gi)].map((m) => m[1]).filter((h) => /contact|kontakt|contatti|contacto|about|team|people|staff|management|impressum|imprint|over-ons|nous-contacter/i.test(h)).slice(0, 4)
     for (const l of [...links, '/contact', '/contact-us']) {
       let u = l; try { u = new URL(l, root).toString() } catch { continue }
       if (hostOf(u) !== host) continue
       const html = await fetchText(u)
       if (!contactUrl && html && /<form/i.test(html) && /contact|kontakt|contatti|contacto/i.test(u)) contactUrl = u
-      found = emailsIn(html); email = pickEmail(found, host)
-      if (email) break
+      if (named && !buyer) { buyer = pickBuyer(html, host); if (buyer) { email = buyer; break } }
+      if (!email) { found = emailsIn(html); email = pickEmail(found, host) }
+      if (email && (!named || buyer)) break
     }
   }
   if (email && !(await hasMx(email.split('@')[1]))) email = ''
   const text = home.replace(/<(script|style|noscript|svg)[\s\S]*?<\/\1>/gi, ' ').replace(/<[^>]+>/g, ' ').replace(/&[a-z#0-9]+;/gi, ' ').replace(/\s+/g, ' ').trim().slice(0, 2500)
-  return { host, email, contactUrl, text }
+  return { host, email, contactUrl, text, buyer: !!buyer && email === buyer }
 }
 const localHour = (country: string) => { const off = UTC_OFFSET[country] ?? 0; const d = new Date(Date.now() + off * 3600e3); return { h: d.getUTCHours(), dow: d.getUTCDay() } }
 
@@ -226,7 +244,7 @@ async function research(target: { fam: string; label: string; country: string; b
   const text = await llm(COMPANY, `Use web search to find ${want + 10} real, currently operating companies in ${target.country} that buy ${target.label}.
 Focus on this buyer type: ${seg.brief}. Typical buyers of this product: ${target.buyers}.
 Exclude marketplaces, directories, B2B portals and factories in Asia. Also exclude: shops that only resell other brands (for example a shoe shop selling Skechers and Clarks), single-store or family shops, second-hand or vintage traders, print-on-demand and single-piece sellers, and anyone too small to order at least one carton or pallet direct from a factory.
-Return a JSON array: [{"company": "...", "website": "https://...", "email": "their public company email (sales@, info@, purchasing@ etc.) if you saw it in the search results or on their site, else empty", "type": "importer|wholesaler|brand|retail chain|online seller|distributor|promotional supplier", "why": "one short sentence on what they sell and why ${target.label} fits", "bd_evidence": "how we know they already buy from Bangladesh, or empty", "import_score": 1-5 (5 = clearly imports direct from Asian factories or runs its own label in volume, 3 = unclear, 1 = small reseller)}]. Only include companies whose website you actually found. Prefer companies that show a public contact email. Keep \"why\" and \"bd_evidence\" under 15 words each. Your final message must be only the JSON array, with no commentary before or after it. If you find fewer companies, return the ones you have.`, { json: true, search: true })
+Return a JSON array: [{"company": "...", "website": "https://...", "email": "their public company email (sales@, info@, purchasing@ etc.) if you saw it in the search results or on their site, else empty", "type": "importer|wholesaler|brand|retail chain|online seller|distributor|promotional supplier", "why": "one short sentence on what they sell and why ${target.label} fits", "bd_evidence": "how we know they already buy from Bangladesh, or empty", "import_score": 1-5 (5 = clearly imports direct from Asian factories or runs its own label in volume, 3 = unclear, 1 = small reseller)}]. Only include companies whose website you actually found. Prefer companies that show a public contact email. ${NAMED_OK.has(target.country) ? 'If the company publishes the work email of its buyer, purchasing or sourcing manager on its own website, put that email in "email"; otherwise the general company email.' : ''} Keep \"why\" and \"bd_evidence\" under 15 words each. Your final message must be only the JSON array, with no commentary before or after it. If you find fewer companies, return the ones you have.`, { json: true, search: true })
   let list: { company: string; website: string; email?: string; type: string; why: string; bd_evidence?: string; import_score?: number }[] = []
   try { list = parseJson(text) } catch { list = []; stats.parse_failed = 1 }
   if (!Array.isArray(list)) list = []
@@ -239,7 +257,7 @@ Return a JSON array: [{"company": "...", "website": "https://...", "email": "the
   // Check candidate websites in parallel: much faster than one by one.
   const cands = list.map((c) => ({ c, h: hostOf(c.website ?? '') })).filter((x, i, arr) => x.h && !knownHosts.has(x.h) && !SKIP_DOMAINS.test(x.h) && arr.findIndex((y) => y.h === x.h) === i).slice(0, want + 8)
   const checkOne = async (x: (typeof cands)[number]) => {
-    const f = await findEmail(x.h)
+    const f = await findEmail(x.h, target.country)
     if (!f.email && x.c.email) { const e = pickEmail([String(x.c.email).toLowerCase().trim()], x.h); if (e && (await hasMx(e.split('@')[1]))) f.email = e }
     return { ...x, ...f }
   }
@@ -258,7 +276,7 @@ Return a JSON array: [{"company": "...", "website": "https://...", "email": "the
       if (save && noEmail++ < 4) await addTask(contactUrl ? 'contact_form' : 'linkedin', { company: c.company, country: target.country, label: target.label, why: c.why, url: contactUrl || linkedinSearch(c.company), website: `https://${host}` })
       continue
     }
-    const row = { email, company: String(c.company).slice(0, 120), country: target.country, website: `https://${host}`, interests: [TARGETS.find((t) => t.fam === target.fam)?.cat ?? ''], tags: ['prospect', 'autopilot'], source: 'autopilot', status: 'subscribed', seq_step: 0, next_touch_at: new Date().toISOString(), research: { fam: target.fam, label: target.label, segment: seg.id, type: c.type, why: q?.what || c.why, bd: c.bd_evidence || '', fit: Number(c.import_score ?? 0), deep_fit: q ? Number(q.fit) : null, size: q?.size ?? null, hook: q?.hook ?? '', found_at: new Date().toISOString() }, score: (c.bd_evidence ? 15 : 5) + Number(c.import_score ?? 0) + (q ? Number(q.fit) : 0) }
+    const row = { email, company: String(c.company).slice(0, 120), country: target.country, website: `https://${host}`, interests: [TARGETS.find((t) => t.fam === target.fam)?.cat ?? ''], tags: ['prospect', 'autopilot'], source: 'autopilot', status: 'subscribed', seq_step: 0, next_touch_at: new Date().toISOString(), research: { fam: target.fam, label: target.label, segment: seg.id, type: c.type, why: q?.what || c.why, bd: c.bd_evidence || '', fit: Number(c.import_score ?? 0), deep_fit: q ? Number(q.fit) : null, size: q?.size ?? null, hook: q?.hook ?? '', named_buyer: !!(checked.find((x) => x.h === host) as any)?.buyer, found_at: new Date().toISOString() }, score: (c.bd_evidence ? 15 : 5) + Number(c.import_score ?? 0) + (q ? Number(q.fit) : 0) + ((checked.find((x) => x.h === host) as any)?.buyer ? 20 : 0) }
     if (save) { const { error } = await db.from('bde_contacts').insert(row); if (error) continue }
     out.push(row)
   }
