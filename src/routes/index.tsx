@@ -6,6 +6,7 @@ import { CATS, FAMILIES } from '@/data/catalog'
 import { Photo } from '@/components/photo'
 import { ItemTile, inSeason } from '@/components/item-tile'
 import { CAT_PHOTO, catStyle } from '@/lib/cat-style'
+import { BuyerReviews } from '@/components/buyer-reviews'
 
 export const Route = createFileRoute('/')({
   head: () => pageHead('/'),
@@ -207,6 +208,8 @@ function Home() {
           </div>
         </section>
       )}
+
+      <BuyerReviews />
 
       {/* Suppliers */}
       <section className="mx-auto max-w-7xl px-4 pt-16">
