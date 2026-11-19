@@ -64,7 +64,8 @@ const SEGMENTS: { id: string; label: string; brief: string; w: number }[] = [
 function pickSegment() { let r = Math.random() * SEGMENTS.reduce((a, s) => a + s.w, 0); for (const s of SEGMENTS) { r -= s.w; if (r <= 0) return s } return SEGMENTS[0] }
 const DUTY_FREE = new Set(['United Kingdom', 'Netherlands', 'France', 'Spain', 'Italy', 'Poland', 'Belgium', 'Denmark', 'Sweden', 'Ireland', 'Germany', 'Austria', 'Canada', 'Australia', 'Japan', 'Norway', 'Switzerland', 'New Zealand'])
 const UTC_OFFSET: Record<string, number> = { Mexico: -6, Brazil: -3, Chile: -3, Colombia: -5, Portugal: 0, 'Czech Republic': 1, Finland: 2, Greece: 2, Turkey: 3, 'United Arab Emirates': 4, Qatar: 3, Kuwait: 3, Oman: 4, Israel: 2, Egypt: 2, 'South Africa': 2, Kenya: 3, Nigeria: 1, India: 5.5, 'Sri Lanka': 5.5, Thailand: 7, Philippines: 8, Indonesia: 7, 'Hong Kong': 8, 'South Korea': 9, China: 8, 'United Kingdom': 0, Ireland: 0, Netherlands: 1, France: 1, Spain: 1, Italy: 1, Poland: 1, Belgium: 1, Denmark: 1, Sweden: 1, Germany: 1, Austria: 1, Norway: 1, Switzerland: 1, Canada: -5, 'United States': -5, Australia: 10, Japan: 9, Malaysia: 8, Singapore: 8, 'Saudi Arabia': 3, 'New Zealand': 12 }
-const ROLE = ['purchasing', 'purchase', 'buying', 'buyer', 'sourcing', 'procurement', 'import', 'einkauf', 'achats', 'compras', 'trade', 'sales', 'info', 'contact', 'hello', 'office', 'enquiries', 'inquiries', 'mail', 'service', 'kontakt', 'admin']
+// Buying-side addresses first (in the local languages too), then general company inboxes.
+const ROLE = ['purchasing', 'purchase', 'buying', 'buyer', 'sourcing', 'procurement', 'import', 'einkauf', 'inkoop', 'inkop', 'indkob', 'innkjop', 'achats', 'acquisti', 'compras', 'zakupy', 'trade', 'wholesale', 'sales', 'verkauf', 'verkoop', 'vente', 'ventas', 'vendite', 'commerciale', 'commercial', 'salg', 'order', 'info', 'contact', 'hello', 'office', 'enquiries', 'inquiries', 'mail', 'post', 'kontor', 'kontakt', 'service', 'admin', 'biuro']
 const SKIP_DOMAINS = /(amazon|alibaba|ebay|etsy|facebook|linkedin|instagram|google|wikipedia|yelp|indiamart|made-in-china|tradekey|europages|kompass|yellowpages|zoominfo|bloomberg|dnb\.com|crunchbase|globalsources|exporthub|go4worldbusiness)\./i
 
 // ---------- AI ----------
@@ -196,6 +197,7 @@ async function plan(n = 2) {
       const why: string[] = []
       let score = 10
       if (DUTY_FREE.has(country)) { score += 8; why.push('0% import duty') }
+      if (['United Kingdom', 'Ireland', 'Netherlands', 'Germany', 'Denmark', 'Sweden', 'Canada', 'Australia', 'New Zealand', 'United States', 'Belgium', 'Switzerland', 'United Arab Emirates', 'Singapore'].includes(country)) score += 12
       const lh = localHour(country)
       if (lh.dow > 0 && lh.dow < 6 && lh.h >= 6 && lh.h < 15) { score += 30; why.push('office hours now') }
       if (demand) { score += Math.min(15, demand); why.push(`${demand} product view${demand > 1 ? 's' : ''} on the site`) }
@@ -251,7 +253,7 @@ Return a JSON array: [{"company": "...", "website": "https://...", "email": "the
     if (out.length >= want) break
     knownHosts.add(host)
     const q = deep.get(host)
-    if (email && q && (!q.match || Number(q.fit) < 7)) { stats.deep_dropped++; continue }
+    if (email && q && (!q.match || Number(q.fit) < 5)) { stats.deep_dropped++; continue }
     if (!email) {
       if (save && noEmail++ < 4) await addTask(contactUrl ? 'contact_form' : 'linkedin', { company: c.company, country: target.country, label: target.label, why: c.why, url: contactUrl || linkedinSearch(c.company), website: `https://${host}` })
       continue
@@ -270,7 +272,7 @@ async function qualify(list: { c: any; h: string; text?: string }[], target: { l
   if (!items.length || !aiReady()) return out
   const arr = parseJson<any[]>(await llm(COMPANY, `You are qualifying B2B buyers for ${target.label} from Bangladesh, located in ${target.country}. For each company below, read its own homepage text and judge it strictly.
 ${JSON.stringify(items)}
-Return a JSON array [{"host": "...", "match": true/false (they sell or use ${target.label} or a very close product), "size": "small|medium|large", "b2b": true/false (wholesale, trade, private label, uniforms, hospitality supply or retail chain buying in volume), "what": "what they sell, 12 words max, from the page", "hook": "one specific, verifiable detail from their page we can mention (a product line, brand, market or service), 15 words max", "fit": 1-10 (10 = clearly buys this product in container or carton volume from factories; 1 = tiny shop, wrong product or not a buyer)}]. Be strict: a reseller of branded goods, a one-person shop or an unrelated business scores 4 or less.`, { json: true }))
+Return a JSON array [{"host": "...", "match": true/false (they sell or use ${target.label} or a very close product), "size": "small|medium|large", "b2b": true/false (wholesale, trade, private label, uniforms, hospitality supply or retail chain buying in volume), "what": "what they sell, 12 words max, from the page", "hook": "one specific, verifiable detail from their page we can mention (a product line, brand, market or service), 15 words max", "fit": 1-10 (10 = clearly buys this product in container or carton volume from factories; 1 = tiny shop, wrong product or not a buyer)}]. Be strict: a reseller of branded goods, a one-person shop, an unrelated business, or a manufacturer or exporter (a supplier like us, for example in Pakistan, India, China or Bangladesh) scores 4 or less. If the homepage text is unreadable (cookie wall, bot check, only code), return match true and fit 5 with hook empty.`, { json: true }))
   for (const a of Array.isArray(arr) ? arr : []) if (a?.host) out.set(String(a.host).replace(/^www\./, '').toLowerCase(), a)
   return out
 }
@@ -290,7 +292,7 @@ async function requalify(offset = 0) {
     for (const g of group) {
       const a = q.get(g.h)
       if (!a) continue
-      const bad = !a.match || Number(a.fit) < 7
+      const bad = !a.match || Number(a.fit) < 5
       await db.from('bde_contacts').update({ status: bad ? 'unqualified' : 'subscribed', research: { ...(g.c.research ?? {}), deep_fit: Number(a.fit), size: a.size ?? null, hook: a.hook ?? '', why: a.what || g.c.research?.why } }).eq('id', g.c.id)
       if (bad) dropped++; else kept++
     }
