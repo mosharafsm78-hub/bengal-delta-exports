@@ -7,6 +7,7 @@ import { Photo } from '@/components/photo'
 import { ItemTile, inSeason } from '@/components/item-tile'
 import { CAT_PHOTO, catStyle } from '@/lib/cat-style'
 import { BuyerReviews } from '@/components/buyer-reviews'
+import { TrustPoints } from '@/components/trust-points'
 
 export const Route = createFileRoute('/')({
   head: () => pageHead('/'),
@@ -60,6 +61,8 @@ function Home() {
           </ul>
         </div>
       </section>
+
+      <TrustPoints />
 
       {/* Categories */}
       <section className="mx-auto max-w-7xl px-4 pt-16">
@@ -134,31 +137,6 @@ function Home() {
         </ol>
       </section>
 
-
-      {/* Why buyers trust us */}
-      <section className="mx-auto max-w-7xl px-4 pt-20">
-        <div className="mb-10 max-w-2xl">
-          <p className="eyebrow m-0 mb-2">Start small, check everything</p>
-          <h2 className="m-0 text-[clamp(1.8rem,3.4vw,2.5rem)]">Why buyers trust us</h2>
-          <p className="mt-3 mb-0 text-[17px] text-muted-foreground">Most of our buyers began with a few samples. These are the commitments that turned a sample order into regular business.</p>
-        </div>
-        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-          {([
-            ['Samples first, no risk', 'Order a few samples before any bulk commitment. Ready styles ship within 24 hours, and the sample cost is credited on your first order.'],
-            ['Samples match your specification', 'We work to your fabric, weight, size chart and packing details, so what you approve at sample stage is what you receive in bulk.'],
-            ['Dispatched on time', 'We confirm a dispatch date before you pay and keep to it. Progress photos are shared at every stage.'],
-            ['Inspected before it leaves', 'Our own QC team checks materials, production and finished cartons before loading, for samples and bulk alike.'],
-            ['Clear, honest pricing', 'One quotation priced to your port, with every cost written in it, including sample courier. No surprises on the invoice.'],
-            ['Small orders, full attention', 'First-time importer or a small trial order, you get the same named account manager and the same care as a container buyer.'],
-          ] as const).map(([t, d]) => (
-            <div key={t} className="rounded-xl border border-border bg-card p-6">
-              <h3 className="mt-0 mb-2 text-[18px]">{t}</h3>
-              <p className="m-0 text-[14.5px] text-muted-foreground">{d}</p>
-            </div>
-          ))}
-        </div>
-        <Link to="/quote" className="btn btn-primary mt-8 px-6 py-3">Request samples {arrow}</Link>
-      </section>
 
       {/* Order protection */}
       <section className="mt-20 border-y border-border bg-card">

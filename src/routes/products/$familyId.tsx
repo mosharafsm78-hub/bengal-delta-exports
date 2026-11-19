@@ -13,6 +13,8 @@ import { PHOTOS, photoAbs } from '@/data/photos'
 import { catStyle } from '@/lib/cat-style'
 import { QuickQuote } from '@/components/quick-quote'
 import { MARKETS } from '@/data/markets'
+import { TrustPoints } from '@/components/trust-points'
+import { BuyerReviews } from '@/components/buyer-reviews'
 
 export const Route = createFileRoute('/products/$familyId')({
   loader: ({ params }) => {
@@ -118,6 +120,8 @@ function FamilyBody() {
           </div>
         </nav>
       </section>
+
+      <div className="mx-auto max-w-7xl px-4 pt-10"><TrustPoints compact /></div>
 
       <div className="mx-auto max-w-7xl px-4">
         <section id="types" className="scroll-mt-32 py-12">
@@ -233,6 +237,7 @@ function FamilyBody() {
           </div>
         </section>
 
+        <BuyerReviews />
         {related.length > 0 && (
           <section className="pb-4">
             <h2 className="mb-5 text-[clamp(1.4rem,2.6vw,1.8rem)]">More {cat?.name.toLowerCase()}</h2>

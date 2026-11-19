@@ -14,6 +14,8 @@ import { money, slug, usd } from '@/lib/slug'
 import { cn } from '@/lib/utils'
 import { catStyle } from '@/lib/cat-style'
 import { QuickOffer } from '@/components/quick-offer'
+import { TrustPoints } from '@/components/trust-points'
+import { BuyerReviews } from '@/components/buyer-reviews'
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
@@ -244,6 +246,8 @@ function ItemBody() {
         </div>
       </section>
 
+      <div className="mx-auto max-w-7xl px-4 pb-12"><TrustPoints compact /></div>
+
       {/* Key facts */}
       <section className="border-y border-border bg-card">
         <dl className="mx-auto my-0 grid max-w-7xl gap-x-6 px-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -367,6 +371,7 @@ function ItemBody() {
         )}
       </section>
 
+      <BuyerReviews />
       {siblings.length > 0 && (
         <section className="mx-auto max-w-7xl px-4 pb-6">
           <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
